@@ -1,0 +1,444 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model lkp_client_module_status {
+  code              String              @id @db.VarChar(1)
+  display_value     String              @db.VarChar(32)
+  description       String?             @db.VarChar(64)
+  create_date       DateTime            @db.Timestamptz(6)
+  created_by        String              @db.VarChar(32)
+  change_date       DateTime?           @db.Timestamptz(6)
+  changed_by        String?             @db.VarChar(32)
+  sgs_client        sgs_client[]
+  sgs_client_ecole  sgs_client_ecole[]
+  sgs_client_module sgs_client_module[]
+}
+
+model lkp_gender {
+  code           String           @id @db.VarChar(1)
+  display_value  String           @db.VarChar(32)
+  description    String?          @db.VarChar(64)
+  create_date    DateTime         @db.Timestamptz(6)
+  created_by     String           @db.VarChar(32)
+  change_date    DateTime?        @db.Timestamptz(6)
+  changed_by     String?          @db.VarChar(32)
+  sgs_enseignant sgs_enseignant[]
+}
+
+model lkp_sgs_onboarding_status {
+  code           String           @id @db.VarChar(1)
+  display_value  String           @db.VarChar(32)
+  description    String?          @db.VarChar(64)
+  create_date    DateTime         @db.Timestamptz(6)
+  created_by     String           @db.VarChar(32)
+  change_date    DateTime?        @db.Timestamptz(6)
+  changed_by     String?          @db.VarChar(32)
+  sgs_onboarding sgs_onboarding[]
+}
+
+model lkp_sgs_onboarding_step_status {
+  code                String                @id @db.VarChar(1)
+  display_value       String                @db.VarChar(32)
+  description         String?               @db.VarChar(64)
+  create_date         DateTime              @db.Timestamptz(6)
+  created_by          String                @db.VarChar(32)
+  change_date         DateTime?             @db.Timestamptz(6)
+  changed_by          String?               @db.VarChar(32)
+  sgs_onboarding_step sgs_onboarding_step[]
+}
+
+model lkp_sgs_request_status {
+  code          String        @id @db.VarChar(1)
+  display_value String        @db.VarChar(32)
+  description   String?       @db.VarChar(64)
+  create_date   DateTime      @db.Timestamptz(6)
+  created_by    String        @db.VarChar(32)
+  change_date   DateTime?     @db.Timestamptz(6)
+  changed_by    String?       @db.VarChar(32)
+  sgs_request   sgs_request[]
+}
+
+model sgs_client {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  systeme_scolaire_id      String                   @db.Uuid
+  active                   Boolean                  @default(true)
+  status                   String                   @default("A") @db.VarChar(1)
+  legal_name               String                   @db.VarChar(128)
+  short_name               String?                  @db.VarChar(64)
+  code                     String                   @unique @db.VarChar(32)
+  address                  String?                  @db.VarChar(128)
+  website                  String?                  @db.VarChar(64)
+  main_contact_name        String?                  @db.VarChar(128)
+  main_contact_email       String?                  @db.VarChar(64)
+  main_contact_phone       String?                  @db.VarChar(32)
+  other_contact_infos      String?                  @db.VarChar(128)
+  notes                    String?                  @db.VarChar
+  create_date              DateTime                 @db.Timestamptz(6)
+  created_by               String                   @db.VarChar(32)
+  change_date              DateTime?                @db.Timestamptz(6)
+  changed_by               String?                  @db.VarChar(32)
+  tenant_id                String                   @db.Uuid
+  lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  tg_systeme_scolaire      tg_systeme_scolaire      @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_client_ecole         sgs_client_ecole[]
+  sgs_client_module        sgs_client_module[]
+  sgs_client_setting       sgs_client_setting[]
+}
+
+model sgs_client_ecole {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id                String                   @db.Uuid
+  ecole_id                 String?                  @db.Uuid
+  active                   Boolean                  @default(true)
+  status                   String                   @default("A") @db.VarChar(1)
+  notes                    String?                  @db.VarChar
+  create_date              DateTime                 @db.Timestamptz(6)
+  created_by               String                   @db.VarChar(32)
+  change_date              DateTime?                @db.Timestamptz(6)
+  changed_by               String?                  @db.VarChar(32)
+  tenant_id                String                   @db.Uuid
+  sgs_client               sgs_client               @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_ecole                sgs_ecole?               @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_client_module {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id                String                   @db.Uuid
+  module_id                String                   @db.Uuid
+  active                   Boolean                  @default(true)
+  status                   String                   @default("A") @db.VarChar(1)
+  notes                    String?                  @db.VarChar
+  create_date              DateTime                 @db.Timestamptz(6)
+  created_by               String                   @db.VarChar(32)
+  change_date              DateTime?                @db.Timestamptz(6)
+  changed_by               String?                  @db.VarChar(32)
+  tenant_id                String                   @db.Uuid
+  sgs_client               sgs_client               @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_module                tg_module                @relation(fields: [module_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_client_setting {
+  id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id           String     @db.Uuid
+  max_schools         Int        @default(1)
+  max_admin_users     Int        @default(1)
+  max_classroom_users Int        @default(0)
+  max_teacher_users   Int        @default(0)
+  max_parent_users    Int        @default(0)
+  max_eleve_users     Int        @default(0)
+  notes               String?    @db.VarChar
+  create_date         DateTime   @db.Timestamptz(6)
+  created_by          String     @db.VarChar(32)
+  change_date         DateTime?  @db.Timestamptz(6)
+  changed_by          String?    @db.VarChar(32)
+  tenant_id           String     @db.Uuid
+  sgs_client          sgs_client @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_ecole {
+  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name              String             @db.VarChar(128)
+  short_name             String             @db.VarChar(64)
+  establishment_date     DateTime?          @db.Date
+  code                   String             @unique @db.VarChar(32)
+  primary_contact_name   String?            @db.VarChar(128)
+  secondary_contact_name String?            @db.VarChar(128)
+  contact_infos          String?            @db.VarChar(128)
+  phone_number           String?            @db.VarChar(32)
+  email                  String?            @db.VarChar(64)
+  website                String?            @db.VarChar(64)
+  notes                  String?            @db.VarChar
+  create_date            DateTime           @db.Timestamptz(6)
+  created_by             String             @db.VarChar(32)
+  change_date            DateTime?          @db.Timestamptz(6)
+  changed_by             String?            @db.VarChar(32)
+  tenant_id              String             @db.Uuid
+  sgs_client_ecole       sgs_client_ecole[]
+  sgs_salle_classe       sgs_salle_classe[]
+}
+
+model sgs_enseignant {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matricule                String                     @unique @db.VarChar(32)
+  last_name                String                     @db.VarChar(64)
+  first_name               String                     @db.VarChar(64)
+  other_names              String?                    @db.VarChar(64)
+  preferred_name           String?                    @db.VarChar(32)
+  date_of_birth            DateTime                   @db.Date
+  gender                   String                     @db.VarChar(2)
+  phone_number             String?                    @db.VarChar(16)
+  email                    String?                    @db.VarChar(64)
+  notes                    String?                    @db.VarChar
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  tenant_id                String                     @db.Uuid
+  lkp_gender               lkp_gender                 @relation(fields: [gender], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_portfolio_enseignant sgs_portfolio_enseignant[]
+}
+
+model sgs_portfolio_enseignant {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  salle_classe_matiere_id  String                   @db.Uuid
+  enseignant_id            String?                  @db.Uuid
+  start_date               DateTime                 @db.Date
+  end_date                 DateTime?                @db.Date
+  notes                    String?                  @db.VarChar
+  create_date              DateTime                 @db.Timestamptz(6)
+  created_by               String                   @db.VarChar(32)
+  change_date              DateTime?                @db.Timestamptz(6)
+  changed_by               String?                  @db.VarChar(32)
+  tenant_id                String                   @db.Uuid
+  sgs_enseignant           sgs_enseignant?          @relation(fields: [enseignant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_salle_classe_matiere sgs_salle_classe_matiere @relation(fields: [salle_classe_matiere_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_salle_classe {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ecole_id                 String                     @db.Uuid
+  annee_scolaire_id        String                     @db.Uuid
+  classe_id                String                     @db.Uuid
+  code                     String                     @db.VarChar(16)
+  description              String?                    @db.VarChar(256)
+  notes                    String?                    @db.VarChar
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  tenant_id                String                     @db.Uuid
+  tg_annee_scolaire        tg_annee_scolaire          @relation(fields: [annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_classe                tg_classe                  @relation(fields: [classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_ecole                sgs_ecole                  @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_salle_classe_matiere sgs_salle_classe_matiere[]
+}
+
+model sgs_salle_classe_matiere {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matiere_id               String                     @db.Uuid
+  salle_classe_id          String                     @db.Uuid
+  power                    Int                        @default(1)
+  active                   Boolean                    @default(true)
+  notes                    String?                    @db.VarChar
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  tenant_id                String                     @db.Uuid
+  sgs_portfolio_enseignant sgs_portfolio_enseignant[]
+  tg_matiere               tg_matiere                 @relation(fields: [matiere_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_salle_classe         sgs_salle_classe           @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_user {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_name            String    @unique @db.VarChar(32)
+  full_name            String    @db.VarChar(128)
+  email                String    @unique @db.VarChar(64)
+  phone                String?   @db.VarChar(32)
+  pwd_hash             String?   @db.VarChar
+  salt                 String?   @db.VarChar
+  token                String?   @db.VarChar
+  token_effective_time DateTime? @db.Timestamptz(6)
+  token_expiry_time    DateTime? @db.Timestamptz(6)
+  notes                String?   @db.VarChar
+  create_date          DateTime  @db.Timestamptz(6)
+  created_by           String    @db.VarChar(64)
+  change_date          DateTime? @db.Timestamptz(6)
+  changed_by           String?   @db.VarChar(64)
+  tenant_id            String    @db.Uuid
+}
+
+model tg_annee_scolaire {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  start_date       DateTime           @db.Date
+  end_date         DateTime           @db.Date
+  notes            String?            @db.VarChar
+  create_date      DateTime           @db.Timestamptz(6)
+  created_by       String             @db.VarChar(32)
+  change_date      DateTime?          @db.Timestamptz(6)
+  changed_by       String?            @db.VarChar(32)
+  sgs_salle_classe sgs_salle_classe[]
+}
+
+model tg_classe {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  niveau_id        String             @db.Uuid
+  serie_id         String?            @db.Uuid
+  full_name        String             @db.VarChar(128)
+  short_name       String?            @db.VarChar(64)
+  code             String             @unique @db.VarChar(32)
+  notes            String?            @db.VarChar
+  create_date      DateTime           @db.Timestamptz(6)
+  created_by       String             @db.VarChar(32)
+  change_date      DateTime?          @db.Timestamptz(6)
+  changed_by       String?            @db.VarChar(32)
+  sgs_salle_classe sgs_salle_classe[]
+  tg_niveau        tg_niveau          @relation(fields: [niveau_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_serie         tg_serie?          @relation(fields: [serie_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tg_enseignement {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  systeme_scolaire_id String              @db.Uuid
+  full_name           String              @db.VarChar(128)
+  short_name          String?             @db.VarChar(64)
+  code                String              @unique @db.VarChar(32)
+  notes               String?             @db.VarChar
+  create_date         DateTime            @db.Timestamptz(6)
+  created_by          String              @db.VarChar(32)
+  change_date         DateTime?           @db.Timestamptz(6)
+  changed_by          String?             @db.VarChar(32)
+  tg_systeme_scolaire tg_systeme_scolaire @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_niveau           tg_niveau[]
+  tg_serie            tg_serie[]
+}
+
+model tg_matiere {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name                String                     @db.VarChar(128)
+  short_name               String?                    @db.VarChar(64)
+  code                     String                     @unique @db.VarChar(32)
+  description              String?                    @db.VarChar(256)
+  notes                    String?                    @db.VarChar
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  sgs_salle_classe_matiere sgs_salle_classe_matiere[]
+}
+
+model tg_module {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name         String              @db.VarChar(128)
+  short_name        String?             @db.VarChar(64)
+  code              String              @unique @db.VarChar(32)
+  base_price        Decimal             @default(0) @db.Decimal(10, 2)
+  notes             String?             @db.VarChar
+  create_date       DateTime            @db.Timestamptz(6)
+  created_by        String              @db.VarChar(32)
+  change_date       DateTime?           @db.Timestamptz(6)
+  changed_by        String?             @db.VarChar(32)
+  sgs_client_module sgs_client_module[]
+}
+
+model tg_niveau {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enseignement_id String          @db.Uuid
+  full_name       String          @db.VarChar(128)
+  short_name      String?         @db.VarChar(64)
+  code            String          @db.VarChar(32)
+  ranking         Int
+  notes           String?         @db.VarChar
+  create_date     DateTime        @db.Timestamptz(6)
+  created_by      String          @db.VarChar(32)
+  change_date     DateTime?       @db.Timestamptz(6)
+  changed_by      String?         @db.VarChar(32)
+  tg_classe       tg_classe[]
+  tg_enseignement tg_enseignement @relation(fields: [enseignement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tg_role {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String    @db.VarChar(64)
+  code        String    @db.VarChar(32)
+  description String?   @db.VarChar(256)
+  notes       String?   @db.VarChar
+  create_date DateTime  @db.Timestamptz(6)
+  created_by  String    @db.VarChar(32)
+  change_date DateTime? @db.Timestamptz(6)
+  changed_by  String?   @db.VarChar(32)
+}
+
+model tg_serie {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enseignement_id String          @db.Uuid
+  full_name       String          @db.VarChar(128)
+  short_name      String?         @db.VarChar(64)
+  code            String          @unique @db.VarChar(32)
+  notes           String?         @db.VarChar
+  create_date     DateTime        @db.Timestamptz(6)
+  created_by      String          @db.VarChar(32)
+  change_date     DateTime?       @db.Timestamptz(6)
+  changed_by      String?         @db.VarChar(32)
+  tg_classe       tg_classe[]
+  tg_enseignement tg_enseignement @relation(fields: [enseignement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tg_systeme_scolaire {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name       String            @db.VarChar(128)
+  short_name      String?           @db.VarChar(64)
+  code            String            @unique @db.VarChar(32)
+  primary_owner   String            @db.VarChar(128)
+  secondary_owner String?           @db.VarChar(128)
+  notes           String?           @db.VarChar
+  create_date     DateTime          @db.Timestamptz(6)
+  created_by      String            @db.VarChar(32)
+  change_date     DateTime?         @db.Timestamptz(6)
+  changed_by      String?           @db.VarChar(32)
+  sgs_client      sgs_client[]
+  tg_enseignement tg_enseignement[]
+}
+
+model sgs_onboarding {
+  id                        String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  request_id                String                    @db.Uuid
+  status                    String                    @default("C") @db.VarChar(1)
+  start_date_time           DateTime                  @default(now()) @db.Timestamp(6)
+  end_date_time             DateTime?                 @db.Timestamp(6)
+  notes                     String?                   @db.VarChar
+  create_date               DateTime                  @db.Timestamptz(6)
+  created_by                String                    @db.VarChar(32)
+  change_date               DateTime?                 @db.Timestamptz(6)
+  changed_by                String?                   @db.VarChar(32)
+  sgs_request               sgs_request               @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_sgs_onboarding_status lkp_sgs_onboarding_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_onboarding_step       sgs_onboarding_step[]
+}
+
+model sgs_onboarding_step {
+  id                             String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  onboarding_id                  String                         @db.Uuid
+  status                         String                         @default("C") @db.VarChar(1)
+  name                           String                         @db.VarChar(64)
+  step_order                     Int
+  code_to_run                    String?                        @db.VarChar
+  start_date_time                DateTime                       @default(now()) @db.Timestamp(6)
+  end_date_time                  DateTime?                      @db.Timestamp(6)
+  notes                          String?                        @db.VarChar
+  create_date                    DateTime                       @db.Timestamptz(6)
+  created_by                     String                         @db.VarChar(32)
+  change_date                    DateTime?                      @db.Timestamptz(6)
+  changed_by                     String?                        @db.VarChar(32)
+  sgs_onboarding                 sgs_onboarding                 @relation(fields: [onboarding_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_sgs_onboarding_step_status lkp_sgs_onboarding_step_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_request {
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status                 String                 @default("D") @db.VarChar(1)
+  request_date           DateTime               @default(dbgenerated("CURRENT_DATE")) @db.Date
+  request_code           String?                @db.VarChar(6)
+  request_confirmed      Boolean                @default(false)
+  requester_full_name    String?                @db.VarChar(128)
+  requester_email        String?                @db.VarChar(64)
+  requester_phone        String?                @db.VarChar(32)
+  ecole_name             String                 @db.VarChar(128)
+  ecole_code             String?                @db.VarChar(32)
+  notes                  String?                @db.VarChar
+  create_date            DateTime               @db.Timestamptz(6)
+  created_by             String                 @db.VarChar(32)
+  change_date            DateTime?              @db.Timestamptz(6)
+  changed_by             String?                @db.VarChar(32)
+  sgs_onboarding         sgs_onboarding[]
+  lkp_sgs_request_status lkp_sgs_request_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+}

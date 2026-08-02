@@ -1,0 +1,14 @@
+export type SGSCreateRequestDO = {                    
+    status                 : string;
+    request_date           : Date;
+    request_code           : string|null;
+    request_confirmed      : boolean;
+    requester_full_name    : string;
+    requester_email        : string;
+    requester_phone        : string|null;
+    ecole_name             : string;
+    ecole_code             : string|null;
+    notes                  : string|null;
+    create_date            : Date;
+    created_by             : string;
+}

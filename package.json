@@ -8,11 +8,23 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "16.2.12"
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcrypt": "^6.0.0",
+    "cookie": "^2.0.1",
+    "date-fns": "^4.4.0",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
+    "next": "16.2.12",
+    "nodemailer": "^9.0.3",
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
+    "prisma": "^7.9.1",
     "typescript": "^5"
   }
 }
