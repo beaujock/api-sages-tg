@@ -408,11 +408,11 @@ model sgs_onboarding {
 model sgs_onboarding_step {
   id                             String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   onboarding_id                  String                         @db.Uuid
-  status                         String                         @default("C") @db.VarChar(1)
+  status                         String                         @default("A") @db.VarChar(1)
   name                           String                         @db.VarChar(64)
   step_order                     Int
   code_to_run                    String?                        @db.VarChar
-  start_date_time                DateTime                       @default(now()) @db.Timestamp(6)
+  start_date_time                DateTime?                      @db.Timestamp(6)
   end_date_time                  DateTime?                      @db.Timestamp(6)
   notes                          String?                        @db.VarChar
   create_date                    DateTime                       @db.Timestamptz(6)
@@ -430,7 +430,7 @@ model sgs_request {
   request_code           String?                @db.VarChar(6)
   request_confirmed      Boolean                @default(false)
   requester_full_name    String?                @db.VarChar(128)
-  requester_email        String?                @db.VarChar(64)
+  requester_email        String                 @db.VarChar(64)
   requester_phone        String?                @db.VarChar(32)
   ecole_name             String                 @db.VarChar(128)
   ecole_code             String?                @db.VarChar(32)

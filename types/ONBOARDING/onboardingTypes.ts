@@ -12,3 +12,13 @@ export type SGSCreateRequestDO = {
     create_date            : Date;
     created_by             : string;
 }
+
+export type SGSCreateOnboardingDO = {
+    request_id                : string;
+    status                    : string;
+    start_date_time           : Date;
+    end_date_time             : Date|null;
+    notes                     : string|null;
+    create_date               : Date;
+    created_by                : string;               
+}
