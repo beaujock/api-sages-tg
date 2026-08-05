@@ -1,4 +1,4 @@
-import { sgs_onboarding } from "@/lib/generated/prisma/browser";
+import { sgs_onboarding } from "@/lib/generated/prisma/client";
 import { sgs_request } from "@/lib/generated/prisma/client";
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { SGSCreateOnboardingDO, SGSCreateRequestDO } from "@/types/ONBOARDING/onboardingTypes";
@@ -152,79 +152,241 @@ export async function createSagesOnboarding(requestId:string) : Promise<sgs_onbo
     }
 }
 
-export async function createSagesOnboardingSteps(onboardingId:string, requestId:string) : Promise<boolean>{
-    const functionName = "createSagesOnboardingStep1 - ";
-    let stepOrder= 1;
-    let stepName = "";
+export async function registerNewClient(requestId:string) : Promise<string> {
+    const functionName = "registerClient - ";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const request = await getOnboardingRequestById(requestId);
-        if (!request || request===null) throw new Error("Requête non trouvée.");
-        if (!request.request_confirmed || request.request_code ==='D') throw new Error("Requête non confirmée.");
-        if (request.request_code === 'I') throw new Error("L'intégration à SAGES a déjà été complètée.");
-        //Create Step1
-        stepName = "Création du client";
-        const step1 = await prisma.sgs_onboarding_step.create({
-            data :  {
-                onboarding_id       : onboardingId,
-                status              : "A",
-                name                : stepName,
-                step_order          : stepOrder,
-                code_to_run         : "INSERT INTO SGS_CLIENT(systeme_scolaire_id, legal_name, short_name, code, create_date, created_by) VALUES ({systeme_scolaire_id}, {legal_name}, {short_name},{code}, {create_date}, {created_by})",
-                create_date         : new Date(Date.now()),
-                created_by          : "SAGES_ADMIN"
+
+        const validRequest = await prisma.sgs_request.findUnique({
+            where : {
+                id                  : requestId,
+                request_confirmed   : true,
+                status              : 'E'
             }
         });
-        stepOrder++;
-        stepName = "Ajouts de modules au client";
-        const step2 = await prisma.sgs_onboarding_step.create({
-            data :  {
-                onboarding_id       : onboardingId,
-                status              : "A",
-                name                : stepName,
-                step_order          : stepOrder,
-                code_to_run         : "INSERT INTO SGS_CLIENT_MODULE(client_id, module_id, create_date, created_by) VALUES ({client_id}, {module_id}, {create_date}, {created_by})",
-                create_date         : new Date(Date.now()),
-                created_by          : "SAGES_ADMIN"
+        if (!validRequest || validRequest===null) return "REQUEST_NOT_VALID";
+        if (validRequest.ecole_code ==='NEW_ECOLE') return "INVALID_ECOLE_CODE";
+
+
+        //create the client
+        const systemScolaireId = process.env.SYSTEM_SCOLAIRE_ID;
+        if (systemScolaireId == null || (typeof systemScolaireId === 'string' && systemScolaireId.trim() === '')) return "SYSTEM_SCOLAIRE_NOT_FOUND";
+        const newClient = await prisma.sgs_client.create({
+            data : {
+                systeme_scolaire_id     : systemScolaireId,
+                legal_name              : validRequest.ecole_name,
+                code                    : validRequest.ecole_code,
+                create_date             : new Date(Date.now()),
+                created_by              : "SAGES_ONBOARDING"
             }
         });
-        stepOrder++;
-        stepName = "Ajout de paramètres client";
-        const step3 = await prisma.sgs_onboarding_step.create({
-            data :  {
-                onboarding_id       : onboardingId,
-                status              : "A",
-                name                : stepName,
-                step_order          : stepOrder,
-                code_to_run         : "INSERT INTO SGS_CLIENT_SETTING(client_id, create_date, created_by) VALUES ({client_id}, {create_date}, {created_by})",
-                create_date         : new Date(Date.now()),
-                created_by          : "SAGES_ADMIN"
-            }
-        });
+        if (!newClient || newClient===null) return "ERROR_CLIENT_CREATION";
+        return newClient.id;
     }
     catch(error:any) {
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
         throw new Error(ErrorOrigin + functionName + error.message);
     }
 }
 
-export async function createSagesOnboardingSteps22(onboardingId:string) {
-    const functionName = "createRequestForOnboarding - ";
+export async function addNewClientSettings(clientId:string) : Promise<string> {
+    const functionName = "addClientSettings - ";
+    try{
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const createdClientSettings = await prisma.sgs_client_setting.create({
+            data : {
+                client_id           : clientId,
+                create_date         : new Date(Date.now()),
+                created_by          : "SAGES_ONBOARDING"
+            }
+        });
+        if (!createdClientSettings || createdClientSettings===null) return "ERROR_CLIENT_SETTING_CREATION";
+        return createdClientSettings.id;
+    }
+    catch(error:any){
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function addNewClientBaseModule(clientId:string, moduleId:string) : Promise<string> {
+    const functionName = "addClientBaseModules - ";
+    try{
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const createdClientModule = await prisma.sgs_client_module.create({
+            data : {
+                client_id           : clientId,
+                module_id           : moduleId,
+                create_date         : new Date(Date.now()),
+                created_by          : "SAGES_ONBOARDING"
+            }
+        });
+        if (!createdClientModule || createdClientModule===null) return "ERROR_CLIENT_MODULE_CREATION (" + moduleId + ")";
+        return createdClientModule.id;
+    }
+    catch(error:any){
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function registerNewSchool(requestId:string) : Promise<string> {
+    const functionName = "registerClient - ";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        //Create Step1
-        const request = await prisma
+
+        const validRequest = await prisma.sgs_request.findUnique({
+            where : {
+                id                  : requestId,
+                request_confirmed   : true,
+                status              : 'E'
+            }
+        });
+        if (!validRequest || validRequest===null) return "REQUEST_NOT_VALID";
+        if (validRequest.ecole_code ==='NEW_ECOLE') return "INVALID_ECOLE_CODE";
+
+        //create the school
+        const newSchool = await prisma.sgs_ecole.create({
+            data : {
+                full_name               : validRequest.ecole_name,
+                code                    : validRequest.ecole_code,
+                create_date             : new Date(Date.now()),
+                created_by              : "SAGES_ONBOARDING"
+            }
+        });
+        if (!newSchool || newSchool===null) return "ERROR_CLIENT_CREATION";
+        return newSchool.id;
     }
     catch(error:any) {
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function addNewClientSchool(clientId:string, schoolId:string) : Promise<string> {
+        const functionName = "addClientSchool - ";
+    try{
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const createdClientSchool = await prisma.sgs_client_ecole.create({
+            data : {
+                client_id       : clientId,
+                ecole_id        : schoolId,
+                create_date     : new Date(Date.now()),
+                created_by      : "SAGES_ONBOARDING"
+            }
+        });
+        if (!createdClientSchool || createdClientSchool === null) return "ERROR_CLIENT_ECOLE_CREATION";
+        return createdClientSchool.id;
+    }
+    catch(error:any){
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function registerNewUser(requestId:string) : Promise<string>{
+    const functionName = "registerUser - ";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        //retrieve a confirmed and not completed request
+        const validRequest = await prisma.sgs_request.findUnique({
+            where : {
+                id                  : requestId,
+                request_confirmed   : true,
+                status              : 'E'
+            }
+        });
+        if (!validRequest || validRequest===null) return "REQUEST_NOT_VALID";
+
+        //create the admin user
+        const newUser = await prisma.sgs_user.create({
+            data : {
+                user_name     : validRequest.requester_email,
+                full_name     : validRequest.requester_full_name,
+                email         : validRequest.requester_email,
+                phone         : validRequest.requester_phone,
+                create_date   : new Date(Date.now()),
+                created_by    : "SAGES_ONBOARDING"
+            }
+        });
+        if (!newUser || newUser===null) return "ERROR_USER_CREATION";
+        return newUser.id;
+    }
+    catch(error:any) {
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
         throw new Error(ErrorOrigin + functionName + error.message);
     }
 }
 
 /*
+export async function addAdminRoleToNewUser(userId:string, roleCode:string) : Promise<string> {
+        const functionName = "addAdminRoleToNewUser - ";
+    try{
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const createdClientSchool = await prisma.sgs_client_ecole.create({
+            data : {
+                client_id       : clientId,
+                ecole_id        : schoolId,
+                create_date     : new Date(Date.now()),
+                created_by      : "SAGES_ONBOARDING"
+
+
+            }
+        });
+        if (!createdClientSchool || createdClientSchool === null) return "ERROR_CLIENT_ECOLE_CREATION";
+        return createdClientSchool.id;
+    }
+    catch(error:any){
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.mssage
+        });
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+*/
+
+
+
+
+
+/*
 await sendEmail({
             name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
             email : process.env.STMP_USER,
-            message : "Voir détails de l'erreur ci-dessous\n\n" + error.mssage 
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message 
         });
 */

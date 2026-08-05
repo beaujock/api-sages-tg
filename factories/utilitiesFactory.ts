@@ -1,7 +1,4 @@
 
-
-'use server';
-
 import nodemailer from 'nodemailer';
 
 export async function sendEmail(formData:any) {
@@ -46,3 +43,47 @@ export async function generateCode(length : number) {
   
   return result;
 }
+
+export async function generatePassword(minLength = 8) {
+  // Force length to be at least 3 to fit all required categories
+  const length = Math.max(minLength, 3);
+
+
+  const upperSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numberSet = '0123456789';
+  const specialSet = ['!', '$', '%']; // Specified special characters
+  const lowerSet = 'abcdefghijklmnopqrstuvwxyz';
+
+
+  // Combine all character pools for filler characters
+  const allChars = upperSet + numberSet + specialSet.join('') + lowerSet;
+
+
+  // Helper to pick a random item from a string or array
+  const getRandom = (source:any) => source[Math.floor(Math.random() * source.length)];
+
+
+  // 1. Guarantee at least 1 of each required type
+  const passwordChars = [
+    getRandom(upperSet),
+    getRandom(numberSet),
+    getRandom(specialSet)
+  ];
+
+
+  // 2. Fill the remaining slots with random characters from the combined pool
+  for (let i = passwordChars.length; i < length; i++) {
+    passwordChars.push(getRandom(allChars));
+  }
+
+
+  // 3. Shuffle the array so guaranteed characters aren't always at the beginning
+  for (let i = passwordChars.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+  }
+
+
+  return passwordChars.join('');
+}
+

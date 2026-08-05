@@ -83,18 +83,18 @@ model sgs_client {
   created_by               String                   @db.VarChar(32)
   change_date              DateTime?                @db.Timestamptz(6)
   changed_by               String?                  @db.VarChar(32)
-  tenant_id                String                   @db.Uuid
   lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
   tg_systeme_scolaire      tg_systeme_scolaire      @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_client_ecole         sgs_client_ecole[]
   sgs_client_module        sgs_client_module[]
   sgs_client_setting       sgs_client_setting[]
+  sgs_client_user          sgs_client_user[]
 }
 
 model sgs_client_ecole {
   id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   client_id                String                   @db.Uuid
-  ecole_id                 String?                  @db.Uuid
+  ecole_id                 String                   @db.Uuid
   active                   Boolean                  @default(true)
   status                   String                   @default("A") @db.VarChar(1)
   notes                    String?                  @db.VarChar
@@ -102,9 +102,8 @@ model sgs_client_ecole {
   created_by               String                   @db.VarChar(32)
   change_date              DateTime?                @db.Timestamptz(6)
   changed_by               String?                  @db.VarChar(32)
-  tenant_id                String                   @db.Uuid
   sgs_client               sgs_client               @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sgs_ecole                sgs_ecole?               @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_ecole                sgs_ecole                @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -119,7 +118,6 @@ model sgs_client_module {
   created_by               String                   @db.VarChar(32)
   change_date              DateTime?                @db.Timestamptz(6)
   changed_by               String?                  @db.VarChar(32)
-  tenant_id                String                   @db.Uuid
   sgs_client               sgs_client               @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_module                tg_module                @relation(fields: [module_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
@@ -139,14 +137,13 @@ model sgs_client_setting {
   created_by          String     @db.VarChar(32)
   change_date         DateTime?  @db.Timestamptz(6)
   changed_by          String?    @db.VarChar(32)
-  tenant_id           String     @db.Uuid
   sgs_client          sgs_client @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model sgs_ecole {
   id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   full_name              String             @db.VarChar(128)
-  short_name             String             @db.VarChar(64)
+  short_name             String?            @db.VarChar(64)
   establishment_date     DateTime?          @db.Date
   code                   String             @unique @db.VarChar(32)
   primary_contact_name   String?            @db.VarChar(128)
@@ -160,7 +157,6 @@ model sgs_ecole {
   created_by             String             @db.VarChar(32)
   change_date            DateTime?          @db.Timestamptz(6)
   changed_by             String?            @db.VarChar(32)
-  tenant_id              String             @db.Uuid
   sgs_client_ecole       sgs_client_ecole[]
   sgs_salle_classe       sgs_salle_classe[]
 }
@@ -181,7 +177,6 @@ model sgs_enseignant {
   created_by               String                     @db.VarChar(32)
   change_date              DateTime?                  @db.Timestamptz(6)
   changed_by               String?                    @db.VarChar(32)
-  tenant_id                String                     @db.Uuid
   lkp_gender               lkp_gender                 @relation(fields: [gender], references: [code], onDelete: NoAction, onUpdate: NoAction)
   sgs_portfolio_enseignant sgs_portfolio_enseignant[]
 }
@@ -197,7 +192,6 @@ model sgs_portfolio_enseignant {
   created_by               String                   @db.VarChar(32)
   change_date              DateTime?                @db.Timestamptz(6)
   changed_by               String?                  @db.VarChar(32)
-  tenant_id                String                   @db.Uuid
   sgs_enseignant           sgs_enseignant?          @relation(fields: [enseignant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_salle_classe_matiere sgs_salle_classe_matiere @relation(fields: [salle_classe_matiere_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -214,7 +208,6 @@ model sgs_salle_classe {
   created_by               String                     @db.VarChar(32)
   change_date              DateTime?                  @db.Timestamptz(6)
   changed_by               String?                    @db.VarChar(32)
-  tenant_id                String                     @db.Uuid
   tg_annee_scolaire        tg_annee_scolaire          @relation(fields: [annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_classe                tg_classe                  @relation(fields: [classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_ecole                sgs_ecole                  @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -232,29 +225,30 @@ model sgs_salle_classe_matiere {
   created_by               String                     @db.VarChar(32)
   change_date              DateTime?                  @db.Timestamptz(6)
   changed_by               String?                    @db.VarChar(32)
-  tenant_id                String                     @db.Uuid
   sgs_portfolio_enseignant sgs_portfolio_enseignant[]
   tg_matiere               tg_matiere                 @relation(fields: [matiere_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_salle_classe         sgs_salle_classe           @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model sgs_user {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_name            String    @unique @db.VarChar(32)
-  full_name            String    @db.VarChar(128)
-  email                String    @unique @db.VarChar(64)
-  phone                String?   @db.VarChar(32)
-  pwd_hash             String?   @db.VarChar
-  salt                 String?   @db.VarChar
-  token                String?   @db.VarChar
-  token_effective_time DateTime? @db.Timestamptz(6)
-  token_expiry_time    DateTime? @db.Timestamptz(6)
-  notes                String?   @db.VarChar
-  create_date          DateTime  @db.Timestamptz(6)
-  created_by           String    @db.VarChar(64)
-  change_date          DateTime? @db.Timestamptz(6)
-  changed_by           String?   @db.VarChar(64)
-  tenant_id            String    @db.Uuid
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_name            String              @unique @db.VarChar(32)
+  full_name            String              @db.VarChar(128)
+  email                String              @unique @db.VarChar(64)
+  phone                String?             @db.VarChar(32)
+  pwd_hash             String?             @db.VarChar
+  salt                 String?             @db.VarChar
+  token                String?             @db.VarChar
+  token_effective_time DateTime?           @db.Timestamptz(6)
+  token_expiry_time    DateTime?           @db.Timestamptz(6)
+  notes                String?             @db.VarChar
+  create_date          DateTime            @db.Timestamptz(6)
+  created_by           String              @db.VarChar(32)
+  change_date          DateTime?           @db.Timestamptz(6)
+  changed_by           String?             @db.VarChar(32)
+  sgs_client_user      sgs_client_user[]
+  sgs_user_resource    sgs_user_resource[]
+  sgs_user_role        sgs_user_role[]
 }
 
 model tg_annee_scolaire {
@@ -347,15 +341,16 @@ model tg_niveau {
 }
 
 model tg_role {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String    @db.VarChar(64)
-  code        String    @db.VarChar(32)
-  description String?   @db.VarChar(256)
-  notes       String?   @db.VarChar
-  create_date DateTime  @db.Timestamptz(6)
-  created_by  String    @db.VarChar(32)
-  change_date DateTime? @db.Timestamptz(6)
-  changed_by  String?   @db.VarChar(32)
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String          @db.VarChar(64)
+  code          String          @db.VarChar(32)
+  description   String?         @db.VarChar(256)
+  notes         String?         @db.VarChar
+  create_date   DateTime        @db.Timestamptz(6)
+  created_by    String          @db.VarChar(32)
+  change_date   DateTime?       @db.Timestamptz(6)
+  changed_by    String?         @db.VarChar(32)
+  sgs_user_role sgs_user_role[]
 }
 
 model tg_serie {
@@ -429,11 +424,11 @@ model sgs_request {
   request_date           DateTime               @default(dbgenerated("CURRENT_DATE")) @db.Date
   request_code           String?                @db.VarChar(6)
   request_confirmed      Boolean                @default(false)
-  requester_full_name    String?                @db.VarChar(128)
+  requester_full_name    String                 @db.VarChar(128)
   requester_email        String                 @db.VarChar(64)
   requester_phone        String?                @db.VarChar(32)
   ecole_name             String                 @db.VarChar(128)
-  ecole_code             String?                @db.VarChar(32)
+  ecole_code             String                 @default("NEW_ECOLE") @db.VarChar(32)
   notes                  String?                @db.VarChar
   create_date            DateTime               @db.Timestamptz(6)
   created_by             String                 @db.VarChar(32)
@@ -441,4 +436,76 @@ model sgs_request {
   changed_by             String?                @db.VarChar(32)
   sgs_onboarding         sgs_onboarding[]
   lkp_sgs_request_status lkp_sgs_request_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model lkp_sgs_type_resource {
+  code              String              @id @db.VarChar(16)
+  display_value     String              @db.VarChar(32)
+  description       String?             @db.VarChar(64)
+  create_date       DateTime            @db.Timestamptz(6)
+  created_by        String              @db.VarChar(32)
+  change_date       DateTime?           @db.Timestamptz(6)
+  changed_by        String?             @db.VarChar(32)
+  sgs_user_resource sgs_user_resource[]
+}
+
+model lkp_user_access_status {
+  code              String              @id @db.VarChar(1)
+  display_value     String              @db.VarChar(32)
+  description       String?             @db.VarChar(64)
+  create_date       DateTime            @db.Timestamptz(6)
+  created_by        String              @db.VarChar(32)
+  change_date       DateTime?           @db.Timestamptz(6)
+  changed_by        String?             @db.VarChar(32)
+  sgs_client_user   sgs_client_user[]
+  sgs_user_resource sgs_user_resource[]
+  sgs_user_role     sgs_user_role[]
+}
+
+model sgs_client_user {
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                String                 @db.Uuid
+  client_id              String                 @db.Uuid
+  status                 String                 @default("A") @db.VarChar(1)
+  notes                  String?                @db.VarChar
+  create_date            DateTime               @db.Timestamptz(6)
+  created_by             String                 @db.VarChar(32)
+  change_date            DateTime?              @db.Timestamptz(6)
+  changed_by             String?                @db.VarChar(32)
+  sgs_client             sgs_client             @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_user_access_status lkp_user_access_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_user               sgs_user               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_user_resource {
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                String                 @db.Uuid
+  type_resource          String                 @db.VarChar(16)
+  resource_id            String                 @db.Uuid
+  status                 String                 @default("A") @db.VarChar(1)
+  notes                  String?                @db.VarChar
+  create_date            DateTime               @db.Timestamptz(6)
+  created_by             String                 @db.VarChar(32)
+  change_date            DateTime?              @db.Timestamptz(6)
+  changed_by             String?                @db.VarChar(32)
+  lkp_user_access_status lkp_user_access_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  lkp_sgs_type_resource  lkp_sgs_type_resource  @relation(fields: [type_resource], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_user               sgs_user               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_user_role {
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_id                String                 @db.Uuid
+  user_id                String                 @db.Uuid
+  status                 String                 @default("A") @db.VarChar(1)
+  effective_date         DateTime               @db.Date
+  expiry_date            DateTime?              @db.Date
+  notes                  String?                @db.VarChar
+  create_date            DateTime               @db.Timestamptz(6)
+  created_by             String                 @db.VarChar(32)
+  change_date            DateTime?              @db.Timestamptz(6)
+  changed_by             String?                @db.VarChar(32)
+  tg_role                tg_role                @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_user_access_status lkp_user_access_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction, map: "sgs_user_role_ststus_fkey")
+  sgs_user               sgs_user               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
