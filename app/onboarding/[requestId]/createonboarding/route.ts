@@ -7,7 +7,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
         const requestId = (await params).requestId;
         if(!requestId) return NextResponse.json("Requête invalide (identification de la requête)", { status: 400 });
         const createdOnboarding = await createOnboarding(requestId);
-        if (createdOnboarding.includes("ERROR")) return NextResponse.json({onboardingMessage : createdOnboarding});
+        if (createdOnboarding.includes("ERROR")) return NextResponse.json({onboardingMessage : createdOnboarding}, { status: 400 });
         return NextResponse.json({onboardingId : createdOnboarding}, { status: 200 });
     }
     catch(error:any) {

@@ -151,6 +151,10 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const onboarding = await getOnboardingById(onboardingId);
+        if (onboarding===null) return "ERROR_INVALID_ONBOARDING";
+        if (onboarding.status === 'F') return "ERROR_COMPLETED_ONBOARDING";
+        if (onboarding.status === 'E') return "ERROR_ONBOARDING_ALREADY_STARTED";
         const tgSteps = await prisma.tg_onboarding_steps.findMany();
         if (tgSteps.length === 0) return "ERROR_NO_STEPS_CREATED";
         for (const tgStep of tgSteps) {
@@ -161,6 +165,18 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
                     step_order      : tgStep.step_order,
                     create_date     : new Date(Date.now()),
                     created_by      : "SAGES_ONBOARDING"          
+                }
+            });
+            const notes = (onboarding.notes === null)?(""):(onboarding.notes) + "Step : " + 
+            tgStep.step_order + " - " + tgStep.main_name + "..." + tgStep.sub_name + " - Created\n";
+            await prisma.sgs_onboarding.update({
+                where : {
+                    id : onboardingId
+                },
+                data : {
+                    notes : notes,
+                    change_date : new Date(Date.now()),
+                    changed_by : "SAGES_ONBOARDING" 
                 }
             });
         }

@@ -1,4 +1,4 @@
-import { createRequestForOnboarding, updateOnboardingRequestCode } from "@/factories/onboardingFactory";
+import { createRequestForOnboarding } from "@/factories/onboardingFactory";
 import { generateCode, sendEmail } from "@/factories/utilitiesFactory";
 import { SGSCreateRequestDO } from "@/types/ONBOARDING/onboardingTypes";
 import { NextRequest, NextResponse } from "next/server";
