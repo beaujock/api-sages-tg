@@ -40,10 +40,31 @@ export async function getOnboardingById(onboardingId:string) : Promise<sgs_onboa
     }
 }
 
-export async function createRequestForOnboarding(requestData : SGSCreateRequestDO) : Promise<sgs_request|null> {
-    const functionName = "createRequestForOnboarding - ";
+export async function getOnboardingFromRequest(requestId:string) : Promise<sgs_onboarding[]> {
+    const functionName = "getOnboardingById - ";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const onboardings = await prisma.sgs_onboarding.findMany({
+            where : {
+                request_id: requestId
+            }
+        });
+
+        return onboardings;
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function createRequestForOnboarding(requestData : SGSCreateRequestDO) : Promise<sgs_request|null> {
+    const functionName = "createRequestForOnboarding - ";
+    //console.log("Entering function : createRequestForOnboarding");
+    //console.log("Request Data : ", requestData);
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        console.log("Connected ?",isConnected);
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const request = await prisma.sgs_request.create({
             data : {
@@ -67,6 +88,61 @@ export async function createRequestForOnboarding(requestData : SGSCreateRequestD
     }
     catch(error:any) {
         throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function isRequestReadyForOnboarding(requestId:string) : Promise<boolean> {
+     const functionName = "isRequestReadyForOnboarding - ";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const theRequest = await prisma.sgs_request.findUnique({
+            where : {
+                id : requestId,
+                request_confirmed : true,
+                status : 'E'
+            }
+        });
+        if (theRequest === null) return false;
+        return true;
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function createOnboarding(requestId:string) : Promise<string> {
+    const functionName = "createRequestForOnboarding - ";
+    try {
+        if (requestId===null || !requestId) return "ERROR_INVALID_REQUEST";
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+
+        const confirmedRequest = await isRequestReadyForOnboarding(requestId);
+        if (!confirmedRequest) return "ERROR_REQUEST_NOT_READY_FOR_ONBOARDING";
+        const onboardingsFromRequest = await  getOnboardingFromRequest(requestId);
+        if (onboardingsFromRequest.length>0) return "ERROR_REQUEST_HAS_ONBOARDING"
+        const createdOnboarding = await prisma.sgs_onboarding.create({
+            data : {
+                request_id             : requestId,
+                status                 : 'C',
+                start_date_time        : new Date(Date.now()),
+                end_date_time          : null,
+                notes                  : "Début de l'intégration a SAGES\n",
+                create_date            : new Date(Date.now()),
+                created_by             : "SAGES_ADMIN"
+            }
+        });
+        if (createdOnboarding === null) return "ERROR_CREATION_ONBOARDING";
+        return createdOnboarding.id;
+    }
+    catch(error:any) {
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        return "ERROR_CREATION_ONBOARDING_FATAL";
     }
 }
 
@@ -139,7 +215,7 @@ export async function confirmOnboardingRequestCode(requestId:string, code:string
                 status : 'E'
             }
         });
-        return "CONFIRMED";
+        return requestId;
     }
     catch(error:any) {
         await sendEmail({
@@ -148,41 +224,6 @@ export async function confirmOnboardingRequestCode(requestId:string, code:string
             message : "Voir détails de l'erreur ci-dessous\n\n" + error.message 
         });
         return "ERROR_CONFIRMATION_REQUEST_FATAL";
-    }
-}
-
-export async function createOnboarding(requestId:string) : Promise<string> {
-    const functionName = "createRequestForOnboarding - ";
-    try {
-        if (requestId===null || !requestId) return "ERROR_INVALID_REQUEST";
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const request = await getOnboardingRequestById(requestId);
-        if (!request || request===null) return "ERROR_REQUEST_NOT_FOUND";
-        if (!request.request_confirmed || request.request_code ==='D') return "ERROR_REQUEST_NOT_CONFIRMED";
-        if (request.request_code === 'I') return "ERROR_CLIENT_ALREADY_ONBOARDED";
-        
-        const createdOnboarding = await prisma.sgs_onboarding.create({
-            data : {
-                request_id             : request.id,
-                status                 : 'C',
-                start_date_time        : new Date(Date.now()),
-                end_date_time          : null,
-                notes                  : "Début de l'intégration a SAGES\n",
-                create_date            : new Date(Date.now()),
-                created_by             : "SAGES_ADMIN"
-            }
-        });
-        if (createdOnboarding === null) return "ERROR_CREATION_ONBOARDING";
-        return createdOnboarding.id;
-    }
-    catch(error:any) {
-        await sendEmail({
-            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
-            email : process.env.STMP_USER,
-            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
-        });
-        return "ERROR_CREATION_ONBOARDING_FATAL";
     }
 }
 

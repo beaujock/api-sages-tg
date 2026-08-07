@@ -1,4 +1,4 @@
-import { confirmOnboardingRequestCode, createOnboarding, createOnboardingSteps, getOnboardingById } from "@/factories/onboardingFactory";
+import { confirmOnboardingRequestCode, getOnboardingRequestById } from "@/factories/onboardingFactory";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -11,8 +11,8 @@ export async function PATCH(request:NextRequest, { params }: { params: Promise<{
         if(!requestCode) return NextResponse.json("Requête invalide (pas de code)", { status: 400 });
         const requestConfirmationResult = await confirmOnboardingRequestCode(requestId, requestCode);
         if (requestConfirmationResult.includes("ERROR")) return NextResponse.json({confirmationMessage : requestConfirmationResult});
-        const theRequest = await getOnboardingById(requestConfirmationResult);
-        return NextResponse.json({confirmationMessage : requestConfirmationResult, request : theRequest});
+        const theRequest = await getOnboardingRequestById(requestConfirmationResult);
+        return NextResponse.json({updatedRequest : theRequest}, { status: 200 });
 
         /*
         const createOnboardingResult = await createOnboarding(requestId);
