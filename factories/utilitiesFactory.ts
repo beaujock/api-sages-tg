@@ -1,5 +1,8 @@
 
 import nodemailer from 'nodemailer';
+import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
+
+const ErrorOrigin = "utilistiesFactory"
 
 export async function sendEmail(formData:any) {
   const name = formData.name;
@@ -44,7 +47,7 @@ export async function generateCode(length : number) {
   return result;
 }
 
-export async function generatePassword(minLength = 8) {
+export async function generatePassword(minLength:number = 8) {
   // Force length to be at least 3 to fit all required categories
   const length = Math.max(minLength, 3);
 
@@ -85,5 +88,38 @@ export async function generatePassword(minLength = 8) {
 
 
   return passwordChars.join('');
+}
+
+export async function logError(errorType:string, title:string, origin:string, details:string, sendingEmail:boolean = false) {
+  const functionName = "logError"
+  try {
+          const isConnected = await verifyAndSetPrismaConnection();
+          if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+          const request = await prisma.sgs_errors_log.create({
+            data : {
+              type      : errorType,
+              title     : title,
+              origin    : origin,
+              details   : details,
+              create_date         : new Date(Date.now()),
+              created_by          : "SAGES_ADMIN"
+
+            }
+          });
+          if (sendingEmail) {
+            await sendEmail({
+                      name : title + " - " + origin,
+                      email : process.env.STMP_USER,
+                      message : "Voir détails de l'erreur ci-dessous\n\n\n" + details
+                  });
+          }
+      }
+      catch(error:any) {
+          await sendEmail({
+                      name : "Erreur - Application SAGES-TG - " + ErrorOrigin + " - " + functionName,
+                      email : process.env.STMP_USER,
+                      message : "Voir détails de l'erreur ci-dessous\n\n" + error.message 
+                  });
+      }
 }
 

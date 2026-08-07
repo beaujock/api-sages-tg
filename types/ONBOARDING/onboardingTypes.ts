@@ -6,6 +6,8 @@ export type SGSCreateRequestDO = {
     requester_full_name    : string;
     requester_email        : string;
     requester_phone        : string|null;
+    client_full_name       : string;
+    client_code            : string;
     ecole_name             : string;
     ecole_code             : string;
     notes                  : string|null;

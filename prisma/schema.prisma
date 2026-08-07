@@ -404,7 +404,7 @@ model sgs_onboarding_step {
   id                             String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   onboarding_id                  String                         @db.Uuid
   status                         String                         @default("A") @db.VarChar(1)
-  name                           String                         @db.VarChar(64)
+  name                           String                         @db.VarChar(128)
   step_order                     Int
   code_to_run                    String?                        @db.VarChar
   start_date_time                DateTime?                      @db.Timestamp(6)
@@ -434,6 +434,8 @@ model sgs_request {
   created_by             String                 @db.VarChar(32)
   change_date            DateTime?              @db.Timestamptz(6)
   changed_by             String?                @db.VarChar(32)
+  client_full_name       String                 @db.VarChar(128)
+  client_code            String                 @db.VarChar(16)
   sgs_onboarding         sgs_onboarding[]
   lkp_sgs_request_status lkp_sgs_request_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -508,4 +510,41 @@ model sgs_user_role {
   tg_role                tg_role                @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   lkp_user_access_status lkp_user_access_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction, map: "sgs_user_role_ststus_fkey")
   sgs_user               sgs_user               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tg_onboarding_steps {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  main_name   String    @db.VarChar(64)
+  sub_name    String    @db.VarChar(64)
+  step_order  Int
+  notes       String?   @db.VarChar
+  create_date DateTime  @db.Timestamptz(6)
+  created_by  String    @db.VarChar(32)
+  change_date DateTime? @db.Timestamptz(6)
+  changed_by  String?   @db.VarChar(32)
+}
+
+model lkp_sgs_type_error {
+  code           String           @id @db.VarChar(1)
+  display_value  String           @db.VarChar(32)
+  description    String?          @db.VarChar(64)
+  create_date    DateTime         @db.Timestamptz(6)
+  created_by     String           @db.VarChar(32)
+  change_date    DateTime?        @db.Timestamptz(6)
+  changed_by     String?          @db.VarChar(32)
+  sgs_errors_log sgs_errors_log[]
+}
+
+model sgs_errors_log {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type               String             @default("X") @db.VarChar(1)
+  title              String?            @db.VarChar(64)
+  origin             String?            @db.VarChar
+  details            String?            @db.VarChar
+  notes              String?            @db.VarChar
+  create_date        DateTime           @db.Timestamptz(6)
+  created_by         String             @db.VarChar(32)
+  change_date        DateTime?          @db.Timestamptz(6)
+  changed_by         String?            @db.VarChar(32)
+  lkp_sgs_type_error lkp_sgs_type_error @relation(fields: [type], references: [code], onDelete: NoAction, onUpdate: NoAction)
 }
