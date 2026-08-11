@@ -1,13 +1,22 @@
-import { sgs_onboarding } from "@/lib/generated/prisma/client";
+import { sgs_client, sgs_onboarding } from "@/lib/generated/prisma/client";
 import { sgs_request } from "@/lib/generated/prisma/client";
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { SGSCreateRequestDO } from "@/types/ONBOARDING/onboardingTypes";
 import { sendEmail } from "./utilitiesFactory";
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const ErrorOrigin = "onboardingFactory - ";
 
-export async function getOnboardingRequestById(requestId:string) : Promise<sgs_request|null> {
-    const functionName = "getOnboardingRequestById - ";
+type Progress = {
+    inProgress : boolean,
+    requestNotes : string|null,
+    onboardingNotes : string|null,
+    message : string
+}
+
+export async function getRequestById(requestId:string) : Promise<sgs_request|null> {
+    const functionName = "getRequestById - ";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -40,6 +49,23 @@ export async function getOnboardingById(onboardingId:string) : Promise<sgs_onboa
     }
 }
 
+export async function getClientById(clientId:string) : Promise<sgs_client|null> {
+    const functionName = "getClientById - ";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const onboarding = await prisma.sgs_client.findUnique({
+            where : {
+                id : clientId
+            }
+        });
+        return onboarding;
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
 export async function getOnboardingFromRequest(requestId:string) : Promise<sgs_onboarding[]> {
     const functionName = "getOnboardingById - ";
     try {
@@ -52,6 +78,77 @@ export async function getOnboardingFromRequest(requestId:string) : Promise<sgs_o
         });
 
         return onboardings;
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function getModuleByCode(moduleCode:string) : Promise<string> {
+    const functionName = "getModuleByCode - ";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const module = await prisma.tg_module.findUnique({
+            where : {
+                code: moduleCode
+            }
+        });
+        if (!module || module===null) return "ERROR_MODULE_NOT_FOUND"
+        return module.id;
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function getRequestAndOnboardingProgress(requestId:string, onboardingId:string) : Promise<Progress> {
+    const functionName = "getRequestAndOnboardingProgress - "
+    try {
+        let message = "Request and onboarding in progress";
+        let requestNotes = "";
+        let onboardingNotes = "";
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        
+        const theRequest = await getRequestById(requestId);
+        if (!theRequest || theRequest===null) message =  "ERROR_INVALID_REQUEST";
+        else {
+            if (!theRequest.request_confirmed || theRequest.status === 'D') message =  "ERROR_REQUEST_NOT_CONFIRMED";
+            if (theRequest.status === 'I') message =  "ERROR_REQUEST_INTEGRATED";
+            if (theRequest.status !== 'E') message =  "ERROR_REQUEST_STATUS";
+            requestNotes = (theRequest.notes === null)?(""):(theRequest.notes);
+
+            const onboarding = await getOnboardingById(onboardingId);
+            if (!onboarding || onboarding===null) message =  "ERROR_INVALID_ONBOARDING";
+            else {
+                if (onboarding.status === 'F') message =  "ERROR_ONBOARDING_ALREADY_COMPLETED";
+                if (onboarding.status === 'C') message =  "ERROR_ONBOARDING_NOT_IN_PROGRESS";
+                if (onboarding.status !== 'E') message =  "ERROR_ONBOARDING_STATUS";
+                onboardingNotes = (onboarding.notes === null)?(""):(onboarding.notes);
+            }
+        };
+        if (message.includes("ERROR")) return {inProgress : false, requestNotes : requestNotes, onboardingNotes : onboardingNotes, message : message};
+        return {inProgress : true, requestNotes : requestNotes, onboardingNotes : onboardingNotes, message : message};
+
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function isOnboardingStepsCreated(onboardingId:string) : Promise<boolean> {
+    const functionName = "isOnboardingStepsCreated - ";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const steps = await prisma.sgs_onboarding_step.findMany({
+            where : {
+                onboarding_id : onboardingId
+            }
+        });
+        if (steps.length === 0) return false;
+        return true;
     }
     catch(error:any) {
         throw new Error(ErrorOrigin + functionName + error.message);
@@ -92,7 +189,7 @@ export async function createRequestForOnboarding(requestData : SGSCreateRequestD
 }
 
 export async function isRequestReadyForOnboarding(requestId:string) : Promise<boolean> {
-     const functionName = "isRequestReadyForOnboarding - ";
+    const functionName = "isRequestReadyForOnboarding - ";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -155,8 +252,11 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
         if (onboarding===null) return "ERROR_INVALID_ONBOARDING";
         if (onboarding.status === 'F') return "ERROR_COMPLETED_ONBOARDING";
         if (onboarding.status === 'E') return "ERROR_ONBOARDING_ALREADY_STARTED";
+        const stepsCreated = await isOnboardingStepsCreated(onboardingId);
+        if (stepsCreated) return "ERROR_ONBOARDING_STEPS_ALREADY_CREATED";
         const tgSteps = await prisma.tg_onboarding_steps.findMany();
         if (tgSteps.length === 0) return "ERROR_NO_STEPS_CREATED";
+        let notes:string ="\nLes étapes de l'intégration\n";
         for (const tgStep of tgSteps) {
             await prisma.sgs_onboarding_step.create({
                 data : {
@@ -167,20 +267,21 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
                     created_by      : "SAGES_ONBOARDING"          
                 }
             });
-            const notes = (onboarding.notes === null)?(""):(onboarding.notes) + "Step : " + 
-            tgStep.step_order + " - " + tgStep.main_name + "..." + tgStep.sub_name + " - Created\n";
-            await prisma.sgs_onboarding.update({
+            notes = notes + "Step : " + tgStep.step_order + " - " + tgStep.main_name + "..." + tgStep.sub_name + "\n";
+        }
+        const updatedNotes = onboarding.notes + notes;
+        await prisma.sgs_onboarding.update({
                 where : {
                     id : onboardingId
                 },
                 data : {
-                    notes : notes,
+                    notes : updatedNotes,
+                    status : 'E',
                     change_date : new Date(Date.now()),
                     changed_by : "SAGES_ONBOARDING" 
                 }
             });
-        }
-        return "ONBOARDING_STEPS_CREATED";
+        return "ONBOARDING_STEPS_CREATED" + notes;
     }
     catch(error:any) {
         await sendEmail({
@@ -218,7 +319,7 @@ export async function confirmOnboardingRequestCode(requestId:string, code:string
         if (requestId===null || !requestId) return "ERROR_INVALID_REQUEST";
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const request = await getOnboardingRequestById(requestId);
+        const request = await getRequestById(requestId);
         if (request===null) return "ERROR_REQUEST_NOT_FOUND";
         if (request.request_code !== code) return "ERROR_INVALID_CODE";
         if (request.request_confirmed) return "ERROR_ALREADY_CONFIRMED";
@@ -243,35 +344,93 @@ export async function confirmOnboardingRequestCode(requestId:string, code:string
     }
 }
 
-export async function registerNewClient(requestId:string) : Promise<string> {
-    //Step 1
-    const functionName = "registerClient - ";
+export async function updateOnboardingStep(stepOrder:number, onboardingId:string, notes:string) : Promise<string> {
+    const functionName = "updateOnboardingStep - ";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-
-        const validRequest = await prisma.sgs_request.findUnique({
-            where : {
-                id                  : requestId,
-                request_confirmed   : true,
-                status              : 'E'
+        const step = await prisma.sgs_onboarding_step.findMany({
+             where : {
+                onboarding_id : onboardingId,
+                step_order : stepOrder
             }
         });
-        if (!validRequest || validRequest===null) return "ERROR_REQUEST_NOT_VALID";
+        if (step.length === 0) return "ERROR_STEP_NOT_FOUND";
+        if (step.length >1) return "ERROR_TOO_MANY_STEPS_FOUND";
+        const updateStep = await prisma.sgs_onboarding_step.update({
+            where : {
+                id : step[0].id
+            },
+            data : {
+                status          : 'C',
+                change_date     : new Date(Date.now()),
+                changed_by      : "SAGES_ONBOARDING"
+            }
+        });
+        if (!updateStep || updateStep === null) return "ERROR_STEP_NOT_UPDATED";
+        const today = new Date(Date.now());
+        const updatedOnboarding = await prisma.sgs_onboarding.update({
+            where : {
+                id : onboardingId
+            },
+            data : {
+                notes          : notes + "\n" + step[0].name + " =======> Complèté le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr }),
+                change_date     : today,
+                changed_by      : "SAGES_ONBOARDING"
+            }
+        });
+        if (!updatedOnboarding || updatedOnboarding === null) return "ERROR_ONBOARDING_NOTES_NOT_UPDATED";
+        return "STEP_AND_ONBOARDING_UPDATED"
+    }
+    catch(error:any) {
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        return "ERROR_ONBOARDING_STEP_UPDATES_FATAL";
+    }
+}
+
+export async function registerNewClient(requestId:string, onboardingId:string) : Promise<string> {
+    //Step 1
+    const functionName = "registerNewClient - ";
+    try {
+        const step = 1;
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        
+        const theRequest = await getRequestById(requestId);
+        if (!theRequest || theRequest===null) return "ERROR_INVALID_REQUEST";
+        if (!theRequest.request_confirmed || theRequest.status === 'D') return "ERROR_REQUEST_NOT_CONFIRMED";
+        if (theRequest.status === 'I') return "ERROR_REQUEST_INTEGRATED";
+        if (theRequest.status !== 'E') return "ERROR_REQUEST_STATUS";
+
+        const onboarding = await getOnboardingById(onboardingId);
+        if (!onboarding || onboarding===null) return "ERROR_INVALID_ONBOARDING";
+        if (onboarding.status === 'F') return "ERROR_ONBOARDING_ALREADY_COMPLETED";
+        if (onboarding.status === 'C') return "ERROR_ONBOARDING_NOT_IN_PROGRESS";
+        if (onboarding.status !== 'E') return "ERROR_ONBOARDING_STATUS";
+        
 
         //create the client
         const systemScolaireId = process.env.SYSTEM_SCOLAIRE_ID;
-        if (systemScolaireId == null || (typeof systemScolaireId === 'string' && systemScolaireId.trim() === '')) return "SYSTEM_SCOLAIRE_NOT_FOUND";
+        if (systemScolaireId == null || (typeof systemScolaireId === 'string' && systemScolaireId.trim() === '')) return "ERROR_SYSTEM_SCOLAIRE_NOT_FOUND";
         const newClient = await prisma.sgs_client.create({
             data : {
                 systeme_scolaire_id     : systemScolaireId,
-                legal_name              : validRequest.client_full_name,
-                code                    : validRequest.client_code,
+                legal_name              : theRequest.client_full_name,
+                code                    : theRequest.client_code,
                 create_date             : new Date(Date.now()),
                 created_by              : "SAGES_ONBOARDING"
             }
         });
         if (!newClient || newClient===null) return "ERROR_CLIENT_CREATION";
+        //update the step
+        const today = new Date(Date.now());
+        //const notes = onboarding.notes + "\nCréation du client .... Complètée .... Le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr });
+        const updateOnboardingAndStep = await updateOnboardingStep(1,onboarding.id,(onboarding.notes===null)?(""):(onboarding.notes));
+        if (updateOnboardingAndStep.includes("ERROR")) return "ERROR_CLIENT_CREATED_ONBOARDING_STEP_NOT_UPDATED";
         return newClient.id;
     }
     catch(error:any) {
@@ -309,34 +468,27 @@ export async function addNewClientSettings(clientId:string) : Promise<string> {
     }
 }
 
-export async function addNewClientBaseModule(clientId:string, moduleId:string) : Promise<string> {
-    const functionName = "addClientBaseModules - ";
-    try{
+export async function isModuleAddedToClient(clientId:string, moduleId:string) : Promise<boolean> {
+    const functionName = "isModuleAddedToClient - ";
+    try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const createdClientModule = await prisma.sgs_client_module.create({
-            data : {
-                client_id           : clientId,
-                module_id           : moduleId,
-                create_date         : new Date(Date.now()),
-                created_by          : "SAGES_ONBOARDING"
+        const clientModules = await prisma.sgs_client_module.findMany({
+            where : {
+                client_id : clientId,
+                module_id : moduleId
             }
         });
-        if (!createdClientModule || createdClientModule===null) return "ERROR_CLIENT_MODULE_CREATION (" + moduleId + ")";
-        return createdClientModule.id;
+        if (clientModules.length === 0) return false;
+        return true;
     }
-    catch(error:any){
-        await sendEmail({
-            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
-            email : process.env.STMP_USER,
-            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
-        });
+    catch(error:any) {
         throw new Error(ErrorOrigin + functionName + error.message);
     }
 }
 
-export async function addModuleToNewClient(clientId:string, moduleId:string) : Promise<string> {
-    const functionName = "addModuleToNewClient - ";
+export async function addModuleToNewClient(onboardingId:string, clientId:string, moduleId:string, stepOrder:number) : Promise<string> {
+    const functionName = "addModuleToClient - ";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -348,7 +500,11 @@ export async function addModuleToNewClient(clientId:string, moduleId:string) : P
                 created_by          : "SAGES_ONBOARDING"
             }
         });
-        if(clientModule===null) return "ERROR_CLIENT_MODUE_CREATION";
+        if(clientModule===null) return "ERROR_CLIENT_MODULE_CREATION";
+        const onboarding = await getOnboardingById(onboardingId);
+        if (!onboarding || onboarding===null) return "ERROR_CLIENT_MODULE_CREATED_ONBOARDING_NOT_FOUND";
+        const updatedOnboardingStep = await updateOnboardingStep(stepOrder,onboarding.id,(onboarding.notes===null)?(""):(onboarding.notes));
+        if (updatedOnboardingStep.includes("ERROR")) return "ERROR_CLIENT_MODULE_CREATED_ONBOARDING_STEP_NOT_UPDATED";
         return clientModule.id;
     }
     catch(error:any){
@@ -361,11 +517,61 @@ export async function addModuleToNewClient(clientId:string, moduleId:string) : P
     }
 }
 
-export async function addNewClientDefaultSettings(clientId:string) : Promise<string> {
+export async function addNewClientBaseModules(requestId:string, onboardingId:string,clientId:string) : Promise<string> {
+    const functionName = "addNewClientBaseModules - ";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        
+        const theRequest = await getRequestById(requestId);
+        if (!theRequest || theRequest===null) return "ERROR_INVALID_REQUEST";
+        if (!theRequest.request_confirmed || theRequest.status === 'D') return "ERROR_REQUEST_NOT_CONFIRMED";
+        if (theRequest.status === 'I') return "ERROR_REQUEST_INTEGRATED";
+        if (theRequest.status !== 'E') return "ERROR_REQUEST_STATUS";
+
+        const onboarding = await getOnboardingById(onboardingId);
+        if (!onboarding || onboarding===null) return "ERROR_INVALID_ONBOARDING";
+        if (onboarding.status === 'F') return "ERROR_ONBOARDING_ALREADY_COMPLETED";
+        if (onboarding.status === 'C') return "ERROR_ONBOARDING_NOT_IN_PROGRESS";
+        if (onboarding.status !== 'E') return "ERROR_ONBOARDING_STATUS";
+
+        const client = await getClientById(clientId);
+        if (!client || client===null) return "ERROR_INVALID_CLIENT";
+
+        //step 2 
+        const userxModuleId = process.env.MODULE_USERX_ID!;
+        const addUSERX = await addModuleToNewClient(onboardingId, client.id, userxModuleId, 2);
+        if (addUSERX.includes("ERROR")) return "ERROR_USERX_MODULE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
+
+        //step 3
+        const syscolModuleId = process.env.MODULE_SYSCOL_ID!;
+        const addSYSCOL = await addModuleToNewClient(onboardingId, client.id, syscolModuleId, 3);
+        if (addSYSCOL.includes("ERROR")) return "ERROR_SYSCOL_MODULE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
+
+        //step 4
+        const soclasModuleId = process.env.MODULE_SOCLAS_ID!;
+        const addSOCLAS = await addModuleToNewClient(onboardingId, client.id, soclasModuleId, 4);
+        if (addSOCLAS.includes("ERROR")) return "ERROR_SOCLAS_MODULE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
+        return "ALL_BASE_MODULE_ADDED_AND_ONBOARDING_STEPS_UPDATED";
+        
+    }
+    catch(error:any){
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function addNewClientDefaultSettings(requestId:string, onboardingId:string,clientId:string) : Promise<string> {
     const functionName = "addNewClientDefaultSettings - ";
     try {
          const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const progress = await getRequestAndOnboardingProgress(requestId, onboardingId);
+        if (!progress.inProgress) return progress.message;
         const clientSetting = await prisma.sgs_client_setting.create({
             data : {
                 client_id : clientId,
@@ -373,7 +579,10 @@ export async function addNewClientDefaultSettings(clientId:string) : Promise<str
                 created_by          : "SAGES_ONBOARDING"
             }
         });
-        if (clientSetting===null) return "ERROR_CLIENT_MODULE_CREATION";
+        if (clientSetting===null) return "ERROR_CLIENT_DEFAULT_SETTINGS_CREATION";
+        const updatedStep = await updateOnboardingStep(5,onboardingId,(progress.onboardingNotes === null)?(""):(progress.onboardingNotes ));
+        if (updatedStep.includes("ERROR")) return "ERROR_CLIENT_DEFAULT_SETTINGS_ADDED_ONBOARDING_STEP_NOT_UPDATED";
+
         return clientSetting.id;
     }
     catch(error:any) {

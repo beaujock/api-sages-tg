@@ -416,6 +416,8 @@ model sgs_onboarding_step {
   changed_by                     String?                        @db.VarChar(32)
   sgs_onboarding                 sgs_onboarding                 @relation(fields: [onboarding_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   lkp_sgs_onboarding_step_status lkp_sgs_onboarding_step_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([onboarding_id, step_order], map: "unique_onboarding_id_step_order")
 }
 
 model sgs_request {
