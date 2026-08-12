@@ -1,7 +1,8 @@
 import { createRequestForOnboarding } from "@/factories/onboardingFactory";
-import { generateCode, sendEmail } from "@/factories/utilitiesFactory";
+import { generateCode, logError, sendEmail } from "@/factories/utilitiesFactory";
 import { SGSCreateRequestDO } from "@/types/ONBOARDING/onboardingTypes";
 import { NextRequest, NextResponse } from "next/server";
+
 
 
 export async function POST(request : NextRequest) {
@@ -31,23 +32,19 @@ export async function POST(request : NextRequest) {
         requestToLog.request_date = new Date(requestToLog.request_date);
         requestToLog.create_date = new Date(requestToLog.create_date);
         const requestCode = await generateCode(6);
-        console.log("Generated code is : ", requestCode);
+        //console.log("Generated code is : ", requestCode);
         requestToLog.request_code = requestCode;
         const requestCreated = await createRequestForOnboarding(requestToLog);
         if (!requestCreated) return NextResponse.json({message:"Echec lors de la création de la requête"}, { status: 400 });
-        //const requestCode = await generateCode(6);
-        //const urlConfirmRequest = process.env.CONFIRM_REQUEST_URL +"?requestID=" + requestCreated.id + "&requestCODE=" + requestCode;
         await sendEmail({
             name : "Sages de Beaujock",
             email : requestToLog.requester_email,
             message : "Requête bien reçue.\nVotre code est : " + requestCode 
-            //"Utilisez le lien ci dessous pour confirmez votre requête.\n" + urlConfirmRequest
         });
-        //await updateOnboardingRequestCode(requestCreated.id, requestCode);
-
         return NextResponse.json({requete : requestCreated}, { status: 200 });
     }
     catch(error : any) {
-        return NextResponse.json({message : error.message}, { status: 500 });
+        logError('F',"Requête non enregistrée",(new URL(request.url)).pathname, error.message, true);
+        return NextResponse.json({errorLabel : "Requête non enregistrée", errorDetails : error.message}, { status: 500 });
     }
 }

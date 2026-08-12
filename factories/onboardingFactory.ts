@@ -2,17 +2,30 @@ import { sgs_client, sgs_ecole, sgs_onboarding } from "@/lib/generated/prisma/cl
 import { sgs_request } from "@/lib/generated/prisma/client";
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { SGSCreateRequestDO } from "@/types/ONBOARDING/onboardingTypes";
-import { generatePassword, sendEmail } from "./utilitiesFactory";
+import { generatePassword, sendEmail, logError } from "./utilitiesFactory";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-const ErrorOrigin = "onboardingFactory - ";
+const ErrorOrigin = "onboardingFactory";
 
 type Progress = {
     inProgress : boolean,
     requestRecord : sgs_request|null,
     onboardingRecord : sgs_onboarding|null,
     message : string
+}
+
+type NewUser = {
+    email : string,
+    password : string,
+    clientName : string,
+    schoolName : string,
+    message : string
+}
+
+type OnboardingCompletionInfo = {
+    requestStatus : string,
+    onboardingStatus : string
 }
 
 export async function getRequestById(requestId:string) : Promise<sgs_request|null> {
@@ -202,6 +215,7 @@ export async function createRequestForOnboarding(requestData : SGSCreateRequestD
         return request;
     }
     catch(error:any) {
+        logError('F',"Echec : Création de Requête",ErrorOrigin + "-" + functionName, error.message, true);
         throw new Error(ErrorOrigin + functionName + error.message);
     }
 }
@@ -227,7 +241,7 @@ export async function isRequestReadyForOnboarding(requestId:string) : Promise<bo
 }
 
 export async function createOnboarding(requestId:string) : Promise<string> {
-    const functionName = "createRequestForOnboarding - ";
+    const functionName = "createOnboarding";
     try {
         if (requestId===null || !requestId) return "ERROR_INVALID_REQUEST";
         const isConnected = await verifyAndSetPrismaConnection();
@@ -245,24 +259,20 @@ export async function createOnboarding(requestId:string) : Promise<string> {
                 end_date_time          : null,
                 notes                  : "Début de l'intégration a SAGES\n",
                 create_date            : new Date(Date.now()),
-                created_by             : "SAGES_ADMIN"
+                created_by             : "SAGES_ONBOARDING"
             }
         });
         if (createdOnboarding === null) return "ERROR_CREATION_ONBOARDING";
         return createdOnboarding.id;
     }
     catch(error:any) {
-        await sendEmail({
-            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
-            email : process.env.STMP_USER,
-            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
-        });
+        logError('F',"Echec : Création de l'intégration",ErrorOrigin + "-" + functionName, error.message, true);
         return "ERROR_CREATION_ONBOARDING_FATAL";
     }
 }
 
 export async function createOnboardingSteps(onboardingId:string) : Promise<string> {
-    const functionName = "createOnboardingSteps - ";
+    const functionName = "createOnboardingSteps";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -299,14 +309,10 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
                     changed_by : "SAGES_ONBOARDING" 
                 }
             });
-        return "ONBOARDING_STEPS_CREATED" + notes;
+        return "ONBOARDING_STEPS_CREATED";
     }
     catch(error:any) {
-        await sendEmail({
-            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
-            email : process.env.STMP_USER,
-            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message 
-        });
+        logError('N',"Echec : Création de l'intégration",ErrorOrigin + "-" + functionName, error.message, true);
         return "ERROR_ONBOARDING_STEPS_CREATION_FATAL";
     }
 }
@@ -347,17 +353,15 @@ export async function confirmOnboardingRequestCode(requestId:string, code:string
             },
             data : {
                 request_confirmed : true,
-                status : 'E'
+                status : 'E',
+                change_date     : new Date(Date.now()),
+                changed_by      : "SAGES_ONBOARDING"
             }
         });
         return requestId;
     }
     catch(error:any) {
-        await sendEmail({
-            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
-            email : process.env.STMP_USER,
-            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message 
-        });
+        logError('N',"Echec : Confirmation de Requête",ErrorOrigin + "-" + functionName, error.message, true);
         return "ERROR_CONFIRMATION_REQUEST_FATAL";
     }
 }
@@ -417,7 +421,10 @@ export async function registerNewClient(requestId:string, onboardingId:string) :
         const step = 1;
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        
+        const progress = await getRequestAndOnboardingProgress(requestId, onboardingId);
+        if (!progress.inProgress || progress.requestRecord===null || progress.onboardingRecord === null) return progress.message;
+       
+        /*
         const theRequest = await getRequestById(requestId);
         if (!theRequest || theRequest===null) return "ERROR_INVALID_REQUEST";
         if (!theRequest.request_confirmed || theRequest.status === 'D') return "ERROR_REQUEST_NOT_CONFIRMED";
@@ -429,7 +436,7 @@ export async function registerNewClient(requestId:string, onboardingId:string) :
         if (onboarding.status === 'F') return "ERROR_ONBOARDING_ALREADY_COMPLETED";
         if (onboarding.status === 'C') return "ERROR_ONBOARDING_NOT_IN_PROGRESS";
         if (onboarding.status !== 'E') return "ERROR_ONBOARDING_STATUS";
-        
+        */
 
         //create the client
         const systemScolaireId = process.env.SYSTEM_SCOLAIRE_ID;
@@ -437,8 +444,8 @@ export async function registerNewClient(requestId:string, onboardingId:string) :
         const newClient = await prisma.sgs_client.create({
             data : {
                 systeme_scolaire_id     : systemScolaireId,
-                legal_name              : theRequest.client_full_name,
-                code                    : theRequest.client_code,
+                legal_name              : progress.requestRecord.client_full_name,
+                code                    : progress.requestRecord.client_code,
                 create_date             : new Date(Date.now()),
                 created_by              : "SAGES_ONBOARDING"
             }
@@ -447,7 +454,7 @@ export async function registerNewClient(requestId:string, onboardingId:string) :
         //update the step
         const today = new Date(Date.now());
         //const notes = onboarding.notes + "\nCréation du client .... Complètée .... Le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr });
-        const updateOnboardingAndStep = await updateOnboardingStep(1,onboarding.id,(onboarding.notes===null)?(""):(onboarding.notes));
+        const updateOnboardingAndStep = await updateOnboardingStep(1,onboardingId,(progress.onboardingRecord.notes===null)?(""):(progress.onboardingRecord.notes));
         if (updateOnboardingAndStep.includes("ERROR")) return "ERROR_CLIENT_CREATED_ONBOARDING_STEP_NOT_UPDATED";
         return newClient.id;
     }
@@ -678,7 +685,7 @@ export async function addNewClientSchool(requestId:string, onboardingId:string,c
     }
 }
 
-export async function registerNewUser(requestId:string, onboardingId:string,clientId:string) : Promise<string>{
+export async function registerNewUser(requestId:string, onboardingId:string,clientId:string) : Promise<NewUser|string>{
     const functionName = "registerNewUser - ";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -705,7 +712,14 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
         if (!createdUser || createdUser===null) return "ERROR_USER_NOT_CREATED";
         // Update step
         const updatedStep8 = await updateOnboardingStep(8,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
-        if (updatedStep8.includes("ERROR")) return "ERROR_USER_CREATED_ONBOARDING_STEP_NOT_UPDATED";
+        if (updatedStep8.includes("ERROR")) 
+            return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ONBOARDING_STEP_NOT_UPDATED"
+                    }
 
         // Add admin role
         const adminRoleId = process.env.ADMIN_ROLE_ID!;
@@ -718,9 +732,23 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
                 created_by      : "SAGES_ONBOARDING"
             }
         });
-        if (!newUserRole || newUserRole===null) return "ERROR_USER_CREATED_ADMIN_ROLE_NOT_ADDED";
+        if (!newUserRole || newUserRole===null) 
+            return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_NOT_ADDED"
+                    };
         const updatedStep9 = await updateOnboardingStep(9,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
-        if (updatedStep9.includes("ERROR")) return "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
+        if (updatedStep9.includes("ERROR")) 
+            return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_ONBOARDING_STEP_NOT_UPDATED"
+                    };
 
         //add resource (client) to the user
         const userResource = await prisma.sgs_user_resource.create({
@@ -733,9 +761,23 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
             }
         });
 
-        if (!userResource || userResource===null) return "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_NOT_ADDED";
+        if (!userResource || userResource===null) 
+            return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_NOT_ADDED"
+                    };
         const updatedStep10 = await updateOnboardingStep(10,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
-        if (updatedStep10.includes("ERROR")) return "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
+        if (updatedStep10.includes("ERROR")) 
+            return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_ONBOARDING_STEP_NOT_UPDATED"
+                    };
 
         //add user to client
         const userClient = await prisma.sgs_client_user.create({
@@ -747,19 +789,89 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
             }
         });
 
-        if (!userClient || userClient===null) return "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_NOT_ADDED";
+        if (!userClient || userClient===null) 
+             return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_NOT_ADDED"
+                    };
         const updatedStep11 = await updateOnboardingStep(11,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
-        if (updatedStep11.includes("ERROR")) return "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_ADDED_ONBOARDING_STEP_NOT_ADDED";
+        if (updatedStep11.includes("ERROR")) 
+             return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_ADDED_ONBOARDING_STEP_NOT_UPDATED"
+                    };
+        //Update the request
+        const updatedRequest = await prisma.sgs_request.update({
+            where : {
+                id : requestId
+            },
+            data : {
+                status : 'I',
+                change_date         : new Date(Date.now()),
+                changed_by          : "SAGES_ONBOARDING"
+            }
+        });
+        if (updatedRequest === null)
+             return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_ADDED_ONBOARDING_STEP_UPDATED_REQUEST_NOT_UPDATED"
+                    };
 
-        return "NEW_USER_COMPLETED_ALL";
+        //Update the Onboarding
+        const updatedOnboarding = await prisma.sgs_onboarding.update({
+            where : {
+                id : onboardingId
+            },
+            data : {
+                status : 'F',
+                change_date         : new Date(Date.now()),
+                changed_by          : "SAGES_ONBOARDING"
+            }
+        });
+        if (updatedOnboarding===null)
+        return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_ADDED_ONBOARDING_STEP_UPDATED_ONBOARDING_NOT_UPDATED"
+                    };
+        return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "NEW_USER_COMPLETED_ALL"
+                    };
+
     }
     catch(error:any) {
         await sendEmail({
             name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
-            email : process.env.STMP_USER,
+            email : process.env.STMP_USER!,
             message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
         });
         throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function onboardingCompletionCheck(requestId:string, onboardingId:string,clientId:string, schoolId:string) {
+    const functionName = "onboardingCompletionCheck - ";
+    try{
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+    }
+    catch(error:any){
+
     }
 }
 

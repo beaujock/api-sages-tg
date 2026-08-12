@@ -108,8 +108,8 @@ export async function logError(errorType:string, title:string, origin:string, de
           });
           if (sendingEmail) {
             await sendEmail({
-                      name : title + " - " + origin,
-                      email : process.env.STMP_USER,
+                      name : title + " : " + origin,
+                      email : process.env.STMP_USER!,
                       message : "Voir détails de l'erreur ci-dessous\n\n\n" + details
                   });
           }
@@ -117,7 +117,7 @@ export async function logError(errorType:string, title:string, origin:string, de
       catch(error:any) {
           await sendEmail({
                       name : "Erreur - Application SAGES-TG - " + ErrorOrigin + " - " + functionName,
-                      email : process.env.STMP_USER,
+                      email : process.env.STMP_USER!,
                       message : "Voir détails de l'erreur ci-dessous\n\n" + error.message 
                   });
       }

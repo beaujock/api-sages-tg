@@ -1,5 +1,6 @@
 import { createOnboardingSteps} from "@/factories/onboardingFactory";
 import { NextRequest, NextResponse } from "next/server";
+import { logError } from "@/factories/utilitiesFactory";
 
 
 export async function POST(request:NextRequest, { params }: { params: Promise<{requestId:string, onboardingId: string }> }) {
@@ -13,6 +14,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
         return NextResponse.json({onboardingStepsMessage : createdOnboardingSteps}, { status: 200 });
     }
     catch(error:any) {
+        logError('F',"Etapes de l'intégration non enregistrées",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }
