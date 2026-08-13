@@ -246,6 +246,7 @@ model sgs_user {
   created_by           String              @db.VarChar(32)
   change_date          DateTime?           @db.Timestamptz(6)
   changed_by           String?             @db.VarChar(32)
+  first_login          Boolean             @default(true)
   sgs_client_user      sgs_client_user[]
   sgs_user_resource    sgs_user_resource[]
   sgs_user_role        sgs_user_role[]

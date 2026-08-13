@@ -722,7 +722,7 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
                     }
 
         // Add admin role
-        const adminRoleId = process.env.ADMIN_ROLE_ID!;
+        const adminRoleId = process.env.ADMIN_CLIENT_ROLE_ID!;
         const newUserRole = await prisma.sgs_user_role.create({
             data : {
                 user_id         : createdUser.id,
