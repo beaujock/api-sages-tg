@@ -1,5 +1,5 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { UserBaseInfos } from "@/types/USERX/UserTypes";
+import { ResourceCombo, UserBaseInfos } from "@/types/USERX/UserTypes";
 import { logError } from "./utilitiesFactory";
 
 const ErrorOrigin = "userFactory";
@@ -156,5 +156,39 @@ export async function changeUserPassword(userId:string, oldPassword:string, newP
     catch(error:any) {
         logError('N',"Echec : Changement de mot de passe",ErrorOrigin + "-" + functionName, error.message, false);
         return false;
+    }
+}
+
+export async function getUserResources(userId : string) : Promise<ResourceCombo[]> {
+    const functionName = "getUserResources";
+    
+    try {
+        const userResources : ResourceCombo[] = [];
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const today = new Date(Date.now());
+        const resources = await prisma.sgs_user_resource.findMany({
+            where: {
+                user_id: userId,
+                status: 'A',
+            },
+            select : {
+                type_resource : true,
+                resource_id :true
+            }
+        });
+        resources.forEach(resource =>{
+            userResources.push({
+                type_resource : resource.type_resource,
+                resource_id : resource.resource_id
+            });
+        });
+        
+        return [...new Set(userResources)];
+    }
+    catch(error:any){
+        logError('N',"Echec : Retrouver les roles d'un utilisateur",ErrorOrigin + "-" + functionName, error.message, false);
+        return [];
+        //throw new Error(ErrorOrigin + functionName + error.message);
     }
 }

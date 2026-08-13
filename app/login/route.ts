@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
-import { addUserSession, getUser, getUserRoles } from "@/factories/userFactory";
+import { addUserSession, getUser, getUserResources, getUserRoles } from "@/factories/userFactory";
 import { generateToken } from "@/lib/auth";
 
 const ErrorOrigin = "userFactory";
@@ -20,6 +20,7 @@ export async function POST(request:NextRequest) {
         const user = await getUser(loginRequest.userName, loginRequest.password);
         if (!user || user===null) return NextResponse.json("Utilisateur non trouvé", { status: 404 });
         const userRoles = await getUserRoles(user.id);
+        const userResources = await getUserResources(user.id);
         const connectionToken = generateToken({
             "isAuthenticated"   : true,
             "first_login"       : user.first_login,
@@ -27,7 +28,8 @@ export async function POST(request:NextRequest) {
                 "id"        : user.id,
                 "user_name" : user.user_name,
                 "email"     : user.email,
-                "roles"     : userRoles
+                "roles"     : userRoles,
+                "resources" : userResources
             }
         });
         const cookie_name = process.env.COOKIE_NAME;

@@ -4,3 +4,8 @@ export type UserBaseInfos = {
     email                   : string;
     first_login             : boolean;
 }
+
+export type ResourceCombo = {
+        type_resource : string,
+        resource_id : string
+    }
