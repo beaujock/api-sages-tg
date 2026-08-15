@@ -12,7 +12,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
         if(!onboardingId) return NextResponse.json("Requête invalide (identification du client)", { status: 400 });
         const addNewSchool = await registerNewSchool(requestId,onboardingId, clientId);
         if (addNewSchool.includes("ERROR")) return NextResponse.json({addNewSchoolErrorMessage : addNewSchool}, { status: 400 });
-        return NextResponse.json({addNewSchoolSuccessMessage : addNewSchool}, { status: 200 });
+        return NextResponse.json({schoolId : addNewSchool}, { status: 200 });
     }
     catch(error:any) {
         return NextResponse.json({message : error.message}, { status: 500 });

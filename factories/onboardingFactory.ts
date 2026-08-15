@@ -1,7 +1,7 @@
 import { sgs_client, sgs_ecole, sgs_onboarding } from "@/lib/generated/prisma/client";
 import { sgs_request } from "@/lib/generated/prisma/client";
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { SGSCreateRequestDO } from "@/types/ONBOARDING/onboardingTypes";
+import { OnboardingStepsInfos, SGSCreateRequestDO, ToOnboardingStepsInfos } from "@/types/ONBOARDING/onboardingTypes";
 import { generatePassword, sendEmail, logError } from "./utilitiesFactory";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -108,6 +108,33 @@ export async function getOnboardingFromRequest(requestId:string) : Promise<sgs_o
         });
 
         return onboardings;
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function getOnboardingSteps(requestId:string, onboardingId:string) : Promise<OnboardingStepsInfos[]|string> {
+    const functionName = "getOnboardingSteps - ";
+    try {
+        const listSteps:OnboardingStepsInfos[] = [];
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const progress = await getRequestAndOnboardingProgress(requestId, onboardingId);
+        if (!progress.inProgress || progress.requestRecord===null || progress.onboardingRecord === null) return progress.message;
+        const steps = await prisma.sgs_onboarding_step.findMany({
+            where : {
+                onboarding_id : onboardingId,
+                status : 'C'
+            },
+            orderBy : {
+                step_order : 'asc'
+            }
+        });
+        steps.forEach(step => {
+            listSteps.push(ToOnboardingStepsInfos(step));
+        });
+        return listSteps;
     }
     catch(error:any) {
         throw new Error(ErrorOrigin + functionName + error.message);
