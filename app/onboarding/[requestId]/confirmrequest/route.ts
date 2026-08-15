@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 
 
-export async function PATCH(request:NextRequest, { params }: { params: Promise<{requestId: string }> }) {
+export async function POST(request:NextRequest, { params }: { params: Promise<{requestId: string }> }) {
     try {
         const requestId = (await params).requestId;
         if(!requestId) return NextResponse.json("Requête invalide (identification de la requête)", { status: 400 });
