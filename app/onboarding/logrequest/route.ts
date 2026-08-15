@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request : NextRequest) {
     try {
-        request.headers.set("Access-Control-Allow-Origin", "*");
+        //request.headers.set("Access-Control-Allow-Origin", "*");
         const body = await request.json();
         if (!body || body===null) return NextResponse.json({message: "Requête invalide"}, { status: 400 });
         const requestToLog:SGSCreateRequestDO = {
