@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../lib/generated/prisma"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -15,7 +16,6 @@ model lkp_client_module_status {
   created_by        String              @db.VarChar(32)
   change_date       DateTime?           @db.Timestamptz(6)
   changed_by        String?             @db.VarChar(32)
-  sgs_client        sgs_client[]
   sgs_client_ecole  sgs_client_ecole[]
   sgs_client_module sgs_client_module[]
 }
@@ -65,26 +65,26 @@ model lkp_sgs_request_status {
 }
 
 model sgs_client {
-  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  systeme_scolaire_id      String                   @db.Uuid
-  active                   Boolean                  @default(true)
-  status                   String                   @default("A") @db.VarChar(1)
-  legal_name               String                   @db.VarChar(128)
-  short_name               String?                  @db.VarChar(64)
-  code                     String                   @unique @db.VarChar(32)
-  address                  String?                  @db.VarChar(128)
-  website                  String?                  @db.VarChar(64)
-  main_contact_name        String?                  @db.VarChar(128)
-  main_contact_email       String?                  @db.VarChar(64)
-  main_contact_phone       String?                  @db.VarChar(32)
-  other_contact_infos      String?                  @db.VarChar(128)
-  notes                    String?                  @db.VarChar
-  create_date              DateTime                 @db.Timestamptz(6)
-  created_by               String                   @db.VarChar(32)
-  change_date              DateTime?                @db.Timestamptz(6)
-  changed_by               String?                  @db.VarChar(32)
-  lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
-  tg_systeme_scolaire      tg_systeme_scolaire      @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                       String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  systeme_scolaire_id      String               @db.Uuid
+  active                   Boolean              @default(true)
+  status                   String               @default("A") @db.VarChar(1)
+  legal_name               String               @db.VarChar(128)
+  short_name               String?              @db.VarChar(64)
+  code                     String               @unique @db.VarChar(32)
+  address                  String?              @db.VarChar(128)
+  website                  String?              @db.VarChar(64)
+  main_contact_name        String?              @db.VarChar(128)
+  main_contact_email       String?              @db.VarChar(64)
+  main_contact_phone       String?              @db.VarChar(32)
+  other_contact_infos      String?              @db.VarChar(128)
+  notes                    String?              @db.VarChar
+  create_date              DateTime             @db.Timestamptz(6)
+  created_by               String               @db.VarChar(32)
+  change_date              DateTime?            @db.Timestamptz(6)
+  changed_by               String?              @db.VarChar(32)
+  lkp_client_module_status lkp_client_status    @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  tg_systeme_scolaire      tg_systeme_scolaire  @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_client_ecole         sgs_client_ecole[]
   sgs_client_module        sgs_client_module[]
   sgs_client_setting       sgs_client_setting[]
@@ -550,4 +550,36 @@ model sgs_errors_log {
   change_date        DateTime?          @db.Timestamptz(6)
   changed_by         String?            @db.VarChar(32)
   lkp_sgs_type_error lkp_sgs_type_error @relation(fields: [type], references: [code], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model lkp_client_status {
+  code          String       @id @db.VarChar(1)
+  display_value String       @db.VarChar(32)
+  description   String?      @db.VarChar(64)
+  create_date   DateTime     @db.Timestamptz(6)
+  created_by    String       @db.VarChar(32)
+  change_date   DateTime?    @db.Timestamptz(6)
+  changed_by    String?      @db.VarChar(32)
+  sgs_client    sgs_client[]
+}
+
+view v_sgs_client {
+  id                  String?   @db.Uuid
+  systeme_scolaire    String?   @db.VarChar(32)
+  active              String?
+  status              String?   @db.VarChar(32)
+  legal_name          String?   @db.VarChar(128)
+  short_name          String?   @db.VarChar(64)
+  code                String?   @db.VarChar(32)
+  address             String?   @db.VarChar(128)
+  website             String?   @db.VarChar(64)
+  main_contact_name   String?   @db.VarChar(128)
+  main_contact_email  String?   @db.VarChar(64)
+  main_contact_phone  String?   @db.VarChar(32)
+  other_contact_infos String?   @db.VarChar(128)
+  notes               String?   @db.VarChar
+  create_date         DateTime? @db.Timestamptz(6)
+  created_by          String?   @db.VarChar(32)
+  change_date         DateTime? @db.Timestamptz(6)
+  changed_by          String?   @db.VarChar(32)
 }
