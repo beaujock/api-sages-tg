@@ -35,8 +35,8 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
                         email : requesterEmail,
                         message : "Félicitations.\nL'intégration a SAGES est complète. \nNom de client : " + clientName + "\nNom de l'école : " 
                         + schoolName + "\nVotre identifiant : " + requesterEmail + "\nVotre mot de passe temporaire : " + password +
-                        "\nVeuillez vous connecter à l'application SAGES (encliquent sur le lien ci-dessous) et changer votre mot de passe.\n" +
-                        "www.tg.sages.beaukock.com/" + client.code
+                        "\nVeuillez vous connecter à l'application SAGES (en cliquant sur le lien ci-dessous) et changer votre mot de passe.\n" +
+                        "www.sages.tg.beaukock.com/" + client.code
                         //"Utilisez le lien ci dessous pour confirmez votre requête.\n" + urlConfirmRequest
                     });
         return NextResponse.json({registerNewUserSuccessMessage : message}, { status: 200 });
