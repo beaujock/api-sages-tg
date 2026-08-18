@@ -1,4 +1,4 @@
-import { addNewClientBaseModules, registerNewUser} from "@/factories/onboardingFactory";
+import { addNewClientBaseModules, getClientById, registerNewUser} from "@/factories/onboardingFactory";
 import { sendEmail } from "@/factories/utilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -27,13 +27,20 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
                     //"Utilisez le lien ci dessous pour confirmez votre requête.\n" + urlConfirmRequest
                 });
         else
-        await sendEmail({
-                    name : "Administrateur SAGES",
-                    email : requesterEmail,
-                    message : "Félicitations.\nL'intégration a SAGES est complète. \nNom de client : " + clientName + "\nNom de l'école : " + schoolName + "\nVotre identifiant : " + requesterEmail + "\nVotre mot de passe temporaire : " + password 
-                    //"Utilisez le lien ci dessous pour confirmez votre requête.\n" + urlConfirmRequest
-                });
+        {
+            const client = await getClientById(clientId);
+            if(!client || client === null) return NextResponse.json("Requête invalide (identification du client)", { status: 400 });
+            await sendEmail({
+                        name : "Administrateur SAGES",
+                        email : requesterEmail,
+                        message : "Félicitations.\nL'intégration a SAGES est complète. \nNom de client : " + clientName + "\nNom de l'école : " 
+                        + schoolName + "\nVotre identifiant : " + requesterEmail + "\nVotre mot de passe temporaire : " + password +
+                        "\nVeuillez vous connecter à l'application SAGES (encliquent sur le lien ci-dessous) et changer votre mot de passe.\n" +
+                        "www.tg.sages.beaukock.com/" + client.code
+                        //"Utilisez le lien ci dessous pour confirmez votre requête.\n" + urlConfirmRequest
+                    });
         return NextResponse.json({registerNewUserSuccessMessage : message}, { status: 200 });
+            }
     }
     catch(error:any) {
         return NextResponse.json({message : error.message}, { status: 500 });
