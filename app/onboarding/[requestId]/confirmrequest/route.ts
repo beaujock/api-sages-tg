@@ -11,7 +11,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
         const requestCode = body.requestCode;
         if(!requestCode) return NextResponse.json("Requête invalide (pas de code)", { status: 400 });
         const requestConfirmationResult = await confirmOnboardingRequestCode(requestId, requestCode);
-        if (requestConfirmationResult.includes("ERROR")) return NextResponse.json({confirmationMessage : requestConfirmationResult});
+        if (requestConfirmationResult.includes("ERROR")) return NextResponse.json({confirmationMessage : requestConfirmationResult}, { status: 400 });
         const theRequest = await getRequestById(requestConfirmationResult);
         return NextResponse.json({updatedRequest : theRequest}, { status: 200 });
     }
