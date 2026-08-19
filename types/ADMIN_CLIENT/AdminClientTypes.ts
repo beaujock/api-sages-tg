@@ -1,7 +1,7 @@
-import { sgs_client, sgs_ecole, sgs_enseignant, sgs_salle_classe } from "@/lib/generated/prisma/client";
+import { sgs_client, sgs_ecole, sgs_enseignant, sgs_salle_classe, sgs_eleve } from "@/lib/generated/prisma/client";
 
 export type AdminClientClientOverview = {
-    client              : sgs_client,
+    client              : sgs_client|null,
     numberEcoles        : number,
     numberSalleClasses  : number,
     numberEnseignants   : number,
@@ -11,8 +11,11 @@ export type AdminClientClientOverview = {
 export type AdminClientClientDisplay = {
     id                       : string,
     systeme_scolaire_id      : string,
+    systeme_scolaire_label   : string,
     active                   : boolean,
+    active_label             : string,
     status                   : string,
+    status_label             : string,
     legal_name               : string,
     short_name               : string|null,
     code                     : string,
@@ -27,29 +30,6 @@ export type AdminClientClientDisplay = {
     created_by               : string,
     change_date              : Date|null,
     changed_by               : string|null,
-}
-
-export function ToAdminClientClientDisplay(client:sgs_client) : AdminClientClientDisplay {
-    return {
-        id                       : client.id,
-        systeme_scolaire_id      : client.systeme_scolaire_id,
-        active                   : client.active,
-        status                   : client.status,
-        legal_name               : client.legal_name,
-        short_name               : client.short_name,
-        code                     : client.code,
-        address                  : client.address,
-        website                  : client.website,
-        main_contact_name        : client.main_contact_name,
-        main_contact_email       : client.main_contact_email,
-        main_contact_phone       : client.main_contact_phone,
-        other_contact_infos      : client.other_contact_infos,
-        notes                    : client.notes,
-        create_date              : client.create_date,
-        created_by               : client.created_by,
-        change_date              : client.change_date,
-        changed_by               : client.changed_by
-    }
 }
 
 export type AdminClientEcoleOverview = {
@@ -109,8 +89,11 @@ export type AdminClientSalleClasseOverview = {
 export type AdminClientSalleClasseDisplay = {
     id                       : string,
     ecole_id                 : string,
+    ecole_label              : string,
     annee_scolaire_id        : string,
+    annee_scolaire_label     : string,
     classe_id                : string,
+    classe_label             : string,
     code                     : string,
     description              : string|null,
     notes                    : string|null,
@@ -120,21 +103,6 @@ export type AdminClientSalleClasseDisplay = {
     changed_by               : string|null
 }
 
-export function ToAdminClientSalleClasseDisplay(salleClasse:sgs_salle_classe) : AdminClientSalleClasseDisplay {
-    return {
-        id                       : salleClasse.id,
-        ecole_id                 : salleClasse.ecole_id,
-        annee_scolaire_id        : salleClasse.annee_scolaire_id,
-        classe_id                : salleClasse.classe_id,
-        code                     : salleClasse.code,
-        description              : salleClasse.description,
-        notes                    : salleClasse.notes,
-        create_date              : salleClasse.create_date,
-        created_by               : salleClasse.created_by,
-        change_date              : salleClasse.change_date,
-        changed_by               : salleClasse.changed_by
-    }
-}
 
 export type AdminClientEnseignantOverview = {
     enseignant              : sgs_enseignant,
@@ -160,6 +128,50 @@ export type AdminClientEnseignantDisplay = {
 }
 
 export function ToAdminClientEnseignantDisplay(enseignant:sgs_enseignant) : AdminClientEnseignantDisplay {
+    return {
+        id                       : enseignant.id,
+        matricule                : enseignant.matricule,
+        last_name                : enseignant.last_name,
+        first_name               : enseignant.first_name,
+        other_names              : enseignant.other_names,
+        preferred_name           : enseignant.preferred_name,
+        date_of_birth            : enseignant.date_of_birth,
+        gender                   : enseignant.gender,
+        phone_number             : enseignant.phone_number,
+        email                    : enseignant.email,
+        notes                    : enseignant.notes,
+        create_date              : enseignant.create_date,
+        created_by               : enseignant.created_by,
+        change_date              : enseignant.change_date,
+        changed_by               : enseignant.changed_by
+    }
+}
+
+
+export type AdminClientEleveOverview = {
+    eleve              : sgs_eleve,
+    numberClasses      : number,
+}
+
+export type AdminClientEleveDisplay = {
+    id                       : string,
+    matricule                : string,
+    last_name                : string,
+    first_name               : string,
+    other_names              : string|null,
+    preferred_name           : string|null,
+    date_of_birth            : Date,
+    gender                   : string,
+    phone_number             : string|null,
+    email                    : string|null,
+    notes                    : string|null,
+    create_date              : Date,
+    created_by               : string,
+    change_date              : Date|null,
+    changed_by               : string|null
+}
+
+export function ToAdminClientEleveDisplay(enseignant:sgs_enseignant) : AdminClientEnseignantDisplay {
     return {
         id                       : enseignant.id,
         matricule                : enseignant.matricule,

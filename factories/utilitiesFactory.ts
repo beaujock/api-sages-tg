@@ -1,6 +1,7 @@
 
 import nodemailer from 'nodemailer';
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
+import { tg_annee_scolaire } from '@/lib/generated/prisma/client';
 
 const ErrorOrigin = "utilistiesFactory"
 
@@ -120,6 +121,29 @@ export async function logError(errorType:string, title:string, origin:string, de
                       email : process.env.STMP_USER!,
                       message : "Voir détails de l'erreur ci-dessous\n\n" + error.message 
                   });
+      }
+}
+
+export async function getCurrentAnneeScolaire() : Promise<tg_annee_scolaire|null> {
+   const functionName = "getCurrentAnneeScolaire"
+  try {
+          const isConnected = await verifyAndSetPrismaConnection();
+          if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+          const currentDate = new Date();
+          const anneeScolaire = await prisma.tg_annee_scolaire.findFirst({
+            where : {
+              start_date : {
+                lte : currentDate
+              },
+              end_date : {
+                gte : currentDate
+              }
+            }
+          });
+          return anneeScolaire;
+      }
+      catch(error:any) {
+          return null;
       }
 }
 

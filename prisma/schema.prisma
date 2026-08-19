@@ -28,6 +28,7 @@ model lkp_gender {
   created_by     String           @db.VarChar(32)
   change_date    DateTime?        @db.Timestamptz(6)
   changed_by     String?          @db.VarChar(32)
+  sgs_eleve      sgs_eleve[]
   sgs_enseignant sgs_enseignant[]
 }
 
@@ -169,7 +170,7 @@ model sgs_enseignant {
   other_names              String?                    @db.VarChar(64)
   preferred_name           String?                    @db.VarChar(32)
   date_of_birth            DateTime                   @db.Date
-  gender                   String                     @db.VarChar(2)
+  gender                   String                     @db.VarChar(1)
   phone_number             String?                    @db.VarChar(16)
   email                    String?                    @db.VarChar(64)
   notes                    String?                    @db.VarChar
@@ -208,6 +209,7 @@ model sgs_salle_classe {
   created_by               String                     @db.VarChar(32)
   change_date              DateTime?                  @db.Timestamptz(6)
   changed_by               String?                    @db.VarChar(32)
+  sgs_inscription          sgs_inscription[]
   tg_annee_scolaire        tg_annee_scolaire          @relation(fields: [annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_classe                tg_classe                  @relation(fields: [classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_ecole                sgs_ecole                  @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -563,6 +565,54 @@ model lkp_client_status {
   sgs_client    sgs_client[]
 }
 
+model lkp_registration_status {
+  code            String            @id @db.VarChar(1)
+  display_value   String            @db.VarChar(32)
+  description     String?           @db.VarChar(64)
+  create_date     DateTime          @db.Timestamptz(6)
+  created_by      String            @db.VarChar(32)
+  change_date     DateTime?         @db.Timestamptz(6)
+  changed_by      String?           @db.VarChar(32)
+  sgs_inscription sgs_inscription[]
+}
+
+model sgs_eleve {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matricule       String            @unique @db.VarChar(32)
+  last_name       String            @db.VarChar(64)
+  first_name      String            @db.VarChar(64)
+  other_names     String?           @db.VarChar(64)
+  preferred_name  String?           @db.VarChar(32)
+  date_of_birth   DateTime          @db.Date
+  gender          String            @db.VarChar(1)
+  phone_number    String?           @db.VarChar(32)
+  email           String?           @db.VarChar(64)
+  notes           String?           @db.VarChar
+  create_date     DateTime          @db.Timestamptz(6)
+  created_by      String            @db.VarChar(32)
+  change_date     DateTime?         @db.Timestamptz(6)
+  changed_by      String?           @db.VarChar(32)
+  lkp_gender      lkp_gender        @relation(fields: [gender], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_inscription sgs_inscription[]
+}
+
+model sgs_inscription {
+  id                      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  salle_classe_id         String                  @db.Uuid
+  eleve_id                String                  @db.Uuid
+  registration_date       DateTime                @db.Date
+  registration_status     String                  @default("A") @db.VarChar(1)
+  status_notes            String?                 @db.VarChar
+  notes                   String?                 @db.VarChar
+  create_date             DateTime                @db.Timestamptz(6)
+  created_by              String                  @db.VarChar(32)
+  change_date             DateTime?               @db.Timestamptz(6)
+  changed_by              String?                 @db.VarChar(32)
+  sgs_eleve               sgs_eleve               @relation(fields: [eleve_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_registration_status lkp_registration_status @relation(fields: [registration_status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_salle_classe        sgs_salle_classe        @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
 view v_sgs_client {
   id                  String?   @db.Uuid
   systeme_scolaire    String?   @db.VarChar(32)
@@ -582,4 +632,18 @@ view v_sgs_client {
   created_by          String?   @db.VarChar(32)
   change_date         DateTime? @db.Timestamptz(6)
   changed_by          String?   @db.VarChar(32)
+}
+
+view v_sgs_salle_classe {
+  id             String?   @db.Uuid
+  ecole          String?   @db.VarChar(64)
+  annee_scolaire String?
+  classe         String?   @db.VarChar(32)
+  code           String?   @db.VarChar(16)
+  description    String?   @db.VarChar(256)
+  notes          String?   @db.VarChar
+  create_date    DateTime? @db.Timestamptz(6)
+  created_by     String?   @db.VarChar(32)
+  change_date    DateTime? @db.Timestamptz(6)
+  changed_by     String?   @db.VarChar(32)
 }
