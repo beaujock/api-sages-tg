@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getCurrentAnneeScolaire, logError } from "./utilitiesFactory";
 import { getYear } from 'date-fns';
-import { AdminClientClientDisplay, AdminClientClientOverview, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
+import { AdminClientClientDisplay, AdminClientClientOverview, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
 
 
 const ErrorOrigin = "clientFactory";
@@ -51,6 +51,51 @@ export async function getClientById(clientId:string) : Promise<AdminClientClient
     }
 }
 
+export async function getClientByCode(clientCode:string) : Promise<AdminClientClientDisplay|null> {
+    const functionName = "getClientById";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const client = await prisma.sgs_client.findFirst({
+            where : {
+                code : clientCode
+            },
+            include : {
+                tg_systeme_scolaire : true,
+                lkp_client_module_status : true
+            }
+        });
+        if(!client) return null;
+        return {
+            id                       : client.id,
+            systeme_scolaire_id      : client.systeme_scolaire_id,
+            systeme_scolaire_label   : client.tg_systeme_scolaire.code,
+            active                   : client.active,
+            active_label             : (client.active)?("Actif"):("Inactif"),
+            status                   : client.status,
+            status_label             : client.lkp_client_module_status.display_value,
+            legal_name               : client.legal_name,
+            short_name               : client.short_name,
+            code                     : client.code,
+            address                  : client.address,
+            website                  : client.website,
+            main_contact_name        : client.main_contact_name,
+            main_contact_email       : client.main_contact_email,
+            main_contact_phone       : client.main_contact_phone,
+            other_contact_infos      : client.other_contact_infos,
+            notes                    : client.notes,
+            create_date              : client.create_date,
+            created_by               : client.created_by,
+            change_date              : client.change_date,
+            changed_by               : client.changed_by
+        }
+    }
+    catch(error:any) {
+        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 export async function getClientEcoles(clientId:string) : Promise<AdminClientEcoleDisplay[]> {
     const functionName = "getClientEcoles";
     try {
@@ -61,7 +106,7 @@ export async function getClientEcoles(clientId:string) : Promise<AdminClientEcol
             where : {
                 client_id : clientId,
                 status : 'A',
-                active : true
+                active : true,
             },
             include : {
                 sgs_ecole : true
@@ -176,6 +221,50 @@ export async function getClientEleves(clientId:string, anneeScolaireId:string|nu
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
+/*
+export async function getClientEnseignants(clientId:string, anneeScolaireId:string|null) : Promise<AdminClientEnseignantDisplay[]> {
+    const functionName = "getClientEnseignants";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listEleves:AdminClientEleveDisplay[] = [];
+        let schoolYearId:string|null;
+        if (anneeScolaireId === null) {
+            const schoolYear = await getCurrentAnneeScolaire();
+            schoolYearId = (schoolYear===null)?(null):(schoolYear.id);
+        };
+        schoolYearId = anneeScolaireId;
+        if (schoolYearId === null) throw new Error("Année scolaire non trouvée");
+        const clientEleves= await prisma.sgs_eleve.findMany({
+            where : {
+                sgs_inscription : {
+                    some: {
+                        sgs_salle_classe : {
+                            annee_scolaire_id : schoolYearId,
+                            sgs_ecole : {
+                                sgs_client_ecole: {
+                                    some: {
+                                        client_id : clientId
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        });
+        clientEleves.forEach(eleve => {
+            listEleves.push(ToAdminClientEleveDisplay(eleve));
+        });
+        return [... new Set(listEleves)];
+    }
+    catch(error:any) {
+        logError('F',"Recherche des classes du client pendant une année scolaire",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+    */
 
 export async function getClientOverview(clientId:string, anneeScolaireId:string|null) : Promise<AdminClientClientOverview> {
     const functionName = "getClientOverview";
