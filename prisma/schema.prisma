@@ -66,28 +66,29 @@ model lkp_sgs_request_status {
 }
 
 model sgs_client {
-  id                       String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  systeme_scolaire_id      String               @db.Uuid
-  active                   Boolean              @default(true)
-  status                   String               @default("A") @db.VarChar(1)
-  legal_name               String               @db.VarChar(128)
-  short_name               String?              @db.VarChar(64)
-  code                     String               @unique @db.VarChar(32)
-  address                  String?              @db.VarChar(128)
-  website                  String?              @db.VarChar(64)
-  main_contact_name        String?              @db.VarChar(128)
-  main_contact_email       String?              @db.VarChar(64)
-  main_contact_phone       String?              @db.VarChar(32)
-  other_contact_infos      String?              @db.VarChar(128)
-  notes                    String?              @db.VarChar
-  create_date              DateTime             @db.Timestamptz(6)
-  created_by               String               @db.VarChar(32)
-  change_date              DateTime?            @db.Timestamptz(6)
-  changed_by               String?              @db.VarChar(32)
-  lkp_client_module_status lkp_client_status    @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
-  tg_systeme_scolaire      tg_systeme_scolaire  @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                       String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  systeme_scolaire_id      String                 @db.Uuid
+  active                   Boolean                @default(true)
+  status                   String                 @default("A") @db.VarChar(1)
+  legal_name               String                 @db.VarChar(128)
+  short_name               String?                @db.VarChar(64)
+  code                     String                 @unique @db.VarChar(32)
+  address                  String?                @db.VarChar(128)
+  website                  String?                @db.VarChar(64)
+  main_contact_name        String?                @db.VarChar(128)
+  main_contact_email       String?                @db.VarChar(64)
+  main_contact_phone       String?                @db.VarChar(32)
+  other_contact_infos      String?                @db.VarChar(128)
+  notes                    String?                @db.VarChar
+  create_date              DateTime               @db.Timestamptz(6)
+  created_by               String                 @db.VarChar(32)
+  change_date              DateTime?              @db.Timestamptz(6)
+  changed_by               String?                @db.VarChar(32)
+  lkp_client_module_status lkp_client_status      @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  tg_systeme_scolaire      tg_systeme_scolaire    @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_client_ecole         sgs_client_ecole[]
   sgs_client_module        sgs_client_module[]
+  sgs_client_role_menu     sgs_client_role_menu[]
   sgs_client_setting       sgs_client_setting[]
   sgs_client_user          sgs_client_user[]
 }
@@ -354,6 +355,7 @@ model tg_role {
   change_date   DateTime?       @db.Timestamptz(6)
   changed_by    String?         @db.VarChar(32)
   sgs_user_role sgs_user_role[]
+  tg_role_menu  tg_role_menu[]
 }
 
 model tg_serie {
@@ -611,6 +613,51 @@ model sgs_inscription {
   sgs_eleve               sgs_eleve               @relation(fields: [eleve_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   lkp_registration_status lkp_registration_status @relation(fields: [registration_status], references: [code], onDelete: NoAction, onUpdate: NoAction)
   sgs_salle_classe        sgs_salle_classe        @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tg_menu {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String         @db.VarChar(64)
+  code         String         @db.VarChar(32)
+  description  String?        @db.VarChar(256)
+  icon         String?        @db.VarChar(64)
+  end_route    String         @default("/") @db.VarChar(64)
+  notes        String?        @db.VarChar
+  create_date  DateTime       @db.Timestamptz(6)
+  created_by   String         @db.VarChar(32)
+  change_date  DateTime?      @db.Timestamptz(6)
+  changed_by   String?        @db.VarChar(32)
+  tg_role_menu tg_role_menu[]
+}
+
+model tg_role_menu {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_id              String                 @db.Uuid
+  menu_id              String                 @db.Uuid
+  item_order           Int
+  active               Boolean                @default(true)
+  notes                String?                @db.VarChar
+  create_date          DateTime               @db.Timestamptz(6)
+  created_by           String                 @db.VarChar(32)
+  change_date          DateTime?              @db.Timestamptz(6)
+  changed_by           String?                @db.VarChar(32)
+  sgs_client_role_menu sgs_client_role_menu[]
+  tg_menu              tg_menu                @relation(fields: [menu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_role              tg_role                @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_client_role_menu {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_menu_id String       @db.Uuid
+  client_id    String       @db.Uuid
+  active       Boolean      @default(true)
+  notes        String?      @db.VarChar
+  create_date  DateTime     @db.Timestamptz(6)
+  created_by   String       @db.VarChar(32)
+  change_date  DateTime?    @db.Timestamptz(6)
+  changed_by   String?      @db.VarChar(32)
+  sgs_client   sgs_client   @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_role_menu tg_role_menu @relation(fields: [role_menu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 view v_sgs_client {

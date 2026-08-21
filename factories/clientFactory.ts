@@ -2,6 +2,7 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getCurrentAnneeScolaire, logError } from "./utilitiesFactory";
 import { getYear } from 'date-fns';
 import { AdminClientClientDisplay, AdminClientClientOverview, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
+import { tg_menu } from "@/lib/generated/prisma/browser";
 
 
 const ErrorOrigin = "clientFactory";
@@ -207,4 +208,39 @@ export async function getClientOverview(clientId:string, anneeScolaireId:string|
     }
 }
 
-
+export async function getClientMenuItemsByRole(clientId:string,role:string) : Promise<tg_menu[]> {
+  const functionName = "getClientMenuItemsByRole";
+  try {
+    const isConnected = await verifyAndSetPrismaConnection();
+    if (!isConnected) throw new Error("Vous n'êtes pas connecté!");
+    let roleCode = role.toUpperCase(); // Ensure the role is in uppercase
+    const menuItems: tg_menu[] = [];
+    const roleMenus = await prisma.tg_role_menu.findMany({
+      where: {
+        active: true,
+        tg_role: {
+          code: roleCode
+        },
+        sgs_client_role_menu: {
+          some: {
+            client_id: clientId,
+            active: true
+          },
+        },
+      },
+      orderBy: {
+        item_order: 'asc',
+      },
+      include: {
+        tg_menu: true,
+      },
+    });
+    for (const roleMenu of roleMenus) {
+      menuItems.push(roleMenu.tg_menu);
+    }
+    return menuItems;
+  }
+  catch(error:any) {
+    throw new Error(ErrorOrigin + functionName + error.message);
+  }
+}
