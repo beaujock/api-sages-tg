@@ -1,4 +1,4 @@
-import { sgs_client, sgs_ecole, sgs_onboarding } from "@/lib/generated/prisma/client";
+import { sgs_client, sgs_ecole, sgs_onboarding,tg_role_module_menu_item } from "@/lib/generated/prisma/client";
 import { sgs_request } from "@/lib/generated/prisma/client";
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { OnboardingStepsInfos, SGSCreateRequestDO, ToOnboardingStepsInfos } from "@/types/ONBOARDING/onboardingTypes";
@@ -275,17 +275,24 @@ export async function createOnboarding(requestId:string) : Promise<string> {
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
 
         const confirmedRequest = await isRequestReadyForOnboarding(requestId);
+        const sagesRequest = await getRequestById(requestId);
+        if (!sagesRequest || sagesRequest === null) return "ERROR_REQUEST_NOT_FOUND";
         if (!confirmedRequest) return "ERROR_REQUEST_NOT_READY_FOR_ONBOARDING";
+        if (sagesRequest.change_date === null) return "ERROR_REQUEST_CHANGE_DATE_NULL";
         const onboardingsFromRequest = await  getOnboardingFromRequest(requestId);
-        if (onboardingsFromRequest.length>0) return "ERROR_REQUEST_HAS_ONBOARDING"
+        if (onboardingsFromRequest.length>0) return "ERROR_REQUEST_HAS_ONBOARDING";
+        const today = new Date(Date.now());
         const createdOnboarding = await prisma.sgs_onboarding.create({
             data : {
                 request_id             : requestId,
                 status                 : 'C',
                 start_date_time        : new Date(Date.now()),
                 end_date_time          : null,
-                notes                  : "Début de l'intégration a SAGES\n",
-                create_date            : new Date(Date.now()),
+                notes                  : "Début de l'intégration a SAGES\n\n" + 
+                                        "Etape 1 : Requête créée le " + format(sagesRequest.create_date, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr }) + 
+                                        "\nEtape 2 : Requête confirmée le " + format(sagesRequest.change_date, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr }) +
+                                        "\nEtape 3 : Instance d'intégration créée le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr }) ,
+                create_date            : today,
                 created_by             : "SAGES_ONBOARDING"
             }
         });
@@ -309,9 +316,13 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
         if (onboarding.status === 'E') return "ERROR_ONBOARDING_ALREADY_STARTED";
         const stepsCreated = await isOnboardingStepsCreated(onboardingId);
         if (stepsCreated) return "ERROR_ONBOARDING_STEPS_ALREADY_CREATED";
-        const tgSteps = await prisma.tg_onboarding_steps.findMany();
+        const tgSteps = await prisma.tg_onboarding_steps.findMany({
+            orderBy : {
+                step_order : 'asc'
+            }
+        });
         if (tgSteps.length === 0) return "ERROR_NO_STEPS_CREATED";
-        let notes:string ="\nLes étapes de l'intégration\n";
+        //let notes:string ="\nLes étapes de l'intégration\n";
         for (const tgStep of tgSteps) {
             await prisma.sgs_onboarding_step.create({
                 data : {
@@ -322,9 +333,10 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
                     created_by      : "SAGES_ONBOARDING"          
                 }
             });
-            notes = notes + "Step : " + tgStep.step_order + " - " + tgStep.main_name + "..." + tgStep.sub_name + "\n";
+            //notes = notes + "Step : " + tgStep.step_order + " - " + tgStep.main_name + "..." + tgStep.sub_name + "\n";
         }
-        const updatedNotes = onboarding.notes + notes;
+        const today = new Date(Date.now());
+        const updatedNotes = onboarding.notes + "\nEtape 4 : Phases d'intégration créées le " + + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr });
         await prisma.sgs_onboarding.update({
                 where : {
                     id : onboardingId
@@ -332,7 +344,7 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
                 data : {
                     notes : updatedNotes,
                     status : 'E',
-                    change_date : new Date(Date.now()),
+                    change_date : today,
                     changed_by : "SAGES_ONBOARDING" 
                 }
             });
@@ -423,7 +435,7 @@ export async function updateOnboardingStep(stepOrder:number, onboardingId:string
                 id : onboardingId
             },
             data : {
-                notes          : notes + "\n" + step[0].name + " =======> Complèté le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr }),
+                notes          : "\n" + notes + "\nEtape " + stepOrder + " : Phase d'intégration " + step[0].name + " complètée le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr }),
                 change_date     : today,
                 changed_by      : "SAGES_ONBOARDING"
             }
@@ -481,7 +493,7 @@ export async function registerNewClient(requestId:string, onboardingId:string) :
         //update the step
         const today = new Date(Date.now());
         //const notes = onboarding.notes + "\nCréation du client .... Complètée .... Le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr });
-        const updateOnboardingAndStep = await updateOnboardingStep(1,onboardingId,(progress.onboardingRecord.notes===null)?(""):(progress.onboardingRecord.notes));
+        const updateOnboardingAndStep = await updateOnboardingStep(5,onboardingId,(progress.onboardingRecord.notes===null)?(""):(progress.onboardingRecord.notes));
         if (updateOnboardingAndStep.includes("ERROR")) return "ERROR_CLIENT_CREATED_ONBOARDING_STEP_NOT_UPDATED";
         return newClient.id;
     }
@@ -591,19 +603,22 @@ export async function addNewClientBaseModules(requestId:string, onboardingId:str
         if (!client || client===null) return "ERROR_INVALID_CLIENT";
 
         //step 2 
-        const userxModuleId = process.env.MODULE_USERX_ID!;
-        const addUSERX = await addModuleToNewClient(onboardingId, client.id, userxModuleId, 2);
-        if (addUSERX.includes("ERROR")) return "ERROR_USERX_MODULE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
+        const inscriptModuleId = process.env.MODULE_INSCRIPT_ID!;
+        const addINSCRIPT = await addModuleToNewClient(onboardingId, client.id, inscriptModuleId, 6);
+        if (addINSCRIPT.includes("ERROR")) return "ERROR_USERX_MODULE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
 
         //step 3
+        /*
         const syscolModuleId = process.env.MODULE_SYSCOL_ID!;
         const addSYSCOL = await addModuleToNewClient(onboardingId, client.id, syscolModuleId, 3);
         if (addSYSCOL.includes("ERROR")) return "ERROR_SYSCOL_MODULE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
-
+        */
         //step 4
+        /*
         const soclasModuleId = process.env.MODULE_SOCLAS_ID!;
         const addSOCLAS = await addModuleToNewClient(onboardingId, client.id, soclasModuleId, 4);
         if (addSOCLAS.includes("ERROR")) return "ERROR_SOCLAS_MODULE_ADDED_ONBOARDING_STEP_NOT_UPDATED";
+        */
         return "ALL_BASE_MODULE_ADDED_AND_ONBOARDING_STEPS_UPDATED";
         
     }
@@ -632,7 +647,7 @@ export async function addNewClientDefaultSettings(requestId:string, onboardingId
             }
         });
         if (clientSetting===null) return "ERROR_CLIENT_DEFAULT_SETTINGS_CREATION";
-        const updatedStep = await updateOnboardingStep(5,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        const updatedStep = await updateOnboardingStep(7,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
         if (updatedStep.includes("ERROR")) return "ERROR_CLIENT_DEFAULT_SETTINGS_ADDED_ONBOARDING_STEP_NOT_UPDATED";
 
         return clientSetting.id;
@@ -665,7 +680,7 @@ export async function registerNewSchool(requestId:string, onboardingId:string,cl
         });
         if (!newSchool || newSchool===null) return "ERROR_CLIENT_CREATION";
         //step update
-        const updatedStep = await updateOnboardingStep(6,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        const updatedStep = await updateOnboardingStep(8,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
         if (updatedStep.includes("ERROR")) return "ERROR_SCHOOL_ADDED_ONBOARDING_STEP_NOT_UPDATED";
 
         return newSchool.id;
@@ -697,7 +712,7 @@ export async function addNewClientSchool(requestId:string, onboardingId:string,c
             }
         });
         if (!createdClientSchool || createdClientSchool === null) return "ERROR_CLIENT_ECOLE_CREATION";
-        const updatedStep = await updateOnboardingStep(7,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        const updatedStep = await updateOnboardingStep(9,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
         if (updatedStep.includes("ERROR")) return "ERROR_SCHOOL_ADDED_TO_CLIENT_ONBOARDING_STEP_NOT_UPDATED";
 
         return createdClientSchool.id;
@@ -725,6 +740,7 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
         const bcrypt = require('bcrypt');
         const hashedPassword = await bcrypt.hash(generatedPassword, saltRounds);
         if (!hashedPassword) throw new Error("Echec création d'utilisateur");
+        //Create user
         const createdUser = await prisma.sgs_user.create({
             data : {
                 user_name   : progress.requestRecord.requester_email,
@@ -738,8 +754,8 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
         });
         if (!createdUser || createdUser===null) return "ERROR_USER_NOT_CREATED";
         // Update step
-        const updatedStep8 = await updateOnboardingStep(8,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
-        if (updatedStep8.includes("ERROR")) 
+        const updatedStep10 = await updateOnboardingStep(10,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        if (updatedStep10.includes("ERROR")) 
             return {
                         email : createdUser.email,
                         password : generatedPassword,
@@ -767,8 +783,8 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
                         schoolName : progress.requestRecord.ecole_name,
                         message : "ERROR_USER_CREATED_ADMIN_ROLE_NOT_ADDED"
                     };
-        const updatedStep9 = await updateOnboardingStep(9,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
-        if (updatedStep9.includes("ERROR")) 
+        const updatedStep11 = await updateOnboardingStep(11,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        if (updatedStep11.includes("ERROR")) 
             return {
                         email : createdUser.email,
                         password : generatedPassword,
@@ -796,8 +812,8 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
                         schoolName : progress.requestRecord.ecole_name,
                         message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_NOT_ADDED"
                     };
-        const updatedStep10 = await updateOnboardingStep(10,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
-        if (updatedStep10.includes("ERROR")) 
+        const updatedStep12 = await updateOnboardingStep(12,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        if (updatedStep12.includes("ERROR")) 
             return {
                         email : createdUser.email,
                         password : generatedPassword,
@@ -824,8 +840,21 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
                         schoolName : progress.requestRecord.ecole_name,
                         message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_NOT_ADDED"
                     };
-        const updatedStep11 = await updateOnboardingStep(11,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
-        if (updatedStep11.includes("ERROR")) 
+        const updatedStep13 = await updateOnboardingStep(13,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        if (updatedStep13.includes("ERROR")) 
+             return {
+                        email : createdUser.email,
+                        password : generatedPassword,
+                        clientName : progress.requestRecord.client_full_name,
+                        schoolName : progress.requestRecord.ecole_name,
+                        message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_ADDED_ONBOARDING_STEP_NOT_UPDATED"
+                    };
+
+        // Create menu items for the clien for admin_client role
+        const createdMenuItems = await createClientMenuItemsForRole(requestId, onboardingId, clientId, adminRoleId);
+        if (createdMenuItems.includes("ERROR")) return "ERROR_CREATION_MENU_ITEMS";
+        const updatedStep14 = await updateOnboardingStep(14,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));            
+        if (updatedStep14.includes("ERROR")) 
              return {
                         email : createdUser.email,
                         password : generatedPassword,
@@ -888,6 +917,78 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
             message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
         });
         throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function getSagesMenuItemsByRoleAndModule(moduleId:string, roleId:string) : Promise<tg_role_module_menu_item[]>{
+    const functionName = "getSagesMenuItemsByRoleAndModule";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const items = await prisma.tg_role_module_menu_item.findMany({
+            where : {
+                module_id : moduleId,
+                role_id : roleId
+            },
+            orderBy : {
+                item_order : 'asc'
+            }
+        });
+        return items;
+    }
+    catch(error:any) {
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        throw new Error(ErrorOrigin + " - " +functionName + error.message);
+    }
+}
+
+export async function createClientMenuItemsForRole(requestId:string, onboardingId:string, clientId:string, roleId:string) : Promise<string> {
+    const functionName = "createClientMenuItemsForRole";
+    try{
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const progress = await getRequestAndOnboardingProgress(requestId, onboardingId);
+        if (!progress.inProgress || progress.requestRecord===null || progress.onboardingRecord === null) return progress.message;
+        
+        //get the client modules
+        const clientModules = await prisma.sgs_client_module.findMany({
+            where : {
+                client_id : clientId,
+            }
+        });
+        for (const clientModule of clientModules) {
+            const items = await getSagesMenuItemsByRoleAndModule(clientModule.module_id, roleId);
+            for (const item of items) {
+                await prisma.sgs_client_module_role_menu_item.create({
+                    data : {
+                        client_module_id : clientModule.id,
+                        role_id : roleId,
+                        display_name : item.display_name,
+                        item_order : item.item_order,
+                        description : item.description,
+                        icon_name : item.icon_name,
+                        end_route : item.end_route,
+                        notes : item.notes,
+                        create_date : new Date(Date.now()),
+                        created_by : "SAGES_ONBOARDING"
+                        
+                    }
+                });
+            }
+        };
+        return "SUCCESS_CREATION_MENU_ITEMS_FOR_NEW_ROLE_CLIENT";
+    }
+    catch(error:any) {
+        await sendEmail({
+            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
+            email : process.env.STMP_USER,
+            message : "Voir détails de l'erreur ci-dessous\n\n" + error.message
+        });
+        return "ERROR_CREATION_MENU_ITEMS_FOR_NEW_ROLE_CLIENT";
     }
 }
 

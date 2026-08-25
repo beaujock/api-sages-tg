@@ -109,19 +109,20 @@ model sgs_client_ecole {
 }
 
 model sgs_client_module {
-  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  client_id                String                   @db.Uuid
-  module_id                String                   @db.Uuid
-  active                   Boolean                  @default(true)
-  status                   String                   @default("A") @db.VarChar(1)
-  notes                    String?                  @db.VarChar
-  create_date              DateTime                 @db.Timestamptz(6)
-  created_by               String                   @db.VarChar(32)
-  change_date              DateTime?                @db.Timestamptz(6)
-  changed_by               String?                  @db.VarChar(32)
-  sgs_client               sgs_client               @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tg_module                tg_module                @relation(fields: [module_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  id                               String                             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id                        String                             @db.Uuid
+  module_id                        String                             @db.Uuid
+  active                           Boolean                            @default(true)
+  status                           String                             @default("A") @db.VarChar(1)
+  notes                            String?                            @db.VarChar
+  create_date                      DateTime                           @db.Timestamptz(6)
+  created_by                       String                             @db.VarChar(32)
+  change_date                      DateTime?                          @db.Timestamptz(6)
+  changed_by                       String?                            @db.VarChar(32)
+  sgs_client                       sgs_client                         @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_module                        tg_module                          @relation(fields: [module_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_client_module_status         lkp_client_module_status           @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_client_module_role_menu_item sgs_client_module_role_menu_item[]
 }
 
 model sgs_client_setting {
@@ -314,17 +315,19 @@ model tg_matiere {
 }
 
 model tg_module {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  full_name         String              @db.VarChar(128)
-  short_name        String?             @db.VarChar(64)
-  code              String              @unique @db.VarChar(32)
-  base_price        Decimal             @default(0) @db.Decimal(10, 2)
-  notes             String?             @db.VarChar
-  create_date       DateTime            @db.Timestamptz(6)
-  created_by        String              @db.VarChar(32)
-  change_date       DateTime?           @db.Timestamptz(6)
-  changed_by        String?             @db.VarChar(32)
-  sgs_client_module sgs_client_module[]
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name                String                     @db.VarChar(128)
+  short_name               String?                    @db.VarChar(64)
+  code                     String                     @unique @db.VarChar(32)
+  base_price               Decimal                    @default(0) @db.Decimal(10, 2)
+  notes                    String?                    @db.VarChar
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  module_order             Int
+  sgs_client_module        sgs_client_module[]
+  tg_role_module_menu_item tg_role_module_menu_item[]
 }
 
 model tg_niveau {
@@ -344,16 +347,18 @@ model tg_niveau {
 }
 
 model tg_role {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          String          @db.VarChar(64)
-  code          String          @db.VarChar(32)
-  description   String?         @db.VarChar(256)
-  notes         String?         @db.VarChar
-  create_date   DateTime        @db.Timestamptz(6)
-  created_by    String          @db.VarChar(32)
-  change_date   DateTime?       @db.Timestamptz(6)
-  changed_by    String?         @db.VarChar(32)
-  sgs_user_role sgs_user_role[]
+  id                               String                             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                             String                             @db.VarChar(64)
+  code                             String                             @db.VarChar(32)
+  description                      String?                            @db.VarChar(256)
+  notes                            String?                            @db.VarChar
+  create_date                      DateTime                           @db.Timestamptz(6)
+  created_by                       String                             @db.VarChar(32)
+  change_date                      DateTime?                          @db.Timestamptz(6)
+  changed_by                       String?                            @db.VarChar(32)
+  sgs_client_module_role_menu_item sgs_client_module_role_menu_item[]
+  sgs_user_role                    sgs_user_role[]
+  tg_role_module_menu_item         tg_role_module_menu_item[]
 }
 
 model tg_serie {
@@ -611,6 +616,78 @@ model sgs_inscription {
   sgs_eleve               sgs_eleve               @relation(fields: [eleve_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   lkp_registration_status lkp_registration_status @relation(fields: [registration_status], references: [code], onDelete: NoAction, onUpdate: NoAction)
   sgs_salle_classe        sgs_salle_classe        @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_client_module_role_menu_item {
+  id                                      String                                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_module_id                        String                                    @db.Uuid
+  role_id                                 String                                    @db.Uuid
+  display_name                            String                                    @db.VarChar(16)
+  description                             String?                                   @db.VarChar(256)
+  icon_name                               String?                                   @db.VarChar(64)
+  end_route                               String                                    @default("/") @db.VarChar(64)
+  item_order                              Int
+  active                                  Boolean                                   @default(true)
+  notes                                   String?                                   @db.VarChar
+  create_date                             DateTime                                  @db.Timestamptz(6)
+  created_by                              String                                    @db.VarChar(32)
+  change_date                             DateTime?                                 @db.Timestamptz(6)
+  changed_by                              String?                                   @db.VarChar(32)
+  sgs_client_module                       sgs_client_module                         @relation(fields: [client_module_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_role                                 tg_role                                   @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_client_module_role_menu_item_action sgs_client_module_role_menu_item_action[]
+}
+
+model sgs_client_module_role_menu_item_action {
+  id                               String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_role_menu_item            String                           @db.Uuid
+  display_name                     String                           @db.VarChar(16)
+  description                      String?                          @db.VarChar(256)
+  icon_name                        String?                          @db.VarChar(64)
+  end_route                        String                           @default("/") @db.VarChar(64)
+  action_order                     Int
+  active                           Boolean                          @default(true)
+  notes                            String?                          @db.VarChar
+  create_date                      DateTime                         @db.Timestamptz(6)
+  created_by                       String                           @db.VarChar(32)
+  change_date                      DateTime?                        @db.Timestamptz(6)
+  changed_by                       String?                          @db.VarChar(32)
+  sgs_client_module_role_menu_item sgs_client_module_role_menu_item @relation(fields: [client_role_menu_item], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sgs_client_module_role_menu_item_act_client_role_menu_item_fkey")
+}
+
+model tg_role_module_menu_item {
+  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  module_id                       String                            @db.Uuid
+  role_id                         String                            @db.Uuid
+  display_name                    String                            @db.VarChar(16)
+  description                     String?                           @db.VarChar(256)
+  icon_name                       String?                           @db.VarChar(64)
+  end_route                       String                            @default("/") @db.VarChar(64)
+  item_order                      Int
+  notes                           String?                           @db.VarChar
+  create_date                     DateTime                          @db.Timestamptz(6)
+  created_by                      String                            @db.VarChar(32)
+  change_date                     DateTime?                         @db.Timestamptz(6)
+  changed_by                      String?                           @db.VarChar(32)
+  tg_module                       tg_module                         @relation(fields: [module_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_role                         tg_role                           @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_role_module_menu_item_action tg_role_module_menu_item_action[]
+}
+
+model tg_role_module_menu_item_action {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_module_menu_item_id String                   @db.Uuid
+  display_name             String                   @db.VarChar(16)
+  description              String?                  @db.VarChar(256)
+  icon_name                String?                  @db.VarChar(64)
+  end_route                String                   @default("/") @db.VarChar(64)
+  action_order             Int
+  notes                    String?                  @db.VarChar
+  create_date              DateTime                 @db.Timestamptz(6)
+  created_by               String                   @db.VarChar(32)
+  change_date              DateTime?                @db.Timestamptz(6)
+  changed_by               String?                  @db.VarChar(32)
+  tg_role_module_menu_item tg_role_module_menu_item @relation(fields: [role_module_menu_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 view v_sgs_client {
