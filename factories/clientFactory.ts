@@ -17,7 +17,7 @@ export async function getClientById(clientId:string) : Promise<AdminClientClient
             },
             include : {
                 tg_systeme_scolaire : true,
-                lkp_client_module_status : true
+                lkp_client_status : true
             }
         });
         if(!client) return null;
@@ -28,7 +28,7 @@ export async function getClientById(clientId:string) : Promise<AdminClientClient
             active                   : client.active,
             active_label             : (client.active)?("Actif"):("Inactif"),
             status                   : client.status,
-            status_label             : client.lkp_client_module_status.display_value,
+            status_label             : client.lkp_client_status.display_value,
             legal_name               : client.legal_name,
             short_name               : client.short_name,
             code                     : client.code,
@@ -62,7 +62,7 @@ export async function getClientByCode(clientCode:string) : Promise<AdminClientCl
             },
             include : {
                 tg_systeme_scolaire : true,
-                lkp_client_module_status : true
+                lkp_client_status : true
             }
         });
         if(!client) return null;
@@ -73,7 +73,7 @@ export async function getClientByCode(clientCode:string) : Promise<AdminClientCl
             active                   : client.active,
             active_label             : (client.active)?("Actif"):("Inactif"),
             status                   : client.status,
-            status_label             : client.lkp_client_module_status.display_value,
+            status_label             : client.lkp_client_status.display_value,
             legal_name               : client.legal_name,
             short_name               : client.short_name,
             code                     : client.code,
