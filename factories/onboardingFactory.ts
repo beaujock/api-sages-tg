@@ -1,4 +1,4 @@
-import { sgs_client, sgs_ecole, sgs_onboarding,tg_role_module_menu_item } from "@/lib/generated/prisma/client";
+import { sgs_client, sgs_ecole, sgs_onboarding,sgs_user,tg_role_module_menu_item } from "@/lib/generated/prisma/client";
 import { sgs_request } from "@/lib/generated/prisma/client";
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { OnboardingStepsInfos, SGSCreateRequestDO, ToOnboardingStepsInfos } from "@/types/ONBOARDING/onboardingTypes";
@@ -26,6 +26,40 @@ type NewUser = {
 type OnboardingCompletionInfo = {
     requestStatus : string,
     onboardingStatus : string
+}
+
+export async function getUserByEmail(email:string) : Promise<sgs_user|null> {
+    const functionName = "getUserByEmail - ";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const user = await prisma.sgs_user.findFirst({
+            where : {
+                email : email
+            }
+        });
+        return user;
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function getClientByCode(clientCode:string) : Promise<sgs_client|null> {
+    const functionName = "getClientByCode - ";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const client = await prisma.sgs_client.findFirst({
+            where : {
+                code : clientCode
+            }
+        });
+        return client;
+    }
+    catch(error:any) {
+        throw new Error(ErrorOrigin + functionName + error.message);
+    }
 }
 
 export async function getRequestById(requestId:string) : Promise<sgs_request|null> {
@@ -219,8 +253,13 @@ export async function createRequestForOnboarding(requestData : SGSCreateRequestD
     //console.log("Request Data : ", requestData);
     try {
         const isConnected = await verifyAndSetPrismaConnection();
-        console.log("Connected ?",isConnected);
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const clientCode = requestData.client_code.replaceAll(" ","").toUpperCase();
+        const client = await getClientByCode(clientCode);
+        if (client !== null) throw new Error("Code client déjà utilisé");
+        const userEmail = requestData.requester_email.toLowerCase();
+        const user = await getUserByEmail(userEmail);
+        if (user !== null) throw new Error("Email déjà utilisé");
         const request = await prisma.sgs_request.create({
             data : {
                 status                 : requestData.status,
@@ -228,10 +267,10 @@ export async function createRequestForOnboarding(requestData : SGSCreateRequestD
                 request_code           : requestData.request_code,
                 request_confirmed      : requestData.request_confirmed,
                 requester_full_name    : requestData.requester_full_name,
-                requester_email        : requestData.requester_email,
+                requester_email        : userEmail,
                 requester_phone        : requestData.requester_phone,
                 client_full_name       : requestData.client_full_name,
-                client_code            : requestData.client_code,
+                client_code            : clientCode,
                 ecole_name             : requestData.ecole_name,
                 ecole_code             : requestData.ecole_code,
                 notes                  : requestData.notes,
