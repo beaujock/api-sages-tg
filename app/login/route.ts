@@ -3,8 +3,6 @@ import { logError } from "@/factories/utilitiesFactory";
 import { addUserSession, getUser, getUserResources, getUserRoles } from "@/factories/userFactory";
 import { generateToken } from "@/lib/auth";
 
-const ErrorOrigin = "userFactory";
-
 export async function POST(request:NextRequest) {
     try {
         //request.headers.set("Access-Control-Allow-Origin", "*");

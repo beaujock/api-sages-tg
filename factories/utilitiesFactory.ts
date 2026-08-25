@@ -1,7 +1,7 @@
 
 import nodemailer from 'nodemailer';
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { tg_annee_scolaire } from '@/lib/generated/prisma/client';
+import { tg_annee_scolaire, } from '@/lib/generated/prisma/client';
 
 const ErrorOrigin = "utilistiesFactory"
 
@@ -147,3 +147,34 @@ export async function getCurrentAnneeScolaire() : Promise<tg_annee_scolaire|null
       }
 }
 
+/*
+export async function getMenuItemsByRole(role:string) : Promise<tg_menu[]> {
+  const functionName = "getMenuItemsByRole";
+  try {
+    const isConnected = await verifyAndSetPrismaConnection();
+    if (!isConnected) throw new Error("Vous n'êtes pas connecté!");
+    let roleCode = role.toUpperCase(); // Ensure the role is in uppercase
+    const menuItems: tg_menu[] = [];
+    const roleMenus = await prisma.tg_role_menu.findMany({
+      where: {
+        tg_role: {
+          code: roleCode,
+        },
+      },
+      orderBy: {
+        order: 'asc',
+      },
+      include: {
+        tg_menu: true,
+      },
+    });
+    for (const roleMenu of roleMenus) {
+      menuItems.push(roleMenu.tg_menu);
+    }
+    return menuItems;
+  }
+  catch(error:any) {
+    throw new Error(ErrorOrigin + functionName + error.message);
+  }
+}
+  */
