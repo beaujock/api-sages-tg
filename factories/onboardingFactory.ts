@@ -249,8 +249,6 @@ export async function isOnboardingStepsCreated(onboardingId:string) : Promise<bo
 
 export async function createRequestForOnboarding(requestData : SGSCreateRequestDO) : Promise<sgs_request|null> {
     const functionName = "createRequestForOnboarding - ";
-    //console.log("Entering function : createRequestForOnboarding");
-    //console.log("Request Data : ", requestData);
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -1030,37 +1028,3 @@ export async function createClientMenuItemsForRole(requestId:string, onboardingI
         return "ERROR_CREATION_MENU_ITEMS_FOR_NEW_ROLE_CLIENT";
     }
 }
-
-export async function onboardingCompletionCheck(requestId:string, onboardingId:string,clientId:string, schoolId:string) {
-    const functionName = "onboardingCompletionCheck - ";
-    try{
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-    }
-    catch(error:any){
-
-    }
-}
-
-/* 
-                create_date         : new Date(Date.now()),
-                created_by          : "SAGES_ONBOARDING"
-*/
-
-/*
-export async function addNewClientDefaultSettings(clientId:string) : Promise<string> {
-    const functionName = "addNewClientDefaultSettings - ";
-    try {
-         const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-    }
-    catch(error:any) {
-        await sendEmail({
-            name : "Erreur - Application SAGES-TG - " + ErrorOrigin + functionName,
-            email : process.env.STMP_USER,
-            message : "Voir détails de l'erreur ci-dessous\n\n" + error.mssage
-        });
-        throw new Error(ErrorOrigin + functionName + error.message);
-    }
-}
-*/
