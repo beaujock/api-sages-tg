@@ -373,7 +373,7 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
             //notes = notes + "Step : " + tgStep.step_order + " - " + tgStep.main_name + "..." + tgStep.sub_name + "\n";
         }
         const today = new Date(Date.now());
-        const updatedNotes = onboarding.notes + "\nEtape 4 : Phases d'intégration créées le " + + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr });
+        const updatedNotes = onboarding.notes + "\nEtape 4 : Phases d'intégration créées le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr });
         await prisma.sgs_onboarding.update({
                 where : {
                     id : onboardingId
@@ -472,7 +472,7 @@ export async function updateOnboardingStep(stepOrder:number, onboardingId:string
                 id : onboardingId
             },
             data : {
-                notes          : "\n" + notes + "\nEtape " + stepOrder + " : Phase d'intégration " + step[0].name + " complètée le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr }),
+                notes          : notes + "\nEtape " + stepOrder + " : Phase d'intégration " + step[0].name + " complètée le " + format(today, "eeee d MMMM yyyy 'à' HH'h'mm", { locale: fr }),
                 change_date     : today,
                 changed_by      : "SAGES_ONBOARDING"
             }
@@ -791,7 +791,9 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
         });
         if (!createdUser || createdUser===null) return "ERROR_USER_NOT_CREATED";
         // Update step
-        const updatedStep10 = await updateOnboardingStep(10,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        const onboarding10 = await getOnboardingById(onboardingId);
+        if (onboarding10 == null ) return "ERROR_ONBOARDING_NOT_FOUND_10";
+        const updatedStep10 = await updateOnboardingStep(10,onboardingId,(onboarding10.notes=== null)?(""):(onboarding10.notes ));
         if (updatedStep10.includes("ERROR")) 
             return {
                         email : createdUser.email,
@@ -820,7 +822,9 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
                         schoolName : progress.requestRecord.ecole_name,
                         message : "ERROR_USER_CREATED_ADMIN_ROLE_NOT_ADDED"
                     };
-        const updatedStep11 = await updateOnboardingStep(11,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        const onboarding11 = await getOnboardingById(onboardingId);
+        if (onboarding11 == null ) return "ERROR_ONBOARDING_NOT_FOUND_11";
+        const updatedStep11 = await updateOnboardingStep(11,onboardingId,(onboarding11.notes=== null)?(""):(onboarding11.notes ));
         if (updatedStep11.includes("ERROR")) 
             return {
                         email : createdUser.email,
@@ -849,7 +853,9 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
                         schoolName : progress.requestRecord.ecole_name,
                         message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_NOT_ADDED"
                     };
-        const updatedStep12 = await updateOnboardingStep(12,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        const onboarding12 = await getOnboardingById(onboardingId);
+        if (onboarding12 == null ) return "ERROR_ONBOARDING_NOT_FOUND_12";
+        const updatedStep12 = await updateOnboardingStep(12,onboardingId,(onboarding12.notes=== null)?(""):(onboarding12.notes ));
         if (updatedStep12.includes("ERROR")) 
             return {
                         email : createdUser.email,
@@ -877,7 +883,9 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
                         schoolName : progress.requestRecord.ecole_name,
                         message : "ERROR_USER_CREATED_ADMIN_ROLE_ADDED_USER_RESOURCE_ADDED_USER_CLIENT_NOT_ADDED"
                     };
-        const updatedStep13 = await updateOnboardingStep(13,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));
+        const onboarding13 = await getOnboardingById(onboardingId);
+        if (onboarding13 == null ) return "ERROR_ONBOARDING_NOT_FOUND_13";
+        const updatedStep13 = await updateOnboardingStep(13,onboardingId,(onboarding13.notes=== null)?(""):(onboarding13.notes ));
         if (updatedStep13.includes("ERROR")) 
              return {
                         email : createdUser.email,
@@ -890,7 +898,9 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
         // Create menu items for the clien for admin_client role
         const createdMenuItems = await createClientMenuItemsForRole(requestId, onboardingId, clientId, adminRoleId);
         if (createdMenuItems.includes("ERROR")) return "ERROR_CREATION_MENU_ITEMS";
-        const updatedStep14 = await updateOnboardingStep(14,onboardingId,(progress.onboardingRecord.notes=== null)?(""):(progress.onboardingRecord.notes ));            
+        const onboarding14 = await getOnboardingById(onboardingId);
+        if (onboarding14 == null ) return "ERROR_ONBOARDING_NOT_FOUND_14";
+        const updatedStep14 = await updateOnboardingStep(14,onboardingId,(onboarding14.notes=== null)?(""):(onboarding14.notes ));            
         if (updatedStep14.includes("ERROR")) 
              return {
                         email : createdUser.email,
