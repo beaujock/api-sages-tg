@@ -2,6 +2,9 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getCurrentAnneeScolaire, logError } from "./utilitiesFactory";
 import { getYear } from 'date-fns';
 import { AdminClientClientDisplay, AdminClientClientOverview, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
+import { tg_role } from "@/lib/generated/prisma/browser";
+import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
+import { sgs_client_module } from "@/lib/generated/prisma/client";
 
 
 const ErrorOrigin = "clientFactory";
@@ -179,6 +182,44 @@ export async function getClientSalleClasses(clientId:string, anneeScolaireId:str
     }
 }
 
+export async function getRoleByCode(roleCode:string) : Promise<tg_role|null> {
+    const functionName = "getRoleByCode";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const role = await prisma.tg_role.findFirst({
+            where : {
+                code : roleCode
+            }
+        });
+
+        return role;
+    }
+    catch(error:any) {
+        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
+export async function getClientModules(clientId:string) : Promise<sgs_client_module[]> {
+    const functionName = "getClientById";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const clientModules = await prisma.sgs_client_module.findMany({
+            where : {
+                client_id : clientId
+            }
+        });
+        return clientModules
+
+    }
+    catch(error:any) {
+        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 export async function getClientEleves(clientId:string, anneeScolaireId:string|null) : Promise<AdminClientEleveDisplay[]> {
     const functionName = "getClientEleves";
     try {
@@ -221,115 +262,41 @@ export async function getClientEleves(clientId:string, anneeScolaireId:string|nu
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
-/*
-export async function getClientEnseignants(clientId:string, anneeScolaireId:string|null) : Promise<AdminClientEnseignantDisplay[]> {
-    const functionName = "getClientEnseignants";
+
+export async function getClientRoleMenuItems(clientCode: string, roleCode:string) : Promise<SagesMenuItem[]> {
+    const functionName = "getClientEleves";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listEleves:AdminClientEleveDisplay[] = [];
-        let schoolYearId:string|null;
-        if (anneeScolaireId === null) {
-            const schoolYear = await getCurrentAnneeScolaire();
-            schoolYearId = (schoolYear===null)?(null):(schoolYear.id);
-        };
-        schoolYearId = anneeScolaireId;
-        if (schoolYearId === null) throw new Error("Année scolaire non trouvée");
-        const clientEleves= await prisma.sgs_eleve.findMany({
+        const menuItems:SagesMenuItem[] = []; 
+        const client = await getClientByCode(clientCode);
+        if (client == null) return menuItems;
+        const role = await getRoleByCode(roleCode);
+        if (role === null) return menuItems;
+        const clientModules = await getClientModules(client.id);
+        const clientModulesIds:string[] = [];
+        clientModules.forEach(cm  => {
+            clientModulesIds.push(cm.id);
+        });
+        const items = await prisma.sgs_client_module_role_menu_item.findMany({
             where : {
-                sgs_inscription : {
-                    some: {
-                        sgs_salle_classe : {
-                            annee_scolaire_id : schoolYearId,
-                            sgs_ecole : {
-                                sgs_client_ecole: {
-                                    some: {
-                                        client_id : clientId
-                                    }
-                                }
-                            }
-                        }
-                    }
+                client_module_id : {
+                    in : clientModulesIds
                 }
+            },
+            orderBy : {
+                item_order : 'asc'
             }
-
         });
-        clientEleves.forEach(eleve => {
-            listEleves.push(ToAdminClientEleveDisplay(eleve));
+        items.forEach(item => {
+            menuItems.push(ToSagesMenuItem(item));
         });
-        return [... new Set(listEleves)];
+        return menuItems;
     }
     catch(error:any) {
         logError('F',"Recherche des classes du client pendant une année scolaire",ErrorOrigin + " : " + functionName, error.message, true);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
-    */
 
-export async function getClientOverview(clientId:string, anneeScolaireId:string|null) : Promise<AdminClientClientOverview> {
-    const functionName = "getClientOverview";
-    try {
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const client = await getClientById(clientId);
-        if (!client || client===null) return {
-            client              : null,
-            numberEcoles        : 0,
-            numberSalleClasses  : 0,
-            numberEnseignants   : 0,
-            numberEleves        : 0
-        };
-        const ecoles = await getClientEcoles(clientId);
-        const salleclasses = await getClientSalleClasses(clientId, anneeScolaireId);
-        const eleves = await getClientEleves(clientId, anneeScolaireId);
-        return {
-            client              : client,
-            numberEcoles        : ecoles.length,
-            numberSalleClasses  : salleclasses.length,
-            numberEnseignants   : 0,
-            numberEleves        : eleves.length
-        }
-    }
-    catch(error:any){
-        logError('F',"Console Client",ErrorOrigin + " : " + functionName, error.message, true);
-        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
-    }
-}
 
-/*export async function getClientMenuItemsByRole(clientId:string,role:string) : Promise<tg_menu[]> {
-  const functionName = "getClientMenuItemsByRole";
-  try {
-    const isConnected = await verifyAndSetPrismaConnection();
-    if (!isConnected) throw new Error("Vous n'êtes pas connecté!");
-    let roleCode = role.toUpperCase(); // Ensure the role is in uppercase
-    const menuItems: tg_menu[] = [];
-    const roleMenus = await prisma.tg_role_menu.findMany({
-      where: {
-        active: true,
-        tg_role: {
-          code: roleCode
-        },
-        sgs_client_role_menu: {
-          some: {
-            client_id: clientId,
-            active: true
-          },
-        },
-      },
-      orderBy: {
-        item_order: 'asc',
-      },
-      include: {
-        tg_menu: true,
-      },
-    });
-    for (const roleMenu of roleMenus) {
-      menuItems.push(roleMenu.tg_menu);
-    }
-    return menuItems;
-  }
-  catch(error:any) {
-    throw new Error(ErrorOrigin + functionName + error.message);
-  }
-}
-  */
