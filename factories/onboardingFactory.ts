@@ -361,7 +361,7 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
         if (tgSteps.length === 0) return "ERROR_NO_STEPS_CREATED";
         //let notes:string ="\nLes étapes de l'intégration\n";
         for (const tgStep of tgSteps) {
-            await prisma.sgs_onboarding_step.create({
+            const createdStep = await prisma.sgs_onboarding_step.create({
                 data : {
                     onboarding_id   : onboardingId,
                     name            : tgStep.main_name + "..." + tgStep.sub_name,
@@ -370,6 +370,18 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
                     created_by      : "SAGES_ONBOARDING"          
                 }
             });
+            if (createdStep.step_order >= 3) {
+                await prisma.sgs_onboarding_step.update({
+                where : {
+                    id : createdStep.id
+                },
+                data : {
+                    status : 'C',
+                    change_date : new Date(Date.now()),
+                    changed_by : "SAGES_ONBOARDING" 
+                }
+            });
+            }
             //notes = notes + "Step : " + tgStep.step_order + " - " + tgStep.main_name + "..." + tgStep.sub_name + "\n";
         }
         const today = new Date(Date.now());
@@ -385,10 +397,11 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
                     changed_by : "SAGES_ONBOARDING" 
                 }
             });
+    
         return "ONBOARDING_STEPS_CREATED";
     }
     catch(error:any) {
-        logError('N',"Echec : Création de l'intégration",ErrorOrigin + "-" + functionName, error.message, true);
+        logError('N',"Echec : Création Phases d'intégration",ErrorOrigin + "-" + functionName, error.message, true);
         return "ERROR_ONBOARDING_STEPS_CREATION_FATAL";
     }
 }
