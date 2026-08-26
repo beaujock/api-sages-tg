@@ -370,7 +370,7 @@ export async function createOnboardingSteps(onboardingId:string) : Promise<strin
                     created_by      : "SAGES_ONBOARDING"          
                 }
             });
-            if (createdStep.step_order <= 3) {
+            if (createdStep.step_order <= 4) {
                 await prisma.sgs_onboarding_step.update({
                 where : {
                     id : createdStep.id
