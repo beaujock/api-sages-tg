@@ -20,7 +20,7 @@ export async function POST(request:NextRequest) {
         if (!user || user===null) return NextResponse.json("Utilisateur non trouvé", { status: 404 });
         const userClient = await getUserClient(user.id);
         if (!userClient || userClient===null) return NextResponse.json("Utilisateur non associé à un client", { status: 404 });
-        if (loginRequest.clientCode !== userClient.code) return NextResponse.json("Utilisateur non associé au client", { status: 404 });
+        if (loginRequest.clientCode.toUpperCase() !== userClient.code) return NextResponse.json("Utilisateur non associé au client", { status: 404 });
         const userRoles = await getUserRoles(user.id);
         const userResources = await getUserResources(user.id);
         const connectionToken = generateToken({
