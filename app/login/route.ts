@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
-import { addUserSession, getUser, getUserResources, getUserRoles } from "@/factories/userFactory";
+import { addUserSession, getUser, getUserClient, getUserResources, getUserRoles } from "@/factories/userFactory";
 import { generateToken } from "@/lib/auth";
 
 export async function POST(request:NextRequest) {
@@ -9,6 +9,7 @@ export async function POST(request:NextRequest) {
         const body = await request.json();
         if(!body) return NextResponse.json("Requête invalide", { status: 400 });
         const loginRequest = {
+            clientCode : body.clientCode,
             userName : body.userName,
             password : body.password
         };
@@ -17,10 +18,12 @@ export async function POST(request:NextRequest) {
             return NextResponse.json("Informations de connexion manquantes", { status: 400 });
         const user = await getUser(loginRequest.userName, loginRequest.password);
         if (!user || user===null) return NextResponse.json("Utilisateur non trouvé", { status: 404 });
+        const userClient = await getUserClient(user.id);
+        if (!userClient || userClient===null) return NextResponse.json("Utilisateur non associé à un client", { status: 404 });
+        if (loginRequest.clientCode !== userClient.code) return NextResponse.json("Utilisateur non associé au client", { status: 404 });
         const userRoles = await getUserRoles(user.id);
         const userResources = await getUserResources(user.id);
         const connectionToken = generateToken({
-            "isAuthenticated"   : true,
             "first_login"       : user.first_login,
             "user" : {
                 "id"        : user.id,
@@ -32,8 +35,9 @@ export async function POST(request:NextRequest) {
         });
         const cookie_name = process.env.COOKIE_NAME;
         const expiry_date_time = new Date(Date.now() + Number(process.env.JWT_EXPIRES_IN!) * 60 * 60 * 1000);
-        const sessionAdded:boolean = await addUserSession(user.id, connectionToken, new Date(Date.now()), expiry_date_time);
-        return NextResponse.json({ message: "Succès : Connexion réussie", session_added : sessionAdded, token : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time}, { status: 200 });
+        //const sessionAdded:boolean = await addUserSession(user.id, connectionToken, new Date(Date.now()), expiry_date_time);
+        //return NextResponse.json({ message: "Succès : Connexion réussie", session_added : sessionAdded, token : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time}, { status: 200 });
+        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time}, { status: 200 });
         
     }
     catch(error:any){

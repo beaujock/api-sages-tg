@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { ResourceCombo, UserBaseInfos } from "@/types/USERX/UserTypes";
 import { logError } from "./utilitiesFactory";
-import { sgs_user } from "@/lib/generated/prisma/client";
+import { sgs_client, sgs_user } from "@/lib/generated/prisma/client";
 
 const ErrorOrigin = "userFactory";
 
@@ -210,6 +210,30 @@ export async function getUserById(userId : string) : Promise<sgs_user|null> {
     }
     catch(error:any){
         logError('N',"Echec : Retrouver un utilisateur par son identifiant",ErrorOrigin + "-" + functionName, error.message, false);
+        return null;
+        //throw new Error(ErrorOrigin + functionName + error.message);
+    }
+}
+
+export async function getUserClient(userId : string) : Promise<sgs_client|null> {
+    const functionName = "getUserClient";
+    
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const userClient = await prisma.sgs_client_user.findFirst({
+            where: {
+                user_id: userId,
+            },
+            include : {
+                sgs_client : true
+            }
+        });
+        if (!userClient || userClient===null) return null;
+        return userClient.sgs_client;
+    }
+    catch(error:any){
+        logError('N',"Echec : Retrouver le client à partir d'un utilisateur",ErrorOrigin + "-" + functionName, error.message, false);
         return null;
         //throw new Error(ErrorOrigin + functionName + error.message);
     }
