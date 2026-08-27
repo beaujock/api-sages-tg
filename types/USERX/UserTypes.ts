@@ -27,3 +27,25 @@ export function ToSagesMenuItem(menuItem : sgs_client_module_role_menu_item) : S
         active          : menuItem.active,
     }
 }
+
+export type UserInfos = {
+  id: string;
+  user_name: string;
+  email: string;
+  roles: string[];
+  resources: ResourceCombo[];
+}
+
+export interface DecodedJwtToken {
+  firstLogin: boolean;
+  user : UserInfos;
+}
+
+export interface AuthState {
+  clientCode: string;
+  clientId: string;
+  isFirstLogin: boolean;
+  cookieName: string;
+  token: string;
+  decodedToken: DecodedJwtToken;
+}

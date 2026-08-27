@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { addUserSession, getUser, getUserClient, getUserResources, getUserRoles } from "@/factories/userFactory";
-import { generateToken } from "@/lib/auth";
+import { generateToken, verifyToken } from "@/lib/auth";
+import { DecodedJwtToken } from "@/types/USERX/UserTypes";
 
 export async function POST(request:NextRequest) {
     try {
@@ -15,7 +16,9 @@ export async function POST(request:NextRequest) {
         };
         if (sessionRequest.token === null) 
             return NextResponse.json("Informations de session manquantes", { status: 400 });
-        const sessionAdded:boolean = await addUserSession(body.userId, sessionRequest.token, new Date(sessionRequest.token_effective_time), new Date(sessionRequest.token_expiry_time));
+        //const JWT_SECRET = process.env.JWT_SECRET || '';
+        const decodedToken = await verifyToken(sessionRequest.token) as DecodedJwtToken;
+        const sessionAdded:boolean = await addUserSession(decodedToken.user.id, sessionRequest.token, new Date(sessionRequest.token_effective_time), new Date(sessionRequest.token_expiry_time));
         return NextResponse.json({ message: "Succès : Session ajoutée", session_added : sessionAdded, token : sessionRequest.token, effective_date : sessionRequest.token_effective_time,  expiry_date : sessionRequest.token_expiry_time}, { status: 200 });
     }
     catch(error:any){
