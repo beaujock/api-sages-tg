@@ -23,6 +23,11 @@ export async function POST(request:NextRequest) {
         if (loginRequest.clientCode.toUpperCase() !== userClient.code) return NextResponse.json("Utilisateur non associé au client", { status: 404 });
         const userRoles = await getUserRoles(user.id);
         const userResources = await getUserResources(user.id);
+        let menuItems = [];
+        if (userRoles && userRoles.length === 1) {
+            const roleCode = userRoles[0];
+            menuItems = await getUserClientMenuItems(userClient.code.toUpperCase(), roleCode.toUpperCase());
+        };
         const connectionToken = generateToken({
             "first_login"       : user.first_login,
             "user" : {
@@ -30,17 +35,23 @@ export async function POST(request:NextRequest) {
                 "user_name" : user.user_name,
                 "email"     : user.email,
                 "roles"     : userRoles,
-                "resources" : userResources
+                "resources" : userResources,
+                "menu_items" : menuItems
             }
         });
+        
         const cookie_name = process.env.COOKIE_NAME;
         const expiry_date_time = new Date(Date.now() + Number(process.env.JWT_EXPIRES_IN!) * 60 * 60 * 1000);
         //const sessionAdded:boolean = await addUserSession(user.id, connectionToken, new Date(Date.now()), expiry_date_time);
         //return NextResponse.json({ message: "Succès : Connexion réussie", session_added : sessionAdded, token : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time}, { status: 200 });
-        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time}, { status: 200 });
+        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time, menu_items : menuItems }, { status: 200 });
         
     }
     catch(error:any){
         return NextResponse.json({message : error.message}, { status: 500 });
     }
+}
+
+function getUserClientMenuItems(code: string, roleCode: string): any[] | PromiseLike<any[]> {
+    throw new Error("Function not implemented.");
 }

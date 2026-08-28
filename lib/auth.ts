@@ -8,7 +8,7 @@ import { sgs_user } from './generated/prisma/client';
 
 
 
-const JWT_SECRET:Secret = process.env.JWT_SECRET! // Use a strong default for development, but always use env in production
+const JWT_SECRET:Secret = process.env.JWT_SECRET || '' // Use a strong default for development, but always use env in production
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
 
 export const generateToken = (payload: Record<string, any>) => {
