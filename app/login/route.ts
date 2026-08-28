@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { addUserSession, getUser, getUserClient, getUserResources, getUserRoles } from "@/factories/userFactory";
 import { generateToken } from "@/lib/auth";
+import { getClientRoleMenuItems } from "@/factories/clientFactory";
+import { SagesMenuItem } from "@/types/USERX/UserTypes";
 
 export async function POST(request:NextRequest) {
     try {
@@ -23,10 +25,10 @@ export async function POST(request:NextRequest) {
         if (loginRequest.clientCode.toUpperCase() !== userClient.code) return NextResponse.json("Utilisateur non associé au client", { status: 404 });
         const userRoles = await getUserRoles(user.id);
         const userResources = await getUserResources(user.id);
-        let menuItems = [];
+        let menuItems: SagesMenuItem[] = [];
         if (userRoles && userRoles.length === 1) {
             const roleCode = userRoles[0];
-            menuItems = await getUserClientMenuItems(userClient.code.toUpperCase(), roleCode.toUpperCase());
+            menuItems = await getClientRoleMenuItems(userClient.code.toUpperCase(), roleCode.toUpperCase());
         };
         const connectionToken = generateToken({
             "first_login"       : user.first_login,
@@ -48,10 +50,8 @@ export async function POST(request:NextRequest) {
         
     }
     catch(error:any){
+        logError('F',"Authentification",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }
 
-function getUserClientMenuItems(code: string, roleCode: string): any[] | PromiseLike<any[]> {
-    throw new Error("Function not implemented.");
-}

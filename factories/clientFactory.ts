@@ -295,7 +295,8 @@ export async function getClientRoleMenuItems(clientCode: string, roleCode:string
     }
     catch(error:any) {
         logError('F',"Recherche des classes du client pendant une année scolaire",ErrorOrigin + " : " + functionName, error.message, true);
-        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+        return [];
+        //throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
 
