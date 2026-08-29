@@ -5,12 +5,10 @@ import { getClientByCode, getClientEcoles } from "@/factories/clientFactory";
 import { getUserResources } from "@/factories/userFactory";
 
 
-export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string, anneescolaireId:string}> }) {
+export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
     try {
         const clientCode = (await params).clientCode;
         if(!clientCode) return NextResponse.json("Requête invalide (code client manquant)", { status: 400 });
-        const anneescolaireId = (await params).anneescolaireId;
-        if(!anneescolaireId) return NextResponse.json("Requête invalide (année scolaire manquant)", { status: 400 });
         const client = await getClientByCode(clientCode);
         if (!client || client === null) return NextResponse.json({message : "Client inconnu"}, { status: 400 });
         const user = await getConnectedUser(request);

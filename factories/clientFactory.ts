@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getCurrentAnneeScolaire, logError } from "./utilitiesFactory";
 import { getYear } from 'date-fns';
-import { AdminClientClientDisplay, AdminClientClientOverview, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
+import { AdminClientClientDisplay, AdminClientClientOverview, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay, AdminClientUserDisplay, ToAdminClientUserDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
 import { tg_role } from "@/lib/generated/prisma/browser";
 import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
 import { sgs_client_module } from "@/lib/generated/prisma/client";
@@ -300,4 +300,29 @@ export async function getClientRoleMenuItems(clientCode: string, roleCode:string
     }
 }
 
-
+export async function getClientActiveUsers(clientId:string) : Promise<AdminClientUserDisplay[]> {
+    const functionName = "getClientActiveUsers";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listUsers:AdminClientUserDisplay[] = [];
+        const clientUsers= await prisma.sgs_user.findMany({
+            where : {
+                sgs_client_user : {
+                    some: {
+                        client_id : clientId,
+                        active : true
+                    }
+                }
+            }
+        });
+        clientUsers.forEach(user => {
+            listUsers.push(ToAdminClientUserDisplay(user));
+        });
+        return listUsers;
+    }
+    catch(error:any) {
+        logError('F',"Recherche des utilisateurs actifs du client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
