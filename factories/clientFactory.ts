@@ -311,7 +311,7 @@ export async function getClientActiveUsers(clientId:string) : Promise<AdminClien
                 sgs_client_user : {
                     some: {
                         client_id : clientId,
-                        active : true
+                        status : 'A'
                     }
                 }
             }
