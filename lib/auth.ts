@@ -62,7 +62,7 @@ export async function getConnectedUser(req:NextRequest) : Promise<sgs_user|null>
     const userInfos = (decodedToken.sub || decodedToken.user) as string;
     if (!userInfos) throw new Error("Token payload missing user information");
     const userData = JSON.parse(userInfos);
-    const userId = userData.userId;
+    const userId = userData.id;
     if(!userId || userId === null) return null;
     const user = await getUserById(userId);
     return user;
