@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getCurrentAnneeScolaire, logError } from "./utilitiesFactory";
 import { getYear } from 'date-fns';
-import { AdminClientClientDisplay, AdminClientClientOverview, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay, AdminClientUserDisplay, ToAdminClientUserDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
+import { AdminClientClientDisplay, AdminClientUpdateEcoleRequest, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay, AdminClientUserDisplay, ToAdminClientUserDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
 import { tg_role } from "@/lib/generated/prisma/browser";
 import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
 import { sgs_client_module } from "@/lib/generated/prisma/client";
@@ -353,4 +353,38 @@ export async function getClientActiveUsers(clientId:string) : Promise<AdminClien
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
+
+export async function updateClientEcole(clientId:string, ecoleId:string, updateEcoleRequest:AdminClientUpdateEcoleRequest, username:string) : Promise<AdminClientEcoleDisplay|null> {
+    const functionName = "updateClientEcole";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const ecole = await prisma.sgs_ecole.update({
+            where : {
+                id : ecoleId
+            },
+            data : {
+                full_name               : updateEcoleRequest.full_name,
+                short_name              : updateEcoleRequest.short_name,
+                establishment_date      : updateEcoleRequest.establishment_date,
+                code                    : updateEcoleRequest.code,
+                primary_contact_name    : updateEcoleRequest.primary_contact_name,
+                secondary_contact_name  : updateEcoleRequest.secondary_contact_name,
+                contact_infos           : updateEcoleRequest.contact_infos,
+                phone_number            : updateEcoleRequest.phone_number,
+                email                   : updateEcoleRequest.email,
+                website                 : updateEcoleRequest.website,
+                notes                   : updateEcoleRequest.notes,
+                change_date             : new Date(),
+                changed_by              : username
+            }
+        });
+        return ecole;
+    }
+    catch(error:any) {
+        logError('F',"Recherche des utilisateurs actifs du client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 

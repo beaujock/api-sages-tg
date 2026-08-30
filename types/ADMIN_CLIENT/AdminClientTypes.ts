@@ -216,5 +216,19 @@ export function ToAdminClientEleveDisplay(enseignant:sgs_enseignant) : AdminClie
     }
 }
 
+export type AdminClientUpdateEcoleRequest = {
+    full_name               : string,
+    short_name              : string|null,
+    establishment_date      : Date|null,
+    code                    : string,
+    primary_contact_name    : string|null,
+    secondary_contact_name  : string|null,
+    contact_infos           : string|null,
+    phone_number            : string|null,
+    email                   : string|null,
+    website                 : string|null,
+    notes                   : string|null
+}
+
 
 
