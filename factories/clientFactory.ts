@@ -54,6 +54,33 @@ export async function getClientById(clientId:string) : Promise<AdminClientClient
     }
 }
 
+export async function getClientEcolesById(clientId:string, ecoleId:string ) : Promise<AdminClientEcoleDisplay|null> {
+    const functionName = "getClientEcoles";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listEcoles:AdminClientEcoleDisplay[] = [];
+        const clientEcoles = await prisma.sgs_client_ecole.findFirst({
+            where : {
+                client_id : clientId,
+                status : 'A',
+                active : true,
+                sgs_ecole : {
+                    id : ecoleId
+                }
+            },
+            include : {
+                sgs_ecole : true
+            }
+        });
+        return (clientEcoles === null)?(null):(ToAdminClientEcoleDisplay(clientEcoles.sgs_ecole));
+    }
+    catch(error:any) {
+        logError('F',"Liste des écoles du client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 export async function getClientByCode(clientCode:string) : Promise<AdminClientClientDisplay|null> {
     const functionName = "getClientById";
     try {
@@ -326,3 +353,4 @@ export async function getClientActiveUsers(clientId:string) : Promise<AdminClien
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
+
