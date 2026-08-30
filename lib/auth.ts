@@ -76,7 +76,7 @@ export async function getConnectedUser(req:NextRequest) : Promise<sgs_user|null>
   }
 }
 
-export async function userAndRouteAuthorized(user:sgs_user, routeRoot:string) : Promise<boolean> {
+export async function userAndRouteAuthorized(user:sgs_user|null, routeRoot:string) : Promise<boolean> {
   // the request will have a body containing a token
   // the decoded token will have the userId
   /*
@@ -104,8 +104,8 @@ export async function userAndRouteAuthorized(user:sgs_user, routeRoot:string) : 
     const tokenEffectiveDateTime = user.token_effective_time;
     const tokenExpiryDateTime = user.token_expiry_time;
     if (tokenEffectiveDateTime=== null || tokenExpiryDateTime===null) throw new Error("User token date/time null");
-    const today = new Date(Date.now());
-    const isBetween = isWithinInterval(today, { start: tokenEffectiveDateTime, end: tokenExpiryDateTime });
+    //const today = new Date();
+    const isBetween = isWithinInterval(new Date(), { start: tokenEffectiveDateTime, end: tokenExpiryDateTime });
     if(!isBetween) throw new Error("token expired");
     const decodedUserToken = jwt.verify(userToken, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
     const roles = (decodedUserToken.roles) as string;
