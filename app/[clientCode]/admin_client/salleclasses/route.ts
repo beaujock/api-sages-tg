@@ -15,7 +15,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         if (!client || client === null) return NextResponse.json({message : "Client inconnu"}, { status: 400 });
         const user = await getConnectedUser(request);
         if (user === null) return NextResponse.json({message : "Aucun utilisateur connecté"}, { status: 400 });
-        const userAuthorized = await userAndRouteAuthorized(request, "ADMIN_CLIENT");
+        const userAuthorized = await userAndRouteAuthorized(user, "ADMIN_CLIENT");
         if (!userAuthorized) return NextResponse.json({message : "Accès non authorisé (route)"}, { status: 400 });
         const userResources = await getUserResources(user.id);
         const clientIDs:string[] = [];
