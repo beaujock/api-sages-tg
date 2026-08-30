@@ -17,7 +17,7 @@ export async function POST(request:NextRequest) {
         if (sessionRequest.token === null) 
             return NextResponse.json("Informations de session manquantes", { status: 400 });
         //const JWT_SECRET = process.env.JWT_SECRET || '';
-        const decodedToken = await verifyToken(sessionRequest.token) as DecodedJwtToken;
+        const decodedToken = await verifyToken(sessionRequest.token) as unknown as DecodedJwtToken;
         const sessionAdded:boolean = await addUserSession(decodedToken.user.id, sessionRequest.token, new Date(sessionRequest.token_effective_time), new Date(sessionRequest.token_expiry_time));
         return NextResponse.json({ message: "Succès : Session ajoutée", session_added : sessionAdded, token : sessionRequest.token, effective_date : sessionRequest.token_effective_time,  expiry_date : sessionRequest.token_expiry_time}, { status: 200 });
     }
