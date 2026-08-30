@@ -108,7 +108,7 @@ export async function userAndRouteAuthorized(user:sgs_user|null, routeRoot:strin
     const isBetween = isWithinInterval(new Date(), { start: tokenEffectiveDateTime, end: tokenExpiryDateTime });
     if(!isBetween) throw new Error("token expired");
     const decodedUserToken = jwt.verify(userToken, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
-    const roles = (decodedUserToken.roles) as string;
+    const roles = (decodedUserToken.user.roles) as string;
     if (!roles) throw new Error("No user roles");
     if (!roles.includes(routeRoot.toUpperCase())) throw new Error("Route not authorized");
     return true;
