@@ -62,11 +62,11 @@ export async function getConnectedUser(req:NextRequest) : Promise<sgs_user|null>
 
     /*const body = await reqClone.json().catch(()=>null);
     if (!body?.token) throw new Error("Token missing from request body");*/
-    const decodedToken = await jwt.verify(token, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
-    const userInfos = (decodedToken.user) as string;
-    if (!userInfos) throw new Error("Token payload missing user information");
-    const userData = JSON.parse(userInfos);
-    const userId = userData.id;
+    const decodedToken = jwt.verify(token, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
+    //const userInfos = (decodedToken.user) as string;
+    //if (!userInfos) throw new Error("Token payload missing user information");
+    //const userData = JSON.parse(userInfos);
+    const userId = decodedToken.user.id;
     if(!userId || userId === null) return null;
     const user = await getUserById(userId);
     return user;
