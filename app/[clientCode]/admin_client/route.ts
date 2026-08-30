@@ -16,7 +16,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const user = await getConnectedUser(request);
         console.log("User : ", user);
         if (user === null) return NextResponse.json({message : "Aucun utilisateur connecté"}, { status: 400 });
-        const userAuthorized = await userAndRouteAuthorized(request, "ADMIN_CLIENT");
+        const userAuthorized = await userAndRouteAuthorized(user, "ADMIN_CLIENT");
         console.log("User authorized : ", userAuthorized);
         if (!userAuthorized) return NextResponse.json({message : "Accès non authorisé (route)"}, { status: 400 });
         const userResources = await getUserResources(user.id);
