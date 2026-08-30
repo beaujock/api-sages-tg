@@ -56,10 +56,14 @@ export const clearAuthCookie = (res: any) => {
 export async function getConnectedUser(req:NextRequest) : Promise<sgs_user|null> {
   try {
     const reqClone = req.clone();
-    const body = await reqClone.json().catch(()=>null);
-    if (!body?.token) throw new Error("Token missing from request body");
-    const decodedToken = await jwt.verify(body.token, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
-    const userInfos = (decodedToken.sub || decodedToken.user) as string;
+    const authHeader = reqClone.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) throw new Error("Authorization header missing or malformed");
+    const token = authHeader.split(' ')[1];
+
+    /*const body = await reqClone.json().catch(()=>null);
+    if (!body?.token) throw new Error("Token missing from request body");*/
+    const decodedToken = await jwt.verify(token, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
+    const userInfos = (decodedToken.user) as string;
     if (!userInfos) throw new Error("Token payload missing user information");
     const userData = JSON.parse(userInfos);
     const userId = userData.id;
