@@ -5,7 +5,7 @@ import { getClientByCode, getClientEcoles } from "@/factories/clientFactory";
 import { getUserResources } from "@/factories/userFactory";
 
 
-export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
+export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
     try {
         const clientCode = (await params).clientCode;
         if(!clientCode) return NextResponse.json("Requête invalide (code client manquant)", { status: 400 });
