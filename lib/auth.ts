@@ -85,9 +85,9 @@ export async function userAndRouteAuthorized(req:NextRequest, routeRoot:string) 
   */
   try {
     
-    const reqClone = req.clone();
-    const body = await reqClone.json().catch(()=>null);
-    if (!body?.token) throw new Error("Token missing from request body");
+    //const reqClone = req.clone();
+    //const body = await reqClone.json().catch(()=>null);
+    //if (!body?.token) throw new Error("Token missing from request body");
     /*
     const decodedToken = await jwt.verify(body.token, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
     const userInfos = (decodedToken.sub || decodedToken.user) as string;
@@ -102,14 +102,15 @@ export async function userAndRouteAuthorized(req:NextRequest, routeRoot:string) 
 
     if (user === null) throw new Error("User cannot be found");
     const userToken = user.token;
+    if (userToken=== null) throw new Error("User token null");
     const tokenEffectiveDateTime = user.token_effective_time;
     const tokenExpiryDateTime = user.token_expiry_time;
     if (tokenEffectiveDateTime=== null || tokenExpiryDateTime===null) throw new Error("User token date/time null");
     const today = new Date(Date.now());
     const isBetween = isWithinInterval(today, { start: tokenEffectiveDateTime, end: tokenExpiryDateTime });
     if(!isBetween) throw new Error("token expired");
-    const decodedUserToken = await jwt.verify(body.token, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
-    const roles = (decodedUserToken.sub || decodedUserToken.roles) as string;
+    const decodedUserToken = await jwt.verify(userToken, JWT_SECRET, { clockTolerance: 60 }) as jwt.JwtPayload;
+    const roles = (decodedUserToken.roles) as string;
     if (!roles) throw new Error("No user roles");
     if (!roles.includes(routeRoot.toUpperCase())) throw new Error("Route not authorized");
     return true;
