@@ -4,7 +4,7 @@ import { getYear } from 'date-fns';
 import { AdminClientClientDisplay, AdminClientUpdateEcoleRequest, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay, AdminClientUserDisplay, ToAdminClientUserDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
 import { tg_role } from "@/lib/generated/prisma/browser";
 import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
-import { sgs_client_module } from "@/lib/generated/prisma/client";
+import { sgs_client_module, tg_annee_scolaire } from "@/lib/generated/prisma/client";
 
 
 const ErrorOrigin = "clientFactory";
@@ -354,6 +354,53 @@ export async function getClientActiveUsers(clientId:string) : Promise<AdminClien
     }
 }
 
+export async function getClientEcoleSalleclasses(clientId:string, ecoleId:string) : Promise<AdminClientSalleClasseDisplay[]> {
+    const functionName = "getClientEleves";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listSalleClasses:AdminClientSalleClasseDisplay[] = [];
+        const anneeScolaire = await getClientAnneeScolaire(clientId);
+        if (anneeScolaire === null) return listSalleClasses;
+
+        const salleClasses= await prisma.sgs_salle_classe.findMany({
+            where : {
+                annee_scolaire_id : anneeScolaire.id,
+                ecole_id : ecoleId
+            },
+            include : {
+                tg_annee_scolaire : true,
+                tg_classe : true,
+                sgs_ecole : true
+            }
+
+        });
+        salleClasses.forEach(sc => {
+            listSalleClasses.push({
+                id                       : sc.id,
+                ecole_id                 : sc.ecole_id,
+                ecole_label              : sc.sgs_ecole.short_name || sc.sgs_ecole.full_name || 'Nom ecole inconnu',
+                annee_scolaire_id        : sc.annee_scolaire_id,
+                annee_scolaire_label     : getYear(sc.tg_annee_scolaire.start_date).toString() + "-" + getYear(sc.tg_annee_scolaire.end_date).toString(),
+                classe_id                : sc.classe_id,
+                classe_label             : sc.tg_classe.code,
+                code                     : sc.code,
+                description              : sc.description,
+                notes                    : sc.notes,
+                create_date              : sc.create_date,
+                created_by               : sc.created_by,
+                change_date              : sc.change_date,
+                changed_by               : sc.changed_by
+            });
+        });
+        return [... new Set(listSalleClasses)];
+    }
+    catch(error:any) {
+        logError('F',"Recherche des classes du client pendant une année scolaire",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 export async function updateClientEcole(clientId:string, ecoleId:string, updateEcoleRequest:AdminClientUpdateEcoleRequest, username:string) : Promise<AdminClientEcoleDisplay|null> {
     const functionName = "updateClientEcole";
     try {
@@ -383,6 +430,32 @@ export async function updateClientEcole(clientId:string, ecoleId:string, updateE
     }
     catch(error:any) {
         logError('F',"Recherche des utilisateurs actifs du client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
+export async function getClientAnneeScolaire(clientId:string) : Promise<tg_annee_scolaire|null> {
+    const functionName = "getClientById";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const setting = await prisma.sgs_client_setting.findFirst({
+            where : {
+                client_id : clientId
+            }
+        });
+        if(setting === null || setting.anneescolaire_id === null) return await getCurrentAnneeScolaire();
+        const anneeScolaire = await prisma.tg_annee_scolaire.findUnique({
+            where : {
+                id : setting.anneescolaire_id
+            }
+        });
+        if (anneeScolaire === null) return await getCurrentAnneeScolaire();
+        return anneeScolaire;
+
+    }
+    catch(error:any) {
+        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }

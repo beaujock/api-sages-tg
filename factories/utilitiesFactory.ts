@@ -146,3 +146,4 @@ export async function getCurrentAnneeScolaire() : Promise<tg_annee_scolaire|null
           return null;
       }
 }
+

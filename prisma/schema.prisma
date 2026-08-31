@@ -232,6 +232,7 @@ model sgs_client_setting {
   created_by          String     @db.VarChar(32)
   change_date         DateTime?  @db.Timestamptz(6)
   changed_by          String?    @db.VarChar(32)
+  anneescolaire_id    String?    @db.Uuid
   sgs_client          sgs_client @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
