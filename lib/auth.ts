@@ -5,15 +5,17 @@ import { getUserById } from '@/factories/userFactory';
 import { isWithinInterval } from 'date-fns';
 import { sgs_user } from './generated/prisma/client';
 
-const JWT_SECRET_STRING = process.env.JWT_SECRET || ''; // Use a strong default for development, but always use env in production
+const JWT_SECRET_STRING = process.env.JWT_SECRET as string; // Use a strong default for development, but always use env in production
 const secretKey = new TextEncoder().encode(JWT_SECRET_STRING);
 
-// const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
 export const generateToken = async (payload: Record<string, any>) => {
   // To use expiration: .setExpirationTime(JWT_EXPIRES_IN as string)
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt() // Best practice: records exactly when the token was created
+    .setExpirationTime(JWT_EXPIRES_IN) // Enforces the token lifespan
     .sign(secretKey);
 };
 
