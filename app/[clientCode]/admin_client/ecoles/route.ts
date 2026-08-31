@@ -25,7 +25,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         return NextResponse.json({clientEcoles: clientEcoles}, { status: 200 });
     }
     catch(error:any) {
-        logError('F',"Liste des écoles du client",(new URL(request.url)).pathname, error.message, true);
+        logError('F',"Echec : Liste des écoles du client",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }

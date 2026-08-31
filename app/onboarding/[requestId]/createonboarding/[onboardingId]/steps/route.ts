@@ -1,4 +1,4 @@
-import { createOnboardingSteps, getOnboardingSteps} from "@/factories/onboardingFactory";
+import { getOnboardingSteps} from "@/factories/onboardingFactory";
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 
@@ -14,7 +14,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{re
         return NextResponse.json({listSteps : onboardingSteps}, { status: 200 });
     }
     catch(error:any) {
-        logError('F',"Liste des étapes de l'intégration",(new URL(request.url)).pathname, error.message, true);
+        logError('F',"Etapes d'intégration non retrouvées",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }

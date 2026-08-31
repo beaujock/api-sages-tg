@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
-import { addUserSession, getUser, getUserClient, getUserResources, getUserRoles } from "@/factories/userFactory";
-import { generateToken, verifyToken } from "@/lib/auth";
+import { addUserSession } from "@/factories/userFactory";
+import { verifyToken } from "@/lib/auth";
 import { DecodedJwtToken } from "@/types/USERX/UserTypes";
 
 export async function POST(request:NextRequest) {
@@ -22,6 +22,7 @@ export async function POST(request:NextRequest) {
         return NextResponse.json({ message: "Succès : Session ajoutée", session_added : sessionAdded, token : sessionRequest.token, effective_date : sessionRequest.token_effective_time,  expiry_date : sessionRequest.token_expiry_time}, { status: 200 });
     }
     catch(error:any){
+        logError('F',"Ajout de jeton de session non effectué",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }

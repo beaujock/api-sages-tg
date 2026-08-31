@@ -1,4 +1,5 @@
 import { addNewClientBaseModules} from "@/factories/onboardingFactory";
+import { logError } from "@/factories/utilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -15,6 +16,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
         return NextResponse.json({addBaseModulesSuccessMessage : addNewClientModules}, { status: 200 });
     }
     catch(error:any) {
+        logError('F',"Ajout du module de base au client non enregistré",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }

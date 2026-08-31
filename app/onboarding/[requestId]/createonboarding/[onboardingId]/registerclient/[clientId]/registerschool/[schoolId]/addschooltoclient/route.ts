@@ -1,4 +1,5 @@
-import { addNewClientSchool, registerNewSchool} from "@/factories/onboardingFactory";
+import { addNewClientSchool} from "@/factories/onboardingFactory";
+import { logError } from "@/factories/utilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -17,6 +18,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
         return NextResponse.json({addNewSchoolToClientSuccessMessage : addNewSchoolToClient}, { status: 200 });
     }
     catch(error:any) {
+        logError('F',"Ajout du client au portfolio du client non enregistré",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }

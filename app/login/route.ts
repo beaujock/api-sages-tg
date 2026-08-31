@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
-import { addUserSession, getUser, getUserClient, getUserResources, getUserRoles } from "@/factories/userFactory";
+import { getUser, getUserClient, getUserResources, getUserRoles } from "@/factories/userFactory";
 import { generateToken } from "@/lib/auth";
 import { getClientRoleMenuItems } from "@/factories/clientFactory";
 import { SagesMenuItem } from "@/types/USERX/UserTypes";
@@ -50,7 +50,7 @@ export async function POST(request:NextRequest) {
         
     }
     catch(error:any){
-        logError('F',"Authentification",(new URL(request.url)).pathname, error.message, true);
+        logError('F',"Echec Authentification",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }
