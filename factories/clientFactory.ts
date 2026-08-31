@@ -355,7 +355,7 @@ export async function getClientActiveUsers(clientId:string) : Promise<AdminClien
 }
 
 export async function getClientEcoleSalleclasses(clientId:string, ecoleId:string) : Promise<AdminClientSalleClasseDisplay[]> {
-    const functionName = "getClientEleves";
+    const functionName = "getClientEcoleSalleclasses";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -372,7 +372,15 @@ export async function getClientEcoleSalleclasses(clientId:string, ecoleId:string
                 tg_annee_scolaire : true,
                 tg_classe : true,
                 sgs_ecole : true
-            }
+            },
+            orderBy : [{
+                tg_classe :{
+                    tg_niveau : {
+                        ranking : 'asc'
+                    }
+                },
+                code : 'asc'
+            }]
 
         });
         salleClasses.forEach(sc => {
@@ -435,7 +443,7 @@ export async function updateClientEcole(clientId:string, ecoleId:string, updateE
 }
 
 export async function getClientAnneeScolaire(clientId:string) : Promise<tg_annee_scolaire|null> {
-    const functionName = "getClientById";
+    const functionName = "getClientAnneeScolaire";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
