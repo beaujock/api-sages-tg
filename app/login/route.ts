@@ -44,7 +44,9 @@ export async function POST(request:NextRequest) {
         
         const cookie_name = process.env.COOKIE_NAME;
         //const expiry_date_time = new Date(Date.now() + Number(process.env.JWT_EXPIRES_IN) * 60 * 60 * 1000);
-        const expiry_date_time = new Date(Date.now() + 720 * 60 * 60 * 1000);
+        //const expiry_date_time = new Date(Date.now() + 720 * 60 * 60 * 1000);
+        const hours = Number(process.env.JWT_EXPIRES_IN);
+        const expiry_date_time = new Date(Date.now() + hours * 60 * 60 * 1000);
         //const sessionAdded:boolean = await addUserSession(user.id, connectionToken, new Date(Date.now()), expiry_date_time);
         //return NextResponse.json({ message: "Succès : Connexion réussie", session_added : sessionAdded, token : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time}, { status: 200 });
         return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, userRoles : userRoles, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time, menu_items : menuItems }, { status: 200 });
