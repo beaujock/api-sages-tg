@@ -30,7 +30,7 @@ export async function POST(request:NextRequest) {
             const roleCode = userRoles[0];
             menuItems = await getClientRoleMenuItems(userClient.code.toUpperCase(), roleCode.toUpperCase());
         };
-        const connectionToken = generateToken({
+        const connectionToken = await generateToken({
             "first_login"       : user.first_login,
             "user" : {
                 "id"        : user.id,
