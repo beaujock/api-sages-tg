@@ -46,7 +46,7 @@ export async function POST(request:NextRequest) {
         const expiry_date_time = new Date(Date.now() + Number(process.env.JWT_EXPIRES_IN) * 60 * 60 * 1000);
         //const sessionAdded:boolean = await addUserSession(user.id, connectionToken, new Date(Date.now()), expiry_date_time);
         //return NextResponse.json({ message: "Succès : Connexion réussie", session_added : sessionAdded, token : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time}, { status: 200 });
-        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time, menu_items : menuItems }, { status: 200 });
+        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, userRoles : userRoles, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time, menu_items : menuItems }, { status: 200 });
         
     }
     catch(error:any){
