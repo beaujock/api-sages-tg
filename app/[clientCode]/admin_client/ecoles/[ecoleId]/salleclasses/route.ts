@@ -27,7 +27,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         if (anneeScolaire === null) return NextResponse.json({message : "Aucune année scolaire en cours. Contactex votre administrateur"}, { status: 400 });
 
 
-        const salleclasses = await getClientEcoleSalleclasses(client.id, anneeScolaire.id);
+        const salleclasses = await getClientEcoleSalleclasses(client.id, ecoleId);
         return NextResponse.json({salleClasses: salleclasses}, { status: 200 });
     }
     catch(error:any) {
