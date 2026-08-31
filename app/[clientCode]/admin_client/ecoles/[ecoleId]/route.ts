@@ -24,6 +24,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         });
         if (!clientIDs.includes(client.id)) return NextResponse.json({message : "Accès non authorisé (client)"}, { status: 400 });
         const ecole = await getClientEcolesById(client.id, ecoleId);
+        if (!ecole || ecole === null) return NextResponse.json({message : "Ecole non trouvée"}, { status: 400 });
         return NextResponse.json({ecole: ecole}, { status: 200 });
     }
     catch(error:any) {

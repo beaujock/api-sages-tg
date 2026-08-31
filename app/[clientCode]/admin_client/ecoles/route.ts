@@ -22,7 +22,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         });
         if (!clientIDs.includes(client.id)) return NextResponse.json({message : "Accès non authorisé (client)"}, { status: 400 });
         const clientEcoles = await getClientEcoles(client.id);
-        return NextResponse.json({clientEcoles: clientEcoles}, { status: 200 });
+        return NextResponse.json({client: client, clientEcoles: clientEcoles}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Echec : Liste des écoles du client",(new URL(request.url)).pathname, error.message, true);

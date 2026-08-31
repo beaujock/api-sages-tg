@@ -13,6 +13,8 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         if(!ecoleId) return NextResponse.json("Requête invalide (ID de l'école manquant)", { status: 400 });
         const client = await getClientByCode(clientCode);
         if (!client || client === null) return NextResponse.json({message : "Client inconnu"}, { status: 400 });
+        const ecole = await getClientEcolesById(client.id, ecoleId);
+        if (!ecole || ecole === null) return NextResponse.json({message : "Ecole inconnu"}, { status: 400 });
         const user = await getConnectedUser(request);
         if (user === null) return NextResponse.json({message : "Aucun utilisateur connecté"}, { status: 400 });
         const userAuthorized = await userAndRouteAuthorized(user, "ADMIN_CLIENT");
@@ -24,11 +26,11 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         });
         if (!clientIDs.includes(client.id)) return NextResponse.json({message : "Accès non authorisé (client)"}, { status: 400 });
         const anneeScolaire = await getClientAnneeScolaire(client.id);
-        if (anneeScolaire === null) return NextResponse.json({message : "Aucune année scolaire en cours. Contactex votre administrateur"}, { status: 400 });
+        if (anneeScolaire === null) return NextResponse.json({message : "Aucune année scolaire en cours. Contactez votre administrateur"}, { status: 400 });
 
 
         const salleclasses = await getClientEcoleSalleclasses(client.id, ecoleId);
-        return NextResponse.json({salleClasses: salleclasses}, { status: 200 });
+        return NextResponse.json({ecole: ecole, salleClasses: salleclasses}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Echec : Liste des classes d'une ecole",(new URL(request.url)).pathname, error.message, true);
