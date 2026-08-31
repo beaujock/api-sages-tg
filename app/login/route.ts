@@ -4,7 +4,7 @@ import { getUser, getUserClient, getUserResources, getUserRoles } from "@/factor
 import { generateToken } from "@/lib/auth";
 import { getClientRoleMenuItems } from "@/factories/clientFactory";
 import { SagesMenuItem } from "@/types/USERX/UserTypes";
-import ms from 'ms'
+import ms, { StringValue } from 'ms'
 
 export async function POST(request:NextRequest) {
     try {
@@ -44,7 +44,7 @@ export async function POST(request:NextRequest) {
         });
         
         const cookie_name = process.env.COOKIE_NAME;
-        const expiry_date_time = new Date(Date.now() + Number(process.env.JWT_EXPIRES_IN) * 60 * 60 * 1000);
+        const expiry_date_time = new Date(Date.now() + ms(process.env.JWT_EXPIRES_IN as StringValue));
         //const expiry_date_time = new Date(Date.now() + 720 * 60 * 60 * 1000);
         //const expiresIn = process.env.JWT_EXPIRES_IN || '30d';
         //const expiry_date_time = new Date(Date.now() + ms(expiresIn));
