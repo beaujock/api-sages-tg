@@ -34,6 +34,7 @@ export type UserInfos = {
   email: string;
   roles: string[];
   resources: ResourceCombo[];
+  menu_items : SagesMenuItem[];
 }
 
 export interface DecodedJwtToken {
