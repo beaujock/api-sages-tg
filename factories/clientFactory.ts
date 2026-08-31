@@ -373,14 +373,18 @@ export async function getClientEcoleSalleclasses(clientId:string, ecoleId:string
                 tg_classe : true,
                 sgs_ecole : true
             },
-            orderBy : [{
-                tg_classe :{
-                    tg_niveau : {
-                        ranking : 'asc'
+            orderBy: [
+                {
+                    tg_classe: {
+                        tg_niveau: {
+                            ranking: 'asc'
+                        }
                     }
                 },
-                code : 'asc'
-            }]
+                {
+                    code: 'asc'
+                }
+            ]
 
         });
         salleClasses.forEach(sc => {
