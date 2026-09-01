@@ -10,7 +10,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const clientCode = (await params).clientCode;
         console.log("GET /admin_client/" + clientCode + " called");
         if(!clientCode) return NextResponse.json("Requête invalide (code client manquant)", { status: 400 });
-        const client = await getClientByCode(clientCode);
+        const client = await getClientByCode(clientCode.toUpperCase());
         console.log("Client : ", client);
         if (!client || client === null) return NextResponse.json({message : "Client inconnu"}, { status: 400 });
         const user = await getConnectedUser(request);
