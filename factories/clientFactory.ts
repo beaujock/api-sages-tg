@@ -575,6 +575,40 @@ export async function getClientEcolesOverviews(clientId:string) : Promise<AdminC
     }
 }
 
+export async function getClientEcolesForPdfExport(clientId: string) {
+    const functionName = "getClientEcolesForPdfExport";
+    
+    try {
+        // 1. Fetch the raw nested data using your existing function
+        const rawOverviews = await getClientEcolesOverviews(clientId);
+
+        // 2. Map and flatten the data into rows for the PDF table
+        const pdfRows = rawOverviews.map((overview) => {
+            return {
+                // Determine the best name to display
+                nom_ecole: overview.ecole.short_name || overview.ecole.full_name || 'École sans nom',
+                code_ecole: overview.ecole.code || 'N/A',
+                // Extract the totals directly
+                total_classes: overview.numberSalleClasses,
+                total_enseignants: overview.numberEnseignants,
+                total_eleves: overview.numberEleves,
+            };
+        });
+
+        // 3. Return the payload. 
+        // This includes headers and the flattened rows, making PDF generation effortless.
+        return {
+            title: "Statistiques des Écoles",
+            headers: ["Nom de l'École", "Code", "Classes", "Enseignants", "Élèves"],
+            data: pdfRows
+        };
+
+    } catch (error: any) {
+        logError('F', "Export PDF client", ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<AdminClientEnseignantDisplay[]>{
     const functionName = "getSalleClasseEnseignants";
     try {
