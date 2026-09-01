@@ -382,7 +382,7 @@ model sgs_onboarding_step {
 model sgs_portfolio_enseignant {
   id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   salle_classe_matiere_id  String                   @db.Uuid
-  enseignant_id            String?                  @db.Uuid
+  enseignant_id            String                   @db.Uuid
   start_date               DateTime                 @db.Date
   end_date                 DateTime?                @db.Date
   notes                    String?                  @db.VarChar
@@ -390,7 +390,7 @@ model sgs_portfolio_enseignant {
   created_by               String                   @db.VarChar(32)
   change_date              DateTime?                @db.Timestamptz(6)
   changed_by               String?                  @db.VarChar(32)
-  sgs_enseignant           sgs_enseignant?          @relation(fields: [enseignant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_enseignant           sgs_enseignant           @relation(fields: [enseignant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_salle_classe_matiere sgs_salle_classe_matiere @relation(fields: [salle_classe_matiere_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 

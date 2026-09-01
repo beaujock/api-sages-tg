@@ -34,7 +34,6 @@ export type AdminClientClientDisplay = {
 
 export type AdminClientEcoleOverview = {
     ecole               : sgs_ecole,
-    numberEcoles        : number,
     numberSalleClasses  : number,
     numberEnseignants   : number,
     numberEleves        : number

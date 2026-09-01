@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getConnectedUser, userAndRouteAuthorized } from "@/lib/auth";
-import { getClientByCode, getClientEcoles } from "@/factories/clientFactory";
+import { getClientByCode, getClientEcoleOverview, getClientEcoles, getClientEcolesOverviews } from "@/factories/clientFactory";
 import { getUserResources } from "@/factories/userFactory";
 
 
@@ -21,8 +21,9 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
             if (resource.type_resource === "CLIENT") clientIDs.push(resource.resource_id);
         });
         if (!clientIDs.includes(client.id)) return NextResponse.json({message : "Accès non authorisé (client)"}, { status: 400 });
-        const clientEcoles = await getClientEcoles(client.id);
-        return NextResponse.json({client: client, clientEcoles: clientEcoles}, { status: 200 });
+        //const clientEcoles = await getClientEcoles(client.id);
+        const clientEcolesOverview = await getClientEcolesOverviews(client.id)
+        return NextResponse.json({client: client, clientEcolesOverviews: clientEcolesOverview}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Echec : Liste des écoles du client",(new URL(request.url)).pathname, error.message, true);
