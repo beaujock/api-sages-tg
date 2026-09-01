@@ -3,7 +3,9 @@ import { logError } from "@/factories/utilitiesFactory";
 import { getConnectedUser, userAndRouteAuthorized } from "@/lib/auth";
 import { getClientByCode, getClientEcolesForPdfExport } from "@/factories/clientFactory";
 import { getUserResources } from "@/factories/userFactory";
-import PDFDocument from 'pdfkit-table';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
@@ -24,53 +26,46 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         if (!clientIDs.includes(client.id)) return NextResponse.json({message : "Accès non authorisé (client)"}, { status: 400 });
         //const clientEcoles = await getClientEcoles(client.id);
         const exportData = await getClientEcolesForPdfExport(client.id);
-        const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-        // Create a new PDF document
-        const doc = new PDFDocument({ margin: 30, size: 'A4' });
-        const chunks: Buffer[] = [];
+        const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-        // Collect data chunks as the PDF is generated
-        doc.on('data', (chunk) => chunks.push(chunk));
-        doc.on('end', () => resolve(Buffer.concat(chunks)));
-        doc.on('error', reject);
+    // 4. Add Title
+    doc.setFontSize(18);
+    // (text, x position, y position)
+    doc.text(exportData.title, 14, 22); 
 
-        // 4. Build the PDF Content
-        // Add Title
-        doc.fontSize(20).text(exportData.title, { align: 'center' });
-        doc.moveDown(2);
+    // 5. Draw the Table
+    autoTable(doc, {
+      startY: 30, // Start drawing below the title
+      head: [exportData.headers],
+      body: exportData.data.map(row => [
+        row.nom_ecole,
+        row.code_ecole,
+        row.total_classes,
+        row.total_enseignants,
+        row.total_eleves,
+      ]),
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [0, 119, 145], // Uses your brand's teal-primary color (#007791)
+        textColor: 255 
+      },
+    });
 
-        // Define the table structure
-        const table = {
-            headers: exportData.headers,
-            // pdfkit-table expects an array of string arrays for the rows
-            rows: exportData.data.map(row => [
-            row.nom_ecole,
-            row.code_ecole,
-            row.total_classes.toString(),
-            row.total_enseignants.toString(),
-            row.total_eleves.toString(),
-            ]),
-        };
+    // 6. Output the PDF as an ArrayBuffer
+    const pdfArrayBuffer = doc.output('arraybuffer');
 
-        // Draw the table
-        doc.table(table, {
-            prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
-            prepareRow: () => doc.font("Helvetica").fontSize(10),
-        });
-
-        // Finalize the PDF
-        doc.end();
-        });
-
-    // 5. Return the PDF buffer to the frontend as a downloadable file
-    return new NextResponse(new Uint8Array(pdfBuffer), {
+    // 7. Send standard Web API response to the frontend
+    return new NextResponse(new Uint8Array(pdfArrayBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="ecoles_statistiques.pdf"`,
       },
     });
-      
     }
     catch(error:any) {
         logError('F',"Echec : Liste des écoles du client",(new URL(request.url)).pathname, error.message, true);
