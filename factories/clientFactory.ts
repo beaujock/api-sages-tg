@@ -575,8 +575,6 @@ export async function getClientEcolesOverviews(clientId:string) : Promise<AdminC
     }
 }
 
-
-
 export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<AdminClientEnseignantDisplay[]>{
     const functionName = "getSalleClasseEnseignants";
     try {
