@@ -1,14 +1,18 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { stringifySetCookie } from 'cookie';
 import { NextRequest } from "next/server";
-import { getUserById } from '@/factories/userFactory';
+import { getUserById, getUserTypeResources } from '@/factories/userFactory';
 import { isWithinInterval } from 'date-fns';
 import { sgs_user } from './generated/prisma/client';
+import { routeRequestedInfos } from '@/types/USERX/UserTypes';
+import { getClientByCode } from '@/factories/clientFactory';
+import { logError } from '@/factories/utilitiesFactory';
 
 const JWT_SECRET_STRING = process.env.JWT_SECRET as string; // Use a strong default for development, but always use env in production
 const secretKey = new TextEncoder().encode(JWT_SECRET_STRING);
 
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
+
 
 export const generateToken = async (payload: Record<string, any>) => {
   // To use expiration: .setExpirationTime(JWT_EXPIRES_IN as string)
@@ -100,5 +104,52 @@ export async function userAndRouteAuthorized(user: sgs_user|null, routeRoot: str
   }
   catch(error: any) {
     return false;
+  }
+}
+
+export async function getClientUserRouteRequestInfos(req: NextRequest|null, clientCode:string|null, routeRoot:string|null, resourceType:string|null) : Promise<routeRequestedInfos> {
+  try {
+    let message = "";
+    let resources:string[] = [];
+    const nullResponse:routeRequestedInfos = {
+      client : null,
+      user : null,
+      route : null,
+      allowed : false,
+      resources : [],
+      message : "Requête invalide"
+    };
+
+    if (req === null || clientCode === null || routeRoot === null || resourceType=== null) return nullResponse;
+    
+    const client = await getClientByCode(clientCode);
+    const user = await getConnectedUser(req);
+    const authorized = await userAndRouteAuthorized(user, routeRoot);
+
+    if (client === null) message = message + " Client non trouvé";
+    if (user === null) message = message + " Utilisateur non trouvé";
+    if (!authorized) message = message + " Utilisateur non authorisé";
+    if (user !== null) resources = await getUserTypeResources(user.id, resourceType.toUpperCase());
+    if (resources.length === 0) message = message + " Aucune resource associée a cet utilisateur";
+
+    return {
+      client : client,
+      user : user,
+      route : routeRoot,
+      allowed : authorized,
+      resources : resources,
+      message : message
+    }
+  }
+  catch(error:any) {
+    logError('F',"Echec : Repose requête","getClientUserRouteRequestInfos", error.message, true);
+    return {
+      client : null,
+      user : null,
+      route : routeRoot,
+      allowed : false,
+      resources : [],
+      message : "ERROR : " + error.message
+    }
   }
 }

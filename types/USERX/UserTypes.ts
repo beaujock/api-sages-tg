@@ -1,4 +1,5 @@
-import { sgs_client_module_role_menu_item } from "@/lib/generated/prisma/client";
+import { sgs_client, sgs_client_module, sgs_client_module_role_menu_item, sgs_user } from "@/lib/generated/prisma/client";
+import { AdminClientClientDisplay, AdminClientEcoleDisplay, AdminClientUserDisplay } from "../ADMIN_CLIENT/AdminClientTypes";
 
 export type UserBaseInfos = {
     id                      : string;
@@ -49,4 +50,20 @@ export interface AuthState {
   cookieName: string;
   token: string;
   decodedToken: DecodedJwtToken;
+}
+
+export type routeRequestedInfos = {
+    client : AdminClientClientDisplay | null,
+    user : sgs_user|null,
+    route : string|null,
+    allowed : boolean,
+    resources : string[],
+    message : string
+}
+
+export type ConnectedAdminClientUserInfos = {
+    client : AdminClientClientDisplay,
+    ecoles : AdminClientEcoleDisplay[],
+    modules : sgs_client_module[],
+
 }

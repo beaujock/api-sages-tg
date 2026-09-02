@@ -18,12 +18,12 @@ export async function POST(request:NextRequest) {
         };
         if (!loginRequest.userName || !loginRequest.password || 
             loginRequest.userName === null || loginRequest.password === null) 
-            return NextResponse.json("Informations de connexion manquantes", { status: 400 });
+            return NextResponse.json({message: "Informations de connexion manquantes"}, { status: 400 });
         const user = await getUser(loginRequest.userName, loginRequest.password);
-        if (!user || user===null) return NextResponse.json("Utilisateur non trouvé", { status: 404 });
+        if (!user || user===null) return NextResponse.json({message: "Utilisateur non trouvé"}, { status: 404 });
         const userClient = await getUserClient(user.id);
-        if (!userClient || userClient===null) return NextResponse.json("Utilisateur non associé à un client", { status: 404 });
-        if (loginRequest.clientCode.toUpperCase() !== userClient.code) return NextResponse.json("Utilisateur non associé au client", { status: 404 });
+        if (!userClient || userClient===null) return NextResponse.json({message: "Utilisateur non associé à un client"}, { status: 404 });
+        if (loginRequest.clientCode.toUpperCase() !== userClient.code) return NextResponse.json({message: "Utilisateur non associé au client"}, { status: 404 });
         const userRoles = await getUserRoles(user.id);
         const userResources = await getUserResources(user.id);
         let menuItems: SagesMenuItem[] = [];
@@ -45,11 +45,6 @@ export async function POST(request:NextRequest) {
         
         const cookie_name = process.env.COOKIE_NAME;
         const expiry_date_time = new Date(Date.now() + ms(process.env.JWT_EXPIRES_IN as StringValue));
-        //const expiry_date_time = new Date(Date.now() + 720 * 60 * 60 * 1000);
-        //const expiresIn = process.env.JWT_EXPIRES_IN || '30d';
-        //const expiry_date_time = new Date(Date.now() + ms(expiresIn));
-        //const sessionAdded:boolean = await addUserSession(user.id, connectionToken, new Date(Date.now()), expiry_date_time);
-        //return NextResponse.json({ message: "Succès : Connexion réussie", session_added : sessionAdded, token : connectionToken, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time}, { status: 200 });
         return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, userRoles : userRoles, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time, menu_items : menuItems }, { status: 200 });
         
     }
