@@ -45,7 +45,7 @@ export async function POST(request:NextRequest) {
         
         const cookie_name = process.env.COOKIE_NAME;
         const expiry_date_time = new Date(Date.now() + ms(process.env.JWT_EXPIRES_IN as StringValue));
-        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, userRoles : userRoles, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time, menu_items : menuItems }, { status: 200 });
+        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, userRoles : userRoles, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time }, { status: 200 });
         
     }
     catch(error:any){
