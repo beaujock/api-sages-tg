@@ -312,9 +312,9 @@ export async function getClientRoleMenuItems(clientCode: string, roleCode:string
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const menuItems:SagesMenuItem[] = []; 
-        const client = await getClientByCode(clientCode);
+        const client = await getClientByCode(clientCode.toUpperCase());
         if (client == null) return menuItems;
-        const role = await getRoleByCode(roleCode);
+        const role = await getRoleByCode(roleCode.toUpperCase());
         if (role === null) return menuItems;
         const clientModules = await getClientModules(client.id);
         const clientModulesIds:string[] = [];
@@ -337,7 +337,7 @@ export async function getClientRoleMenuItems(clientCode: string, roleCode:string
         return menuItems;
     }
     catch(error:any) {
-        logError('F',"Recherche des classes du client pendant une année scolaire",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Liste des éléments de menu basé sur le client et le role",ErrorOrigin + " : " + functionName, error.message, true);
         return [];
         //throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
