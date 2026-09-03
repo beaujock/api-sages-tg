@@ -78,7 +78,6 @@ export async function getClientEcoleById(clientId:string, ecoleId:string ) : Pro
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listEcoles:AdminClientEcoleDisplay[] = [];
         const clientEcoles = await prisma.sgs_client_ecole.findFirst({
             where : {
                 client_id : clientId,
@@ -99,7 +98,7 @@ export async function getClientEcoleById(clientId:string, ecoleId:string ) : Pro
 }
 
 export async function getClientByCode(clientCode:string) : Promise<AdminClientClientDisplay|null> {
-    const functionName = "getClientById";
+    const functionName = "getClientByCod";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
