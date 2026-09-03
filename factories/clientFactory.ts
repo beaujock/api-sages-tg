@@ -73,7 +73,7 @@ export async function getEcoleById(ecoleId:string) : Promise<AdminClientEcoleDis
     }
 }
 
-export async function getClientEcolesById(clientId:string, ecoleId:string ) : Promise<AdminClientEcoleDisplay|null> {
+export async function getClientEcoleById(clientId:string, ecoleId:string ) : Promise<AdminClientEcoleDisplay|null> {
     const functionName = "getClientEcolesById";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -82,11 +82,9 @@ export async function getClientEcolesById(clientId:string, ecoleId:string ) : Pr
         const clientEcoles = await prisma.sgs_client_ecole.findFirst({
             where : {
                 client_id : clientId,
+                ecole_id : ecoleId,
                 status : 'A',
                 active : true,
-                sgs_ecole : {
-                    id : ecoleId
-                }
             },
             include : {
                 sgs_ecole : true
