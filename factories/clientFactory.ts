@@ -74,7 +74,7 @@ export async function getEcoleById(ecoleId:string) : Promise<AdminClientEcoleDis
 }
 
 export async function getClientEcoleById(clientId:string, ecoleId:string ) : Promise<AdminClientEcoleDisplay|null> {
-    const functionName = "getClientEcolesById";
+    const functionName = "getClientEcoleById";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");

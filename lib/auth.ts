@@ -122,9 +122,9 @@ export async function getClientUserRouteRequestInfos(req: NextRequest|null, clie
 
     if (req === null || clientCode === null || routeRoot === null || resourceType=== null) return nullResponse;
     
-    const client = await getClientByCode(clientCode);
+    const client = await getClientByCode(clientCode.toUpperCase());
     const user = await getConnectedUser(req);
-    const authorized = await userAndRouteAuthorized(user, routeRoot);
+    const authorized = await userAndRouteAuthorized(user, routeRoot.toUpperCase());
 
     if (client === null) message = message + " Client non trouvé";
     if (user === null) message = message + " Utilisateur non trouvé";
@@ -142,7 +142,7 @@ export async function getClientUserRouteRequestInfos(req: NextRequest|null, clie
     }
   }
   catch(error:any) {
-    logError('F',"Echec : Repose requête","getClientUserRouteRequestInfos", error.message, true);
+    logError('F',"Echec : Réponse requête","getClientUserRouteRequestInfos", error.message, true);
     return {
       client : null,
       user : null,
