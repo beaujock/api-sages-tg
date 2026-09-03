@@ -109,9 +109,9 @@ export async function userAndRouteAuthorized(user: sgs_user|null, routeRoot: str
 
 export async function getClientUserRouteRequestInfos(req: NextRequest, clientCode:string|null, routeRoot:string|null, resourceType:string|null) : Promise<routeRequestedInfos> {
   try {
-    const reqClone = req.clone();
+    /*const reqClone = req.clone();
     const authHeader = reqClone.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) throw new Error("Authorization header missing or malformed");
+    if (!authHeader || !authHeader.startsWith('Bearer ')) throw new Error("Authorization header missing or malformed");*/
     let message = "";
     let resources:string[] = [];
     const nullResponse:routeRequestedInfos = {
