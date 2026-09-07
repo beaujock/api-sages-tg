@@ -66,9 +66,8 @@ export async function getConnectedUser(req: NextRequest) : Promise<sgs_user|null
 
     const { payload: decodedToken } = await jwtVerify(token, secretKey, { clockTolerance: 60 });
     
-    // Type casting the user object from the payload
-    const userPayload = decodedToken.user as Record<string, any>;
-    const userId = userPayload?.id;
+    // Type casting the user id from the payload
+    const userId = decodedToken.user_id as string
     
     if (!userId || userId === null) return null;
     
