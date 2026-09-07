@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { stringifySetCookie } from 'cookie';
 import { NextRequest } from "next/server";
-import { getUserById, getUserTypeResources } from '@/factories/userFactory';
+import { getUserById, getUserRoles, getUserTypeResources } from '@/factories/userFactory';
 import { isWithinInterval } from 'date-fns';
 import { sgs_user } from './generated/prisma/client';
 import { routeRequestedInfos } from '@/types/USERX/UserTypes';
@@ -92,12 +92,14 @@ export async function userAndRouteAuthorized(user: sgs_user|null, routeRoot: str
     const isBetween = isWithinInterval(new Date(), { start: tokenEffectiveDateTime, end: tokenExpiryDateTime });
     if (!isBetween) throw new Error("token expired");
     
-    const { payload: decodedUserToken } = await jwtVerify(userToken, secretKey, { clockTolerance: 60 });
-    const userPayload = decodedUserToken.user as Record<string, any>;
-    const roles = userPayload?.roles as string;
+    //const { payload: decodedUserToken } = await jwtVerify(userToken, secretKey, { clockTolerance: 60 });
+    //const userPayload = decodedUserToken.user as Record<string, any>;
+    //const roles = userPayload?.roles as string;
+
+    const userRoles = await getUserRoles(user.id);
     
-    if (!roles) throw new Error("No user roles");
-    if (!roles.includes(routeRoot.toUpperCase())) throw new Error("Route not authorized");
+    if (userRoles.length === 0) throw new Error("No user roles");
+    if (!userRoles.includes(routeRoot.toUpperCase())) throw new Error("Route not authorized");
     
     return true;
   }
