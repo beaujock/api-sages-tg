@@ -45,7 +45,9 @@ export async function POST(request:NextRequest) {
         });
         
         
-        return NextResponse.json({ message: "Succès : Connexion réussie", first_login : user.first_login, cookie_name: cookie_name, connectionToken : connectionToken, roles : userRoles, resources : userResources, menu_items : menuItems }, { status: 200 });
+        return NextResponse.json({ message: "Succès : Connexion réussie", first_login : user.first_login, cookie_name: cookie_name, connectionToken : connectionToken, 
+            roles : userRoles, resources : userResources, menu_items : menuItems, effective_date : effective_date_time,  expiry_date : expiry_date_time}, 
+            { status: 200 });
         
     }
     catch(error:any){
