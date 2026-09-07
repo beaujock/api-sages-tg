@@ -252,7 +252,7 @@ export async function createRequestForOnboarding(requestData : SGSCreateRequestD
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const clientCode = requestData.client_code.replaceAll(" ","").toUpperCase();
+        const clientCode = requestData.client_code.replaceAll(" ","").toLocaleLowerCase();
         const client = await getClientByCode(clientCode);
         if (client !== null) throw new Error("Code client déjà utilisé");
         const userEmail = requestData.requester_email.toLowerCase();

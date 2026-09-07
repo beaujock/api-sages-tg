@@ -31,22 +31,21 @@ export async function POST(request:NextRequest) {
             const roleCode = userRoles[0];
             menuItems = await getClientRoleMenuItems(userClient.code.toUpperCase(), roleCode.toUpperCase());
         };
-        const cookie_name = process.env.COOKIE_NAME;
-        const effective_date_time = new Date(Date.now());
-        const expiry_date_time = new Date(Date.now() + ms(process.env.JWT_EXPIRES_IN as StringValue));
-
         const connectionToken = await generateToken({
             "first_login"       : user.first_login,
-            "cookie_name"        : cookie_name,
-            "effective_date"     : effective_date_time,
-            "expiry_date"        : expiry_date_time,
-            "roles"               : userRoles,
-            "resources"           : userResources,
-            "menu_items"          : menuItems,
+            "user" : {
+                "id"        : user.id,
+                "user_name" : user.user_name,
+                "email"     : user.email,
+                "roles"     : userRoles,
+                "resources" : userResources,
+                "menu_items" : menuItems
+            }
         });
         
-        
-        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken }, { status: 200 });
+        const cookie_name = process.env.COOKIE_NAME;
+        const expiry_date_time = new Date(Date.now() + ms(process.env.JWT_EXPIRES_IN as StringValue));
+        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken, userRoles : userRoles, cookie_name: cookie_name, effective_date : new Date(Date.now()),  expiry_date : expiry_date_time }, { status: 200 });
         
     }
     catch(error:any){

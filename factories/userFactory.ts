@@ -14,13 +14,13 @@ export async function getUser(login:string|null, password:string|null) : Promise
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const emailUser = await prisma.sgs_user.findUnique({
             where : {
-                email : login
+                email : login.toLocaleLowerCase()
             }
         });
         if (emailUser === null) user = null; else user = emailUser;
         const userNameUser = await prisma.sgs_user.findUnique({
             where : {
-                user_name : login
+                user_name : login.toLocaleLowerCase()
             }
         });
         if (userNameUser === null) user = null; else user = userNameUser;
@@ -32,7 +32,8 @@ export async function getUser(login:string|null, password:string|null) : Promise
             id: user.id,
             user_name : user.user_name,
             email : user.email,
-            first_login : user.first_login
+            first_login : user.first_login,
+            userToken : user.token,
         }
     }
     catch(error:any) {
@@ -265,4 +266,8 @@ export async function getUserClient(userId : string) : Promise<sgs_client|null> 
         return null;
         //throw new Error(ErrorOrigin + functionName + error.message);
     }
+}
+
+export async function getUserConnectionInfos(userId : string) {
+    
 }
