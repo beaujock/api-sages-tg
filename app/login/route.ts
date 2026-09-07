@@ -36,17 +36,16 @@ export async function POST(request:NextRequest) {
         const expiry_date_time = new Date(Date.now() + ms(process.env.JWT_EXPIRES_IN as StringValue));
 
         const connectionToken = await generateToken({
-            "first_login"       : user.first_login,
             "cookie_name"        : cookie_name,
             "effective_date"     : effective_date_time,
             "expiry_date"        : expiry_date_time,
-            "roles"               : userRoles,
-            "resources"           : userResources,
-            "menu_items"          : menuItems,
+            "user_ip_address"    : request.headers.get('x-forwarded-for') || null,
+            "user_agent"         : request.headers.get('user-agent') || null,
+            "host"               : request.headers.get('host') || null,
         });
         
         
-        return NextResponse.json({ message: "Succès : Connexion réussie", connectionToken : connectionToken }, { status: 200 });
+        return NextResponse.json({ message: "Succès : Connexion réussie", first_login : user.first_login, connectionToken : connectionToken, roles : userRoles, resources : userResources, menu_items : menuItems }, { status: 200 });
         
     }
     catch(error:any){
