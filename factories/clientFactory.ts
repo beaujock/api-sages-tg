@@ -312,7 +312,7 @@ export async function getClientRoleMenuItems(clientCode: string, roleCode:string
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const menuItems:SagesMenuItem[] = []; 
-        const client = await getClientByCode(clientCode.toUpperCase());
+        const client = await getClientByCode(clientCode.toLowerCase());
         if (client == null) return menuItems;
         const role = await getRoleByCode(roleCode.toUpperCase());
         if (role === null) return menuItems;

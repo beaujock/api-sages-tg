@@ -29,14 +29,14 @@ export async function POST(request:NextRequest) {
         let menuItems: SagesMenuItem[] = [];
         if (userRoles && userRoles.length === 1) {
             const roleCode = userRoles[0];
-            menuItems = await getClientRoleMenuItems(userClient.code.toUpperCase(), roleCode.toUpperCase());
+            menuItems = await getClientRoleMenuItems(userClient.code.toLowerCase(), roleCode.toUpperCase());
         };
         const cookie_name = process.env.COOKIE_NAME;
         const effective_date_time = new Date(Date.now());
         const expiry_date_time = new Date(Date.now() + ms(process.env.JWT_EXPIRES_IN as StringValue));
 
         const connectionToken = await generateToken({
-            "cookie_name"        : cookie_name,
+            "user_id"            : user.id,
             "effective_date"     : effective_date_time,
             "expiry_date"        : expiry_date_time,
             "user_ip_address"    : request.headers.get('x-forwarded-for') || null,
@@ -45,7 +45,7 @@ export async function POST(request:NextRequest) {
         });
         
         
-        return NextResponse.json({ message: "Succès : Connexion réussie", first_login : user.first_login, connectionToken : connectionToken, roles : userRoles, resources : userResources, menu_items : menuItems }, { status: 200 });
+        return NextResponse.json({ message: "Succès : Connexion réussie", first_login : user.first_login, cookie_name: cookie_name, connectionToken : connectionToken, roles : userRoles, resources : userResources, menu_items : menuItems }, { status: 200 });
         
     }
     catch(error:any){

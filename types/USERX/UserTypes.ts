@@ -40,8 +40,12 @@ export type UserInfos = {
 }
 
 export interface DecodedJwtToken {
-  firstLogin: boolean;
-  user : UserInfos;
+    user_id            : string;
+    effective_date     : Date;
+    expiry_date        : Date;
+    user_ip_address    : string | null;
+    user_agent         : string | null;
+    host               : string | null;
 }
 
 export interface AuthState {
