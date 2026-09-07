@@ -104,7 +104,7 @@ export async function getClientByCode(clientCode:string) : Promise<AdminClientCl
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const client = await prisma.sgs_client.findFirst({
             where : {
-                code : clientCode.toUpperCase()
+                code : clientCode.toLocaleLowerCase()
             },
             include : {
                 tg_systeme_scolaire : true,
