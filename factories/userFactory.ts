@@ -1,7 +1,9 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { ResourceCombo, UserBaseInfos } from "@/types/USERX/UserTypes";
+import { ResourceCombo, UserBaseInfos, UserInfos } from "@/types/USERX/UserTypes";
 import { logError } from "./utilitiesFactory";
 import { sgs_client, sgs_user } from "@/lib/generated/prisma/client";
+import { UserInfo } from "os";
+import { getClientRoleMenuItems } from "./clientFactory";
 
 const ErrorOrigin = "userFactory";
 
@@ -268,6 +270,35 @@ export async function getUserClient(userId : string) : Promise<sgs_client|null> 
     }
 }
 
-export async function getUserConnectionInfos(userId : string) {
+export async function getUserConnectionInfos(clientCode:string, userId : string, roleCode:string) : Promise<UserInfos|null> {
+    const functionName = "getUserConnectionInfos";
     
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const userClient = await getUserClient(userId);
+        if (!userClient || userClient===null) return null;
+        if (userClient.code.toLowerCase() !== clientCode.toLowerCase()) return null;
+        const user = await getUserById(userId);
+        if (!user || user===null) return null;
+        const roles = await getUserRoles(userId);
+        if (roles.length === 0) return null;
+        if (!roles.includes(roleCode.toUpperCase())) return null;
+        const resources = await getUserResources(userId);
+        const menuItems = await getClientRoleMenuItems(clientCode.toLowerCase(), roles[0].toUpperCase());
+        return {
+            id : user.id,
+            user_name : user.user_name,
+            full_name : user.full_name,
+            email : user.email,
+            roles : roles,
+            resources : resources,
+            menu_items : menuItems
+        }
+    }
+    catch(error:any){
+        logError('N',"Echec : Informations de coonexion d'un utilisateur",ErrorOrigin + "-" + functionName, error.message, false);
+        return null;
+        //throw new Error(ErrorOrigin + functionName + error.message);
+    }
 }

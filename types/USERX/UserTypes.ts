@@ -33,6 +33,7 @@ export function ToSagesMenuItem(menuItem : sgs_client_module_role_menu_item) : S
 export type UserInfos = {
   id: string;
   user_name: string;
+  full_name: string;
   email: string;
   roles: string[];
   resources: ResourceCombo[];
