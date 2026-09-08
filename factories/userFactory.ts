@@ -282,7 +282,6 @@ export async function getUserConnectionInfos(clientCode:string, userId : string,
         const user = await getUserById(userId);
         if (!user || user===null) return null;
         const roles = await getUserRoles(userId);
-        if (roles.length === 0) return null;
         if (!roles.includes(roleCode.toUpperCase())) return null;
         const resources = await getUserResources(userId);
         const menuItems = await getClientRoleMenuItems(clientCode.toLowerCase(), roles[0].toUpperCase());
