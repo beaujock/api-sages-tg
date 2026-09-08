@@ -33,6 +33,7 @@ export async function getUser(login:string|null, password:string|null) : Promise
         return {
             id: user.id,
             user_name : user.user_name,
+            user_full_name : user.full_name,
             email : user.email,
             first_login : user.first_login,
             userToken : user.token,

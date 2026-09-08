@@ -37,6 +37,7 @@ export async function POST(request:NextRequest) {
 
         const connectionToken = await generateToken({
             "user_id"            : user.id,
+            "user_full_name"     : user.user_full_name,
             "effective_date"     : effective_date_time,
             "expiry_date"        : expiry_date_time,
             "user_ip_address"    : request.headers.get('x-forwarded-for') || null,

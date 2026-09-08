@@ -4,6 +4,7 @@ import { AdminClientClientDisplay, AdminClientEcoleDisplay, AdminClientUserDispl
 export type UserBaseInfos = {
     id                      : string;
     user_name               : string;
+    user_full_name          : string;
     email                   : string;
     first_login             : boolean;
     userToken               : string|null;
