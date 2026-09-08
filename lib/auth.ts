@@ -59,8 +59,8 @@ export const clearAuthCookie = (res: any) => {
 
 export async function getConnectedUser(req: NextRequest) : Promise<sgs_user|null> {
   try {
-    const reqClone = req.clone();
-    const authHeader = reqClone.headers.get('Authorization');
+    //const reqClone = req.clone();
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) throw new Error("Authorization header missing or malformed");
     const token = authHeader.split(' ')[1];
 
@@ -71,12 +71,11 @@ export async function getConnectedUser(req: NextRequest) : Promise<sgs_user|null
     // Type casting the user id from the payload
     const userId = decodedToken.user_id as string
     
-    if (!userId || userId === null) return null;
-    
     const user = await getUserById(userId);
     return user;
   }
   catch(error: any) {
+    console.error("Error in getConnectedUser:", error.message);
     return null;
   }
 }
