@@ -9,13 +9,10 @@ export async function POST(request:NextRequest) {
         const body = await request.json();
         if(!body) return NextResponse.json("Requête invalide", { status: 400 });
         const changeRequest = {
-            userId      : body.userId,
             newPassword : body.newPassword,
-            changer     : body.changer
         };
-        if (!changeRequest.userId || !changeRequest.newPassword || !changeRequest.changer || changeRequest.userId === null  || 
-            changeRequest.newPassword === null || changeRequest.changer === null) 
-            return NextResponse.json("Informations de connexion manquantes", { status: 400 });
+        if (!changeRequest.newPassword || changeRequest.newPassword === null || changeRequest.newPassword === "") 
+            return NextResponse.json("Nouveau mot de passe manquant", { status: 400 });
         const user = await getConnectedUser(request);
         if (!user || user === null) return NextResponse.json("Utilisateur non connecté", { status: 401 });
         const updateUser = await changeUserPassword(user.id, changeRequest.newPassword, user.email);
