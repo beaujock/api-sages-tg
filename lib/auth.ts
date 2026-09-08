@@ -65,6 +65,7 @@ export async function getConnectedUser(req: NextRequest) : Promise<sgs_user|null
     const token = authHeader.split(' ')[1];
 
     const { payload: decodedToken } = await verifyToken(token) as { payload: JWTPayload };
+    console.log("Decoded Token:", decodedToken);
     if (!decodedToken || !decodedToken.user_id) throw new Error("Invalid token payload");
     
     // Type casting the user id from the payload
