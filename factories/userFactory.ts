@@ -116,7 +116,7 @@ export async function addUserSession(userId:string, token:string, effective_date
   }
 }
 
-export async function changeUserPassword(userId:string, oldPassword:string, newPassword:string, firstLogin:boolean, changer : string) : Promise<boolean> {
+export async function changeUserPassword(userId:string, newPassword:string, changer : string) : Promise<boolean> {
     const functionName = "changeUserPassword";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -134,10 +134,10 @@ export async function changeUserPassword(userId:string, oldPassword:string, newP
         //console.log("The User", theUser);
         
         if (!theUser || theUser === null) return false;
+        /*
         const isPasswordValid = await bcrypt.compare(oldPassword, theUser.pwd_hash);
-        //console.log("current password hashed = ", theUser.pwd_hash);
         if (!isPasswordValid) return false;
-        
+        */
         const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
         //update the user new password, user will have to get re-authenticated
         const updatedUser = await prisma.sgs_user.update({
