@@ -36,7 +36,7 @@ export type UserInfos = {
   user_name: string;
   full_name: string;
   email: string;
-  roles: string[];
+  role: string;
   resources: ResourceCombo[];
   menu_items : SagesMenuItem[];
 }

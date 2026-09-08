@@ -46,7 +46,7 @@ export async function POST(request:NextRequest) {
         });
         
         
-        return NextResponse.json({ message: "Succès : Connexion réussie", first_login : user.first_login, user_full_name : user.user_full_name, cookie_name: cookie_name, connectionToken : connectionToken, 
+        return NextResponse.json({ message: "Succès : Connexion réussie", "user_id" : user.id,  first_login : user.first_login, user_full_name : user.user_full_name, cookie_name: cookie_name, connectionToken : connectionToken, 
             roles : userRoles, resources : userResources, menu_items : menuItems, effective_date : effective_date_time,  expiry_date : expiry_date_time}, 
             { status: 200 });
         

@@ -291,7 +291,7 @@ export async function getUserConnectionInfos(clientCode:string, userId : string,
             user_name : user.user_name,
             full_name : user.full_name,
             email : user.email,
-            roles : roles,
+            role : roleCode,
             resources : resources,
             menu_items : menuItems
         }
