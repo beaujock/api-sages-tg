@@ -522,9 +522,11 @@ export async function getEnseignantSalleClasses(clientId:string, ecoleId:string,
                 sgs_salle_classe : {
                     ecole_id : ecoleId,
                     annee_scolaire_id : anneeScolaireId,
-                    sgs_client_ecole : {
-                        some : {
-                            client_id : clientId
+                    sgs_ecole : {
+                        sgs_client_ecole : {
+                            some : {
+                                client_id : clientId
+                            }
                         }
                     }
                 }
