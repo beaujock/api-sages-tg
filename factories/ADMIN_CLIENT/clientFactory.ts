@@ -3,7 +3,7 @@ import { getYear } from 'date-fns';
 import { logError } from "../ALL_USAGE/allUsageFactories";
 import { DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 import { OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
-import { DisplayMatiereDO } from "@/types/ALL_USAGE/AllUsagesTypes";
+import { InfoMatiereDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
 
 export async function getClientById(clientId:string) : Promise<DisplayClientDO|null> {
@@ -544,12 +544,12 @@ export async function getEnseignantSalleClasses(clientId:string, ecoleId:string,
     }
 }
 
-export async function getEnseignantMatieres(clientId:string, ecoleId:string, anneeScolaireId:string, enseignantId:string) : Promise<DisplayMatiereDO[]> {
+export async function getEnseignantMatieres(clientId:string, ecoleId:string, anneeScolaireId:string, enseignantId:string) : Promise<InfoMatiereDO[]> {
     const functionName = "getEnseignantMatieres";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listMatieres : DisplayMatiereDO[] = [];
+        const listMatieres : InfoMatiereDO[] = [];
         const matieres = await prisma.sgs_salle_classe_matiere.findMany({
             where : {
                 sgs_portfolio_enseignant : {
