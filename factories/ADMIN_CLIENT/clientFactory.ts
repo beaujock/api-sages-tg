@@ -562,9 +562,11 @@ export async function getEnseignantMatieres(clientId:string, ecoleId:string, ann
                 sgs_salle_classe : {
                     ecole_id : ecoleId,
                     annee_scolaire_id : anneeScolaireId,
-                    sgs_client_ecole : {
-                        some : {
-                            client_id : clientId
+                    sgs_ecole :{
+                        sgs_client_ecole : {
+                            some : {
+                                client_id : clientId
+                            }
                         }
                     }
                 }
