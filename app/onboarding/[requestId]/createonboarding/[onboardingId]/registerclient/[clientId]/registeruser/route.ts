@@ -1,5 +1,5 @@
-import { addNewClientBaseModules, getClientById, registerNewUser} from "@/factories/onboardingFactory";
-import { sendEmail } from "@/factories/utilitiesFactory";
+import { addNewClientBaseModules, getClientById, registerNewUser} from "@/factories/ONBOARDING/onboardingFactory";
+import { logError, sendEmail } from "@/factories/utilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -20,12 +20,8 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{r
         const message = (typeof addNewUser === 'string')?(null):(addNewUser.message);
         if (registerNewUserMessage.includes("ERROR")) return NextResponse.json({registerNewUserErrorMessage : addNewUser}, { status: 400 });
         if (requesterEmail === null)
-            await sendEmail({
-                    name : "Administrateur SAGES",
-                    email : process.env.SMTP_USER!,
-                    message : "Echech - Enregistrement du nouvel utilisateur (message ci dessous): " + addNewUser 
-                    //"Utilisez le lien ci dessous pour confirmez votre requête.\n" + urlConfirmRequest
-                });
+            
+            logError('N',"Echec : Enregistrement du nouvel utilisateur",(new URL(request.url)).pathname, registerNewUserMessage , true);
         else
         {
             const client = await getClientById(clientId);

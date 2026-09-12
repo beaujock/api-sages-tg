@@ -1,4 +1,4 @@
-import { addNewClientSchool} from "@/factories/onboardingFactory";
+import { addNewClientSchool} from "@/factories/ONBOARDING/onboardingFactory";
 import { logError } from "@/factories/utilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 

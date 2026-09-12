@@ -1,4 +1,4 @@
-import { confirmOnboardingRequestCode, getRequestById, } from "@/factories/onboardingFactory";
+import { confirmOnboardingRequestCode, getRequestById, } from "@/factories/ONBOARDING/onboardingFactory";
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 

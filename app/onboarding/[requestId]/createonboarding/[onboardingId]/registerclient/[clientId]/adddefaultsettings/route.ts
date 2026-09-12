@@ -1,4 +1,4 @@
-import { addNewClientDefaultSettings} from "@/factories/onboardingFactory";
+import { addNewClientDefaultSettings} from "@/factories/ONBOARDING/onboardingFactory";
 import { logError } from "@/factories/utilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 

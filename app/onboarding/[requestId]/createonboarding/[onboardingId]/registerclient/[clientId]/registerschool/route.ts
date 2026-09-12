@@ -1,4 +1,4 @@
-import { registerNewSchool} from "@/factories/onboardingFactory";
+import { registerNewSchool} from "@/factories/ONBOARDING/onboardingFactory";
 import { logError } from "@/factories/utilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 

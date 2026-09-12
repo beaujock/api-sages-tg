@@ -1,4 +1,4 @@
-import { getOnboardingSteps} from "@/factories/onboardingFactory";
+import { getOnboardingSteps} from "@/factories/ONBOARDING/onboardingFactory";
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 

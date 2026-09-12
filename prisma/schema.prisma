@@ -15,7 +15,6 @@ model lkp_client_module_status {
   created_by        String              @db.VarChar(32)
   change_date       DateTime?           @db.Timestamptz(6)
   changed_by        String?             @db.VarChar(32)
-  sgs_client_ecole  sgs_client_ecole[]
   sgs_client_module sgs_client_module[]
 }
 
@@ -127,7 +126,7 @@ model sgs_client {
   active              Boolean              @default(true)
   status              String               @default("A") @db.VarChar(1)
   legal_name          String               @db.VarChar(128)
-  short_name          String?              @db.VarChar(64)
+  short_name          String               @db.VarChar(64)
   code                String               @unique @db.VarChar(32)
   address             String?              @db.VarChar(128)
   website             String?              @db.VarChar(64)
@@ -149,19 +148,19 @@ model sgs_client {
 }
 
 model sgs_client_ecole {
-  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  client_id                String                   @db.Uuid
-  ecole_id                 String                   @db.Uuid
-  active                   Boolean                  @default(true)
-  status                   String                   @default("A") @db.VarChar(1)
-  notes                    String?                  @db.VarChar
-  create_date              DateTime                 @db.Timestamptz(6)
-  created_by               String                   @db.VarChar(32)
-  change_date              DateTime?                @db.Timestamptz(6)
-  changed_by               String?                  @db.VarChar(32)
-  sgs_client               sgs_client               @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sgs_ecole                sgs_ecole                @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  lkp_client_module_status lkp_client_module_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  id                       String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id                String                  @db.Uuid
+  ecole_id                 String                  @db.Uuid
+  active                   Boolean                 @default(true)
+  status                   String                  @default("A") @db.VarChar(1)
+  notes                    String?                 @db.VarChar
+  create_date              DateTime                @db.Timestamptz(6)
+  created_by               String                  @db.VarChar(32)
+  change_date              DateTime?               @db.Timestamptz(6)
+  changed_by               String?                 @db.VarChar(32)
+  sgs_client               sgs_client              @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_ecole                sgs_ecole               @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_client_module_status lkp_client_ecole_status @relation(fields: [status], references: [code], onDelete: NoAction, onUpdate: NoAction, map: "sgs_client_ecole_ecole_status")
 }
 
 model sgs_client_module {
@@ -199,6 +198,7 @@ model sgs_client_module_role_menu_item {
   sgs_client_module                       sgs_client_module                         @relation(fields: [client_module_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_role                                 tg_role                                   @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_client_module_role_menu_item_action sgs_client_module_role_menu_item_action[]
+  sgs_client_module_role_menu_item_link   sgs_client_module_role_menu_item_link[]
 }
 
 model sgs_client_module_role_menu_item_action {
@@ -568,7 +568,7 @@ model tg_matiere {
 model tg_module {
   id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   full_name                String                     @db.VarChar(128)
-  short_name               String?                    @db.VarChar(64)
+  short_name               String                     @db.VarChar(64)
   code                     String                     @unique @db.VarChar(32)
   base_price               Decimal                    @default(0) @db.Decimal(10, 2)
   notes                    String?                    @db.VarChar
@@ -626,36 +626,31 @@ model tg_role {
 
 model tg_role_module_menu_item {
   id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  menu_item_id                    String                            @db.Uuid
   module_id                       String                            @db.Uuid
   role_id                         String                            @db.Uuid
-  display_name                    String                            @db.VarChar(16)
-  description                     String?                           @db.VarChar(256)
-  icon_name                       String?                           @db.VarChar(64)
-  end_route                       String                            @default("/") @db.VarChar(64)
-  item_order                      Int
-  notes                           String?                           @db.VarChar
+  active                          Boolean                           @default(true)
   create_date                     DateTime                          @db.Timestamptz(6)
   created_by                      String                            @db.VarChar(32)
   change_date                     DateTime?                         @db.Timestamptz(6)
   changed_by                      String?                           @db.VarChar(32)
+  tg_menu_item                    tg_menu_item                      @relation(fields: [menu_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_module                       tg_module                         @relation(fields: [module_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_role                         tg_role                           @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_role_module_menu_item_action tg_role_module_menu_item_action[]
+  tg_role_module_menu_item_link   tg_role_module_menu_item_link[]
 }
 
 model tg_role_module_menu_item_action {
   id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   role_module_menu_item_id String                   @db.Uuid
-  display_name             String                   @db.VarChar(16)
-  description              String?                  @db.VarChar(256)
-  icon_name                String?                  @db.VarChar(64)
-  end_route                String                   @default("/") @db.VarChar(64)
-  action_order             Int
-  notes                    String?                  @db.VarChar
+  action_id                String                   @db.Uuid
+  active                   Boolean                  @default(true)
   create_date              DateTime                 @db.Timestamptz(6)
   created_by               String                   @db.VarChar(32)
   change_date              DateTime?                @db.Timestamptz(6)
   changed_by               String?                  @db.VarChar(32)
+  tg_action                tg_action                @relation(fields: [action_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_role_module_menu_item tg_role_module_menu_item @relation(fields: [role_module_menu_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -688,4 +683,85 @@ model tg_systeme_scolaire {
   changed_by      String?           @db.VarChar(32)
   sgs_client      sgs_client[]
   tg_enseignement tg_enseignement[]
+}
+
+model lkp_client_ecole_status {
+  code             String             @id @db.VarChar(1)
+  display_value    String             @db.VarChar(32)
+  description      String?            @db.VarChar(64)
+  create_date      DateTime           @db.Timestamptz(6)
+  created_by       String             @db.VarChar(32)
+  change_date      DateTime?          @db.Timestamptz(6)
+  changed_by       String?            @db.VarChar(32)
+  sgs_client_ecole sgs_client_ecole[]
+}
+
+model tg_action {
+  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  display_name                    String                            @db.VarChar(64)
+  icon_name                       String?                           @db.VarChar(64)
+  end_route                       String                            @default("/") @db.VarChar(64)
+  description                     String?                           @db.VarChar(256)
+  create_date                     DateTime                          @db.Timestamptz(6)
+  created_by                      String                            @db.VarChar(32)
+  change_date                     DateTime?                         @db.Timestamptz(6)
+  changed_by                      String?                           @db.VarChar(32)
+  tg_role_module_menu_item_action tg_role_module_menu_item_action[]
+}
+
+model tg_link {
+  id                            String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  display_name                  String                          @db.VarChar(32)
+  icon_name                     String?                         @db.VarChar(64)
+  end_route                     String                          @default("/") @db.VarChar(64)
+  description                   String?                         @db.VarChar(256)
+  create_date                   DateTime                        @db.Timestamptz(6)
+  created_by                    String                          @db.VarChar(32)
+  change_date                   DateTime?                       @db.Timestamptz(6)
+  changed_by                    String?                         @db.VarChar(32)
+  tg_role_module_menu_item_link tg_role_module_menu_item_link[]
+}
+
+model tg_menu_item {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  display_name             String                     @db.VarChar(64)
+  icon_name                String?                    @db.VarChar(64)
+  end_route                String                     @default("/") @db.VarChar(64)
+  description              String?                    @db.VarChar(256)
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  item_order               Int
+  tg_role_module_menu_item tg_role_module_menu_item[]
+}
+
+model tg_role_module_menu_item_link {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_module_menu_item_id String                   @db.Uuid
+  link_id                  String                   @db.Uuid
+  active                   Boolean                  @default(true)
+  create_date              DateTime                 @db.Timestamptz(6)
+  created_by               String                   @db.VarChar(32)
+  change_date              DateTime?                @db.Timestamptz(6)
+  changed_by               String?                  @db.VarChar(32)
+  tg_link                  tg_link                  @relation(fields: [link_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_role_module_menu_item tg_role_module_menu_item @relation(fields: [role_module_menu_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_client_module_role_menu_item_link {
+  id                               String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_role_menu_item            String                           @db.Uuid
+  display_name                     String                           @db.VarChar(16)
+  description                      String?                          @db.VarChar(256)
+  icon_name                        String?                          @db.VarChar(64)
+  end_route                        String                           @default("/") @db.VarChar(64)
+  action_order                     Int
+  active                           Boolean                          @default(true)
+  notes                            String?                          @db.VarChar
+  create_date                      DateTime                         @db.Timestamptz(6)
+  created_by                       String                           @db.VarChar(32)
+  change_date                      DateTime?                        @db.Timestamptz(6)
+  changed_by                       String?                          @db.VarChar(32)
+  sgs_client_module_role_menu_item sgs_client_module_role_menu_item @relation(fields: [client_role_menu_item], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sgs_client_module_role_menu_item_lin_client_role_menu_item_fkey")
 }

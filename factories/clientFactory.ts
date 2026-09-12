@@ -307,7 +307,7 @@ export async function getClientEleves(clientId:string, anneeScolaireId:string|nu
 }
 
 export async function getClientRoleMenuItems(clientCode: string, roleCode:string) : Promise<SagesMenuItem[]> {
-    const functionName = "getClientEleves";
+    const functionName = "getClientRoleMenuItems";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");

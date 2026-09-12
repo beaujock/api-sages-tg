@@ -1,4 +1,4 @@
-import { addNewClientBaseModules} from "@/factories/onboardingFactory";
+import { addNewClientBaseModules} from "@/factories/ONBOARDING/onboardingFactory";
 import { logError } from "@/factories/utilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 
