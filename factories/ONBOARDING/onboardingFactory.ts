@@ -935,12 +935,15 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
         if (!modules || modules.length === 0) return emptyMenu;
         const roles = await getAllRoles();
         if (!roles || roles.length === 0) return emptyMenu;
+        const listItems:InfoMenuItemLinkActionDO[] = [];
+        const listLinks:InfoMenuItemLinkActionDO[] = [];
+        const listActions:InfoMenuItemLinkActionDO[] = [];
+
         let items:InfoMenuItemLinkActionDO[] = [];
         let links:InfoMenuItemLinkActionDO[] = [];
         let actions:InfoMenuItemLinkActionDO[] = [];
         for(const module of modules) {
-            for (const role of roles) {
-                const clientModule = await prisma.sgs_client_module.findFirst({
+            const clientModule = await prisma.sgs_client_module.findFirst({
                     where : {
                         client_id : clientId,
                         module_id : module.id
@@ -949,7 +952,8 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                         id : true
                     }
                 });
-                if (!clientModule || clientModule===null) break;
+            if (!clientModule || clientModule===null) break;
+            for (const role of roles) {
                 items = await getModuleRoleMenuItems(module.id, role.id); 
                 for (const item of items) {
                     const menuItem = await prisma.sgs_client_module_role_menu_item.create({
@@ -967,9 +971,17 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                             }
                     });
                     if (menuItem) {
+                        listItems.push({
+                            id : menuItem.id,
+                            display_name : menuItem.display_name,
+                            icon_name : menuItem.icon_name,
+                            end_route : menuItem.end_route,
+                            order : menuItem.item_order,
+                            description : menuItem.description
+                        });
                         links = await getModuleRoleMenuLinks(module.id, role.id);
                         for (const link of links) {
-                            await prisma.sgs_client_module_role_menu_item_link.create({
+                            const newLink = await prisma.sgs_client_module_role_menu_item_link.create({
                                 data : {
                                     client_role_menu_item : menuItem.id,
                                     display_name : link.display_name,
@@ -982,10 +994,18 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                     created_by : "SAGES_ONBOARDING"
                                 }
                             });
+                            listLinks.push({
+                                id : newLink.id,
+                                display_name : newLink.display_name,
+                                icon_name : newLink.icon_name,
+                                end_route : newLink.end_route,
+                                order : newLink.action_order,
+                                description : newLink.description
+                            });
                         };
                         actions = await getModuleRoleMenuActions(module.id, role.id); 
                         for (const action of actions) {
-                            await prisma.sgs_client_module_role_menu_item_action.create({
+                            const newAction = await prisma.sgs_client_module_role_menu_item_action.create({
                                 data : {
                                     client_role_menu_item : menuItem.id,
                                     display_name : action.display_name,
@@ -997,6 +1017,14 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                     create_date : new Date(Date.now()),
                                     created_by : "SAGES_ONBOARDING"
                                 }
+                            });
+                            listActions.push({
+                                id : newAction.id,
+                                display_name : newAction.display_name,
+                                icon_name : newAction.icon_name,
+                                end_route : newAction.end_route,
+                                order : newAction.action_order,
+                                description : newAction.description
                             });
                         };
                     }                    
