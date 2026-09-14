@@ -5,9 +5,9 @@ import { OnboardingStepsInfos, SGSCreateRequestDO, ToOnboardingStepsInfos } from
 import { generatePassword, sendEmail, logError } from "../utilitiesFactory";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { getClientModules } from "../clientFactory";
 import { InfoClientMenuDO, InfoMenuItemLinkActionDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { getAllRoles, getModuleRoleMenuActions, getModuleRoleMenuItems, getModuleRoleMenuLinks } from "../ALL_USAGE/SagesTgFactory";
+import { getClientModules } from "../clientFactory";
 
 const ErrorOrigin = "ONBOARDING : onboardingFactory";
 
@@ -926,10 +926,15 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const emptyMenu = {
+            items   : [],
+            links   : [],
+            actions : []
+        }
         const modules = await getClientModules(clientId);
-        if (!modules || modules.length === 0) return null;
+        if (!modules || modules.length === 0) return emptyMenu;
         const roles = await getAllRoles();
-        if (!roles || roles.length === 0) return null;
+        if (!roles || roles.length === 0) return emptyMenu;
         let items:InfoMenuItemLinkActionDO[] = [];
         let links:InfoMenuItemLinkActionDO[] = [];
         let actions:InfoMenuItemLinkActionDO[] = [];

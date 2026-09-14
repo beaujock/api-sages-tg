@@ -5,6 +5,7 @@ import { AdminClientClientDisplay, AdminClientUpdateEcoleRequest, AdminClientEco
 import { tg_role } from "@/lib/generated/prisma/browser";
 import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
 import { sgs_client_module, tg_annee_scolaire } from "@/lib/generated/prisma/client";
+import { InfoModuleDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 
 
 const ErrorOrigin = "clientFactory";
@@ -244,18 +245,31 @@ export async function getRoleByCode(roleCode:string) : Promise<tg_role|null> {
     }
 }
 
-export async function getClientModules(clientId:string) : Promise<sgs_client_module[]> {
-    const functionName = "getClientById";
+export async function getClientModules(clientId:string) : Promise<InfoModuleDO[]> {
+    const functionName = "getClientModules";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listModules:InfoModuleDO[] = [];
         const clientModules = await prisma.sgs_client_module.findMany({
             where : {
                 client_id : clientId
+            },
+            include : {
+                tg_module : true
             }
         });
-        return clientModules
-
+        if (!clientModules || clientModules.length === 0) return [];
+        for (const cm of clientModules) {
+            if (cm) listModules.push({
+                id : cm.tg_module.id,
+                full_name : cm.tg_module.full_name,
+                short_name : cm.tg_module.short_name,
+                code : cm.tg_module.code,
+                order : cm.tg_module.module_order
+            });
+        };
+        return listModules;
     }
     catch(error:any) {
         logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
