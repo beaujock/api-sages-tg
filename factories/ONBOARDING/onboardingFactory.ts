@@ -5,7 +5,7 @@ import { OnboardingStepsInfos, SGSCreateRequestDO, ToOnboardingStepsInfos } from
 import { generatePassword, sendEmail, logError } from "../utilitiesFactory";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { InfoClientMenuDO, InfoMenuItemLinkActionDO } from "@/types/ALL_USAGE/AllUsagesTypes";
+import { InfoClientMenuDO, InfoMenuItemLinkActionDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { getAllRoles, getModuleRoleMenuActions, getModuleRoleMenuItems, getModuleRoleMenuLinks } from "../ALL_USAGE/SagesTgFactory";
 import { getClientModules } from "../clientFactory";
 
@@ -921,7 +921,7 @@ export async function registerNewUser(requestId:string, onboardingId:string,clie
     }
 }
 
-export async function createClientMenu(clientId:string) : Promise<InfoClientMenuDO|null>{
+export async function createClientMenu(clientId:string) : Promise<InfoClientMenuDO>{
     const functionName = "createClientMenu";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -930,16 +930,16 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
             items   : [],
             links   : [],
             actions : []
-        }
+        };
         const modules = await getClientModules(clientId);
         if (!modules || modules.length === 0) return emptyMenu;
         const roles = await getAllRoles();
         if (!roles || roles.length === 0) return emptyMenu;
-        const listItems:InfoMenuItemLinkActionDO[] = [];
+        const listItems:InfoRoleModuleMenuItemDO[] = [];
         const listLinks:InfoMenuItemLinkActionDO[] = [];
         const listActions:InfoMenuItemLinkActionDO[] = [];
 
-        let items:InfoMenuItemLinkActionDO[] = [];
+        let items:InfoRoleModuleMenuItemDO[] = [];
         let links:InfoMenuItemLinkActionDO[] = [];
         let actions:InfoMenuItemLinkActionDO[] = [];
         for(const module of modules) {
@@ -952,7 +952,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                         id : true
                     }
                 });
-            if (!clientModule || clientModule===null) break;
+            if (!clientModule || clientModule===null) continue;
             for (const role of roles) {
                 items = await getModuleRoleMenuItems(module.id, role.id); 
                 for (const item of items) {
@@ -973,13 +973,16 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                     if (menuItem) {
                         listItems.push({
                             id : menuItem.id,
+                            item : menuItem.display_name,
+                            module : module.code,
+                            role : role.code,
                             display_name : menuItem.display_name,
                             icon_name : menuItem.icon_name,
                             end_route : menuItem.end_route,
                             order : menuItem.item_order,
                             description : menuItem.description
                         });
-                        links = await getModuleRoleMenuLinks(module.id, role.id);
+                        links = await getModuleRoleMenuLinks(item.id);
                         for (const link of links) {
                             const newLink = await prisma.sgs_client_module_role_menu_item_link.create({
                                 data : {
@@ -1003,7 +1006,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                 description : newLink.description
                             });
                         };
-                        actions = await getModuleRoleMenuActions(module.id, role.id); 
+                        actions = await getModuleRoleMenuActions(item.id); 
                         for (const action of actions) {
                             const newAction = await prisma.sgs_client_module_role_menu_item_action.create({
                                 data : {
@@ -1032,14 +1035,18 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
             }
         };
         return {
-            items : items,
-            links : links,
-            actions : actions
+            items : listItems,
+            links : listLinks,
+            actions : listActions
         }
     }
     catch(error:any) {
         logError('N',"Echec : Création du menu client",ErrorOrigin + "-" + functionName, error.message, true);
-        return null;
+        return {
+            items : [],
+            links : [],
+            actions : []
+        };
     }
 }
 

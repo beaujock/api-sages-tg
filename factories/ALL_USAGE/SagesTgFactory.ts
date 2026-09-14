@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { logError } from "./allUsageFactories";
-import { InfoMenuItemLinkActionDO, InfoModuleDO, InfoRoleDO } from "@/types/ALL_USAGE/AllUsagesTypes";
+import { InfoMenuItemLinkActionDO, InfoModuleDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 const ErrorOrigin = "ALL_USAGE : menuFactory";
 
 export async function getModuleById(moduleId:string) : Promise<InfoModuleDO|null>{
@@ -54,19 +54,21 @@ export async function getModuleByCode(moduleCode:string) : Promise<InfoModuleDO|
     }
 }
 
-export async function getModuleRoleMenuItems(moduleId:string, roleId:string) : Promise<InfoMenuItemLinkActionDO[]> {
+export async function getModuleRoleMenuItems(moduleId:string, roleId:string) : Promise<InfoRoleModuleMenuItemDO[]> {
     const functionName = "getClientRoleMenuItems";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listMenuItems:InfoMenuItemLinkActionDO[] = [];
+        const listMenuItems:InfoRoleModuleMenuItemDO[] = [];
         const roleModuleMenuItems= await prisma.tg_role_module_menu_item.findMany({
             where : {
                 role_id : roleId,
                 module_id : moduleId
             },
             include : {
-                tg_menu_item : true
+                tg_menu_item : true,
+                tg_module : true,
+                tg_role : true
             },
             orderBy : [{
                 tg_module : {
@@ -77,7 +79,10 @@ export async function getModuleRoleMenuItems(moduleId:string, roleId:string) : P
         if (!roleModuleMenuItems || roleModuleMenuItems.length === 0) return [];
         for (const item of roleModuleMenuItems) {
             if (item) listMenuItems.push({
-                id : item.tg_menu_item.id,
+                id : item.id,
+                item : item.tg_menu_item.display_name,
+                module : item.tg_module.code,
+                role : item.tg_role.code,
                 display_name : item.tg_menu_item.display_name,
                 icon_name : item.tg_menu_item.icon_name,
                 end_route : item.tg_menu_item.end_route,
@@ -93,33 +98,23 @@ export async function getModuleRoleMenuItems(moduleId:string, roleId:string) : P
     }
 }
 
-export async function getModuleRoleMenuLinks(moduleId:string, roleId:string) : Promise<InfoMenuItemLinkActionDO[]> {
+export async function getModuleRoleMenuLinks(roleModuleMenuItemId:string) : Promise<InfoMenuItemLinkActionDO[]> {
     const functionName = "getModuleRoleMenuLinks";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listMenuItems:InfoMenuItemLinkActionDO[] = [];
-        const roleModuleMenuItems= await prisma.tg_role_module_menu_item_link.findMany({
+        const roleModuleMenuLinks= await prisma.tg_role_module_menu_item_link.findMany({
             where : {
-                tg_role_module_menu_item : {
-                    module_id : moduleId,
-                    role_id : roleId
-                }
+                role_module_menu_item_id : roleModuleMenuItemId
             },
             include : {
                 tg_link : true
-            },
-            orderBy : [{
-                tg_role_module_menu_item : {
-                    tg_module : {
-                        module_order : 'asc'
-                    }
-                }
-            }]
+            }
         });
-        if (!roleModuleMenuItems || roleModuleMenuItems.length === 0) return [];
+        if (!roleModuleMenuLinks || roleModuleMenuLinks.length === 0) return [];
         let order = 10;
-        for (const item of roleModuleMenuItems) {
+        for (const item of roleModuleMenuLinks) {
             if (item) listMenuItems.push({
                 id : item.tg_link.id,
                 display_name : item.tg_link.display_name,
@@ -138,33 +133,23 @@ export async function getModuleRoleMenuLinks(moduleId:string, roleId:string) : P
     }
 }
 
-export async function getModuleRoleMenuActions(moduleId:string, roleId:string) : Promise<InfoMenuItemLinkActionDO[]> {
+export async function getModuleRoleMenuActions(roleModuleMenuItemId:string) : Promise<InfoMenuItemLinkActionDO[]> {
     const functionName = "getModuleRoleMenuActions";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listMenuItems:InfoMenuItemLinkActionDO[] = [];
-        const roleModuleMenuItems= await prisma.tg_role_module_menu_item_action.findMany({
+        const roleModuleMenuActions= await prisma.tg_role_module_menu_item_action.findMany({
             where : {
-                tg_role_module_menu_item : {
-                    module_id : moduleId,
-                    role_id : roleId
-                }
+                role_module_menu_item_id : roleModuleMenuItemId
             },
             include : {
                 tg_action : true
-            },
-            orderBy : [{
-                tg_role_module_menu_item : {
-                    tg_module : {
-                        module_order : 'asc'
-                    }
-                }
-            }]
+            }
         });
-        if (!roleModuleMenuItems || roleModuleMenuItems.length === 0) return [];
+        if (!roleModuleMenuActions || roleModuleMenuActions.length === 0) return [];
         let order = 10;
-        for (const item of roleModuleMenuItems) {
+        for (const item of roleModuleMenuActions) {
             if (item) listMenuItems.push({
                 id : item.tg_action.id,
                 display_name : item.tg_action.display_name,

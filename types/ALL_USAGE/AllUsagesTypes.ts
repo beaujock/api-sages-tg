@@ -47,3 +47,15 @@ export type InfoClientMenuDO = {
     links   : InfoMenuItemLinkActionDO[];
     actions : InfoMenuItemLinkActionDO[];
 }
+
+export type InfoRoleModuleMenuItemDO = {
+    id          : string,
+    item        : string,
+    module      : string,
+    role        : string,
+    display_name :  string;
+    icon_name :     string|null;
+    end_route :     string;
+    order :         number;
+    description :   string|null
+}
