@@ -90,7 +90,7 @@ export async function getModuleRoleMenuItems(moduleId:string, roleId:string) : P
                 description : item.tg_menu_item.description
             });
         };
-        return [... new Set(listMenuItems)];
+        return listMenuItems;
     }
     catch(error:any) {
         logError('F',"Echec : Retrouver les elements de menu d'un module et d'un role",ErrorOrigin + " - " + functionName, error.message, true);
