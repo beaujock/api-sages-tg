@@ -707,7 +707,7 @@ export async function getEnseignantOverview(clientId:string, ecoleId:string, ann
     }
 }
 
-export async function getClientMenuItemLinks(clientId:string, roleId:string, menuItemDisplay:string) {
+export async function getClientMenuItemLinks(clientId:string, roleId:string, menuItemDisplay:string) : Promise<InfoMenuItemLinkActionDO[]>{
     const functionName = "getClientMenuItemLinks";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -737,15 +737,16 @@ export async function getClientMenuItemLinks(clientId:string, roleId:string, men
                 order : link.link_order,
                 description : link.description
             });
-        }
+        };
+        return listLinks;
     }
     catch(error:any) {
         logError('F',"Echec : List des liens d'un menu", ErrorOrigin + " - " + functionName, error.message, true);
-        return null;
+        return [];
     }
 }
 
-export async function getClientMenuItemActions(clientId:string, roleId:string, menuItemDisplay:string) {
+export async function getClientMenuItemActions(clientId:string, roleId:string, menuItemDisplay:string) : Promise<InfoMenuItemLinkActionDO[]> {
     const functionName = "getClientMenuItemActions";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -775,11 +776,12 @@ export async function getClientMenuItemActions(clientId:string, roleId:string, m
                 order : action.action_order,
                 description : action.description
             });
-        }
+        };
+        return listActions;
     }
     catch(error:any) {
         logError('F',"Echec : List des actions d'un menu", ErrorOrigin + " - " + functionName, error.message, true);
-        return null;
+        return [];
     }
 }
 
