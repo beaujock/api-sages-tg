@@ -59,3 +59,13 @@ export type InfoRoleModuleMenuItemDO = {
     order :         number;
     description :   string|null
 }
+
+export type SagesToken = {
+    user_id            : string;
+    user_full_name     : string;
+    effective_date     : Date,
+    expiry_date        : Date
+    user_ip_address    : string;
+    user_agent         : string;
+    host               : string;
+}
