@@ -988,7 +988,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                     description : link.description,
                                     icon_name : link.icon_name,
                                     end_route : link.end_route,
-                                    action_order : link.order,
+                                    link_order : link.order,
                                     active : true,
                                     create_date : new Date(),
                                     created_by : "SAGES_ONBOARDING"
@@ -999,7 +999,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                 display_name : newLink.display_name,
                                 icon_name : newLink.icon_name,
                                 end_route : newLink.end_route,
-                                order : newLink.action_order,
+                                order : newLink.link_order,
                                 description : newLink.description
                             });
                         };

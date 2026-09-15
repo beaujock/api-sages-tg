@@ -756,7 +756,7 @@ model sgs_client_module_role_menu_item_link {
   description                      String?                          @db.VarChar(256)
   icon_name                        String?                          @db.VarChar(64)
   end_route                        String                           @default("/") @db.VarChar(64)
-  action_order                     Int
+  link_order                       Int
   active                           Boolean                          @default(true)
   notes                            String?                          @db.VarChar
   create_date                      DateTime                         @db.Timestamptz(6)

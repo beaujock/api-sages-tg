@@ -3,7 +3,7 @@ import { getYear } from 'date-fns';
 import { logError } from "../ALL_USAGE/allUsageFactories";
 import { DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 import { OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
-import { InfoMatiereDO} from "@/types/ALL_USAGE/AllUsagesTypes";
+import { InfoMatiereDO, InfoMenuItemLinkActionDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
 
 export async function getClientById(clientId:string) : Promise<DisplayClientDO|null> {
@@ -703,6 +703,82 @@ export async function getEnseignantOverview(clientId:string, ecoleId:string, ann
     }
     catch(error:any) {
         logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
+
+export async function getClientMenuItemLinks(clientId:string, roleId:string, menuItemDisplay:string) {
+    const functionName = "getClientMenuItemLinks";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listLinks:InfoMenuItemLinkActionDO[] = [];
+        const links = await prisma.sgs_client_module_role_menu_item_link.findMany({
+            where : {
+                active : true,
+                sgs_client_module_role_menu_item : {
+                    display_name : menuItemDisplay.toUpperCase(),
+                    role_id : roleId,
+                    sgs_client_module : {
+                        client_id : clientId
+                    }
+                }
+            },
+            orderBy : {
+                link_order : 'asc'
+            }
+        });
+        for (const link of links) {
+            listLinks.push({
+                id : link.id,
+                display_name : link.display_name,
+                icon_name : link.icon_name,
+                end_route : link.end_route,
+                order : link.link_order,
+                description : link.description
+            });
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : List des liens d'un menu", ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
+
+export async function getClientMenuItemActions(clientId:string, roleId:string, menuItemDisplay:string) {
+    const functionName = "getClientMenuItemActions";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listActions:InfoMenuItemLinkActionDO[] = [];
+        const actions = await prisma.sgs_client_module_role_menu_item_action.findMany({
+            where : {
+                active : true,
+                sgs_client_module_role_menu_item : {
+                    display_name : menuItemDisplay.toUpperCase(),
+                    role_id : roleId,
+                    sgs_client_module : {
+                        client_id : clientId
+                    }
+                }
+            },
+            orderBy : {
+                action_order : 'asc'
+            }
+        });
+        for (const action of actions) {
+            listActions.push({
+                id : action.id,
+                display_name : action.display_name,
+                icon_name : action.icon_name,
+                end_route : action.end_route,
+                order : action.action_order,
+                description : action.description
+            });
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : List des actions d'un menu", ErrorOrigin + " - " + functionName, error.message, true);
         return null;
     }
 }
