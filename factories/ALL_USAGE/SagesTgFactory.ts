@@ -55,7 +55,7 @@ export async function getModuleByCode(moduleCode:string) : Promise<InfoModuleDO|
 }
 
 export async function getModuleRoleMenuItems(moduleId:string, roleId:string) : Promise<InfoRoleModuleMenuItemDO[]> {
-    const functionName = "getClientRoleMenuItems";
+    const functionName = "getModuleRoleMenuItems";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -71,26 +71,23 @@ export async function getModuleRoleMenuItems(moduleId:string, roleId:string) : P
                 tg_role : true
             },
             orderBy : [{
-                tg_module : {
-                    module_order : 'asc'
+                tg_menu_item : {
+                    item_order : 'asc'
                 }
             }]
         });
         if (!roleModuleMenuItems || roleModuleMenuItems.length === 0) return [];
-        for (const item of roleModuleMenuItems) {
-            if (item) listMenuItems.push({
-                id : item.id,
-                item : item.tg_menu_item.display_name,
-                module : item.tg_module.code,
-                role : item.tg_role.code,
-                display_name : item.tg_menu_item.display_name,
-                icon_name : item.tg_menu_item.icon_name,
-                end_route : item.tg_menu_item.end_route,
-                order : item.tg_menu_item.item_order,
-                description : item.tg_menu_item.description
-            });
-        };
-        return listMenuItems;
+        return roleModuleMenuItems.map((item) => ({
+            id: item.id,
+            item: item.tg_menu_item?.display_name ?? 'Unknown',
+            module: item.tg_module?.code ?? 'Unknown',
+            role: item.tg_role?.code ?? 'Unknown',
+            display_name: item.tg_menu_item?.display_name ?? 'Unknown',
+            icon_name: item.tg_menu_item?.icon_name ?? '',
+            end_route: item.tg_menu_item?.end_route ?? '',
+            order: item.tg_menu_item?.item_order ?? 0,
+            description: item.tg_menu_item?.description ?? ''
+        }));
     }
     catch(error:any) {
         logError('F',"Echec : Retrouver les elements de menu d'un module et d'un role",ErrorOrigin + " - " + functionName, error.message, true);

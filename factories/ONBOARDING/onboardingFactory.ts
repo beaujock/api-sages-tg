@@ -939,9 +939,6 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
         const listLinks:InfoMenuItemLinkActionDO[] = [];
         const listActions:InfoMenuItemLinkActionDO[] = [];
 
-        //let items:InfoRoleModuleMenuItemDO[] = [];
-        //let links:InfoMenuItemLinkActionDO[] = [];
-        //let actions:InfoMenuItemLinkActionDO[] = [];
         for(const module of modules) {
             const clientModule = await prisma.sgs_client_module.findFirst({
                     where : {
@@ -952,7 +949,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                         id : true
                     }
                 });
-            if (!clientModule || clientModule===null) continue;
+            if (!clientModule) continue;
             for (const role of roles) {
                 const items = await getModuleRoleMenuItems(module.id, role.id); 
                 for (const item of items) {
@@ -966,7 +963,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                 item_order : item.order,
                                 description : item.description,
                                 active : true,
-                                create_date : new Date(Date.now()),
+                                create_date : new Date(),
                                 created_by : "SAGES_ONBOARDING"
                             }
                     });
@@ -993,7 +990,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                     end_route : link.end_route,
                                     action_order : link.order,
                                     active : true,
-                                    create_date : new Date(Date.now()),
+                                    create_date : new Date(),
                                     created_by : "SAGES_ONBOARDING"
                                 }
                             });
@@ -1017,7 +1014,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                     end_route : action.end_route,
                                     action_order : action.order,
                                     active : true,
-                                    create_date : new Date(Date.now()),
+                                    create_date : new Date(),
                                     created_by : "SAGES_ONBOARDING"
                                 }
                             });
