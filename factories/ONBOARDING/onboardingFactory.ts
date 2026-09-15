@@ -939,9 +939,9 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
         const listLinks:InfoMenuItemLinkActionDO[] = [];
         const listActions:InfoMenuItemLinkActionDO[] = [];
 
-        let items:InfoRoleModuleMenuItemDO[] = [];
-        let links:InfoMenuItemLinkActionDO[] = [];
-        let actions:InfoMenuItemLinkActionDO[] = [];
+        //let items:InfoRoleModuleMenuItemDO[] = [];
+        //let links:InfoMenuItemLinkActionDO[] = [];
+        //let actions:InfoMenuItemLinkActionDO[] = [];
         for(const module of modules) {
             const clientModule = await prisma.sgs_client_module.findFirst({
                     where : {
@@ -954,7 +954,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                 });
             if (!clientModule || clientModule===null) continue;
             for (const role of roles) {
-                items = await getModuleRoleMenuItems(module.id, role.id); 
+                const items = await getModuleRoleMenuItems(module.id, role.id); 
                 for (const item of items) {
                     const menuItem = await prisma.sgs_client_module_role_menu_item.create({
                             data : {
@@ -982,7 +982,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                             order : menuItem.item_order,
                             description : menuItem.description
                         });
-                        links = await getModuleRoleMenuLinks(item.id);
+                        const links = await getModuleRoleMenuLinks(item.id);
                         for (const link of links) {
                             const newLink = await prisma.sgs_client_module_role_menu_item_link.create({
                                 data : {
@@ -1006,7 +1006,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
                                 description : newLink.description
                             });
                         };
-                        actions = await getModuleRoleMenuActions(item.id); 
+                        const actions = await getModuleRoleMenuActions(item.id); 
                         for (const action of actions) {
                             const newAction = await prisma.sgs_client_module_role_menu_item_action.create({
                                 data : {
