@@ -1,4 +1,4 @@
-import { getClientRoleMenuItems } from "@/factories/clientFactory";
+import { getClientRoleMenuItems, getRoleByCode } from "@/factories/clientFactory";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,7 +13,8 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
                 return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
             const client = requestedRouteInfos.client;
             const userClientRoleMenuItems = await getClientRoleMenuItems(clientCode, "ADMIN_CLIENT");
-            return NextResponse.json({menuItems : userClientRoleMenuItems}, { status: 200 });
+            const roleInfos = await getRoleByCode("ADMIN_CLIENT");
+            return NextResponse.json({menuItems : userClientRoleMenuItems, userFullName : requestedRouteInfos.user.full_name}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Echec : Menu d'un utilisateur",(new URL(request.url)).pathname, error.message, true);

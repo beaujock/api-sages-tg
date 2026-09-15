@@ -337,8 +337,12 @@ export async function getClientRoleMenuItems(clientCode: string, roleCode:string
         });
         const items = await prisma.sgs_client_module_role_menu_item.findMany({
             where : {
-                client_module_id : {
-                    in : clientModulesIds
+                sgs_client_module : {
+                    tg_module : {
+                        id : {
+                            in : clientModulesIds
+                        } 
+                    }
                 }
             },
             orderBy : {
@@ -353,7 +357,6 @@ export async function getClientRoleMenuItems(clientCode: string, roleCode:string
     catch(error:any) {
         logError('F',"Liste des éléments de menu basé sur le client et le role",ErrorOrigin + " : " + functionName, error.message, true);
         return [];
-        //throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
 
