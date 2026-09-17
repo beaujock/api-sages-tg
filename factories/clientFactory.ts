@@ -178,7 +178,7 @@ export async function getClientSalleClasses(clientId:string, anneeScolaireId:str
         const listSalleClasses:AdminClientSalleClasseDisplay[] = [];
         let schoolYearId:string|null;
         if (anneeScolaireId === null) {
-            const schoolYear = await getCurrentAnneeScolaire();
+            const schoolYear = await getCurrentAnneeScolaire(clientId);
             schoolYearId = (schoolYear===null)?(null):(schoolYear.id);
         };
         schoolYearId = anneeScolaireId;
@@ -285,7 +285,7 @@ export async function getClientEleves(clientId:string, anneeScolaireId:string|nu
         const listEleves:AdminClientEleveDisplay[] = [];
         let schoolYearId:string|null;
         if (anneeScolaireId === null) {
-            const schoolYear = await getCurrentAnneeScolaire();
+            const schoolYear = await getCurrentAnneeScolaire(clientId);
             schoolYearId = (schoolYear===null)?(null):(schoolYear.id);
         };
         schoolYearId = anneeScolaireId;
@@ -529,13 +529,13 @@ export async function getClientAnneeScolaire(clientId:string) : Promise<tg_annee
                 client_id : clientId
             }
         });
-        if(setting === null || setting.anneescolaire_id === null) return await getCurrentAnneeScolaire();
+        if(setting === null || setting.anneescolaire_id === null) return await getCurrentAnneeScolaire(clientId);
         const anneeScolaire = await prisma.tg_annee_scolaire.findUnique({
             where : {
                 id : setting.anneescolaire_id
             }
         });
-        if (anneeScolaire === null) return await getCurrentAnneeScolaire();
+        if (anneeScolaire === null) return await getCurrentAnneeScolaire(clientId);
         return anneeScolaire;
 
     }
