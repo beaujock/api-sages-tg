@@ -674,6 +674,7 @@ export async function registerNewSchool(requestId:string, onboardingId:string,cl
         const newSchool = await prisma.sgs_ecole.create({
             data : {
                 full_name               : progress.requestRecord.ecole_name,
+                short_name              :progress.requestRecord.ecole_code,
                 code                    : progress.requestRecord.ecole_code,
                 create_date             : new Date(Date.now()),
                 created_by              : "SAGES_ONBOARDING"
