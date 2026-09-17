@@ -877,23 +877,23 @@ export async function getClientEcoleClasses(clientId:string, ecoleId:string) : P
         if (!clienEcoleSetting) return [];
         if(clienEcoleSetting.prescolaire) {
             const newClasses = await getEnseignementClasses(clienEcoleSetting.prescolaire);
-            listClasses = [... newClasses];
+            listClasses.push(...newClasses);
         };
         if(clienEcoleSetting.primaire) {
             const newClasses = await getEnseignementClasses(clienEcoleSetting.primaire);
-            listClasses = [... newClasses];
+            listClasses.push(...newClasses);
         };
         if(clienEcoleSetting.secondaire_premier_cycle) {
             const newClasses = await getEnseignementClasses(clienEcoleSetting.secondaire_premier_cycle);
-            listClasses = [... newClasses];
+            listClasses.push(...newClasses);
         };
         if(clienEcoleSetting.secondaire_second_cycle_general) {
             const newClasses = await getEnseignementClasses(clienEcoleSetting.secondaire_second_cycle_general);
-            listClasses = [... newClasses];
+            listClasses.push(...newClasses);
         };
         if(clienEcoleSetting.secondaire_second_cycle_technique) {
             const newClasses = await getEnseignementClasses(clienEcoleSetting.secondaire_second_cycle_technique);
-            listClasses = [... newClasses];
+            listClasses.push(...newClasses);
         };
         
         return listClasses;
