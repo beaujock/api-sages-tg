@@ -2,7 +2,27 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { logError } from "./allUsageFactories";
 import { InfoMenuItemLinkActionDO, InfoModuleDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
-const ErrorOrigin = "ALL_USAGE : menuFactory";
+import { DisplayAnneeScolaireDO, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+const ErrorOrigin = "SagesTgFactory";
+
+export async function getAnneeScolaireById(anneeScolaireIdId:string) : Promise<DisplayAnneeScolaireDO|null> {
+    const functionName = "getAnneeScolaireById";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = await prisma.tg_annee_scolaire.findFirst({
+            where : {
+                id : anneeScolaireIdId
+            }
+        });
+        if(!anneeScolaire) return null;
+        return ToDisplayAnneeScolaireDO(anneeScolaire);
+    }
+    catch(error:any) {
+        logError('F',"Echec : Retrouver une école par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
 
 export async function getModuleById(moduleId:string) : Promise<InfoModuleDO|null>{
     const functionName = "getModuleById";

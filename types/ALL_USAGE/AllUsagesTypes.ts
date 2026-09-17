@@ -69,3 +69,8 @@ export type SagesToken = {
     user_agent         : string;
     host               : string;
 }
+
+export type InfoClasseDO = {
+    id : string;
+    short_name : string;
+}

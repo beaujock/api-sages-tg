@@ -2,6 +2,7 @@
 import nodemailer from 'nodemailer';
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { tg_annee_scolaire, } from '@/lib/generated/prisma/client';
+import { DisplayAnneeScolaireDO } from '@/types/ADMIN_CLIENT/AdminClientDisplays';
 
 const ErrorOrigin = "utilistiesFactory"
 
@@ -124,11 +125,16 @@ export async function logError(errorType:string, title:string, origin:string, de
       }
 }
 
-export async function getCurrentAnneeScolaire() : Promise<tg_annee_scolaire|null> {
+export async function getCurrentAnneeScolaire(clientId:string) : Promise<DisplayAnneeScolaireDO|null> {
    const functionName = "getCurrentAnneeScolaire"
   try {
           const isConnected = await verifyAndSetPrismaConnection();
           if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+          const anneeScolaireFromSetting = await prisma.sgs_client_setting.findFirst({
+            where : {
+              client_id : clientId
+            }
+          });
           const currentDate = new Date();
           const anneeScolaire = await prisma.tg_annee_scolaire.findFirst({
             where : {

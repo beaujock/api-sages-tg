@@ -1,10 +1,20 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { logError } from "../ALL_USAGE/allUsageFactories";
-import { DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 import { OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
-import { InfoMatiereDO, InfoMenuItemLinkActionDO} from "@/types/ALL_USAGE/AllUsagesTypes";
+import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO} from "@/types/ALL_USAGE/AllUsagesTypes";
+import { AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
+import { AdminClientSalleClasseDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
+import { getAnneeScolaireById } from "../ALL_USAGE/SagesTgFactory";
+import { getCurrentAnneeScolaire } from "../utilitiesFactory";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
+
+/* Get DataObjects from records */
+
+
+
+/* Retrieveing data */
 
 export async function getClientById(clientId:string) : Promise<DisplayClientDO|null> {
     const functionName = "getClientById";
@@ -782,6 +792,146 @@ export async function getClientMenuItemActions(clientId:string, roleId:string, m
     catch(error:any) {
         logError('F',"Echec : List des actions d'un menu", ErrorOrigin + " - " + functionName, error.message, true);
         return [];
+    }
+}
+
+export async function getClientCurrentAnneeScolaire(clientId:string) : Promise<DisplayAnneeScolaireDO|null> {
+   const functionName = "getClientCurrentAnneeScolaire"
+  try {
+          const isConnected = await verifyAndSetPrismaConnection();
+          if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+          let anneeScolaire:DisplayAnneeScolaireDO|null = null;
+          const anneeScolaireFromSetting = await prisma.sgs_client_setting.findFirst({
+            where : {
+              client_id : clientId,
+              anneescolaire_id : {
+                not : null
+              }
+            }
+          });
+          if (anneeScolaireFromSetting && anneeScolaireFromSetting.anneescolaire_id !== null) {
+            anneeScolaire = await getAnneeScolaireById(anneeScolaireFromSetting.anneescolaire_id);
+          }
+          const currentDate = new Date();
+          const currentAnneeScolaire = await prisma.tg_annee_scolaire.findFirst({
+            where : {
+              start_date : {
+                lte : currentDate
+              },
+              end_date : {
+                gte : currentDate
+              }
+            }
+          });
+          if (currentAnneeScolaire) anneeScolaire = ToDisplayAnneeScolaireDO(currentAnneeScolaire);
+          return anneeScolaire;
+      }
+      catch(error:any) {
+          return null;
+      }
+}
+
+export async function getEnseignementClasses(enseignementId:string) : Promise<InfoClasseDO[]> {
+    const functionName = "getClientEcoleEnseignementClasses";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listClasses:InfoClasseDO[] = [];
+        const classes = await prisma.tg_classe.findMany({
+            where : {
+                tg_niveau : {
+                    enseignement_id : enseignementId
+                }
+            }
+        });
+        if (!classes || classes.length === 0) return [];
+        for (const cl of classes) {
+            listClasses.push({
+                id : cl.id,
+                short_name : cl.short_name
+            });
+        }
+        
+        return listClasses;
+    }
+    catch(error:any) {
+        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, true);
+        return [];
+    }
+}
+
+export async function getClientEcoleClasses(clientId:string, ecoleId:string) : Promise<InfoClasseDO[]> {
+    const functionName = "getClientEcoleClasses";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        let  listClasses:InfoClasseDO[] = [];
+        const clienEcoleSetting = await prisma.sgs_client_ecole_setting.findFirst({
+            where : {
+                sgs_client_ecole : {
+                    client_id : clientId,
+                    ecole_id : ecoleId
+                }
+            }
+        });
+        if (!clienEcoleSetting) return [];
+        if(clienEcoleSetting.prescolaire) {
+            const newClasses = await getEnseignementClasses(clienEcoleSetting.prescolaire);
+            listClasses = [... newClasses];
+        };
+        if(clienEcoleSetting.primaire) {
+            const newClasses = await getEnseignementClasses(clienEcoleSetting.primaire);
+            listClasses = [... newClasses];
+        };
+        if(clienEcoleSetting.secondaire_premier_cycle) {
+            const newClasses = await getEnseignementClasses(clienEcoleSetting.secondaire_premier_cycle);
+            listClasses = [... newClasses];
+        };
+        if(clienEcoleSetting.secondaire_second_cycle_general) {
+            const newClasses = await getEnseignementClasses(clienEcoleSetting.secondaire_second_cycle_general);
+            listClasses = [... newClasses];
+        };
+        if(clienEcoleSetting.secondaire_second_cycle_technique) {
+            const newClasses = await getEnseignementClasses(clienEcoleSetting.secondaire_second_cycle_technique);
+            listClasses = [... newClasses];
+        };
+        
+        return listClasses;
+    }
+    catch(error:any) {
+        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, true);
+        return [];
+    }
+}
+
+
+/* Creating records */
+
+export async function createSalleClasse(clientId: string, data : AdminClientCreateSalleClasseDO) : Promise<DisplaySalleClasseDO|null> {
+    const functionName = "createSalleClasse";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = await getCurrentAnneeScolaire(clientId);
+        if (anneeScolaire===null) throw new Error("Aucune année scolaire en cours");
+        const salleClasseCreated = await prisma.sgs_salle_classe.create({
+            data : {
+                ecole_id                 : data.ecole_id,
+                annee_scolaire_id        : anneeScolaire.id,
+                classe_id                : data.classe_id,
+                code                     : data.code,
+                description              : data.description,
+                notes                    : data.notes,
+                create_date              : new Date(),
+                created_by               : data.created_by
+            }
+        });
+        if (!salleClasseCreated) return null;
+        return ToDisplaySalleClasseDO(salleClasseCreated);
+    }
+    catch(error:any) {
+        logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
     }
 }
 
