@@ -26,7 +26,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
             created_by               : requestedRouteInfos.user.user_name
         };
         if (createSalleClasseData.ecole_id === null  || createSalleClasseData.classe_id === null ||
-            createSalleClasseData.code === null || createSalleClasseData.created_by)
+            createSalleClasseData.code === null || createSalleClasseData.created_by === null)
             return NextResponse.json({message: "Informations de création d'une classe manquantes"}, { status: 400 });
         
         const salleClasse = await createSalleClasse(requestedRouteInfos.client.id, createSalleClasseData);
