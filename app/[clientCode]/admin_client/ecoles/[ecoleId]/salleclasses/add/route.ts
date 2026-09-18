@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getClientAnneeScolaire, getClientEcoleSalleclasses, getClientEcoleById  } from "@/factories/clientFactory";
 import { AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
-import { createSalleClasse, getEcoleSalleClasseByCode } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { createSalleClasse, getClientEcoleSalleClasseByCode } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string}> }) {
@@ -28,7 +27,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         if (createSalleClasseData.ecole_id === null  || createSalleClasseData.classe_id === null ||
             createSalleClasseData.code === null || createSalleClasseData.created_by === null)
             return NextResponse.json({message: "Informations de création d'une classe manquantes"}, { status: 400 });
-        const existingSalleclasse = await getEcoleSalleClasseByCode(ecoleId,createSalleClasseData.code);
+        const existingSalleclasse = await getClientEcoleSalleClasseByCode(requestedRouteInfos.client.id, ecoleId,createSalleClasseData.code);
         if (existingSalleclasse) return NextResponse.json({message: "Une classe du même code existe déjà"}, { status: 400 });
         const salleClasse = await createSalleClasse(requestedRouteInfos.client.id, createSalleClasseData);
 

@@ -181,15 +181,18 @@ export async function getSalleClasseById(salleClasseId:string) : Promise<Display
     }
 }
 
-export async function getEcoleSalleClasseByCode(ecoleId:string, salleClasseId:string) : Promise<DisplaySalleClasseDO|null> {
-    const functionName = "getEcoleSalleClasseByCode";
+export async function getClientEcoleSalleClasseByCode(clientId:string, ecoleId:string, salleClasseCode:string) : Promise<DisplaySalleClasseDO|null> {
+    const functionName = "getClientEcoleSalleClasseByCode";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const salleClasse = await prisma.sgs_salle_classe.findUnique({
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) return null;
+        const salleClasse = await prisma.sgs_salle_classe.findFirst({
             where : {
+                code : salleClasseCode,
                 ecole_id : ecoleId,
-                id : salleClasseId
+                annee_scolaire_id : anneeScolaire.id
             },
             include : {
                 tg_annee_scolaire : true,
