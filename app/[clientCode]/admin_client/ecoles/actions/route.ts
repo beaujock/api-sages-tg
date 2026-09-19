@@ -19,7 +19,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         return NextResponse.json({actions: actions}, { status: 200 });
     }
     catch(error:any) {
-        logError('F',"Echec : Détails d'une école",(new URL(request.url)).pathname, error.message, true);
+        logError('F',"Echec : Actions (ecole)",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }

@@ -15,11 +15,11 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const client = requestedRouteInfos.client;
         const role = await getRoleByCode("ADMIN_CLIENT");
         if (!role) return NextResponse.json({message : "Role non trouvé. Contactez votre administrateur"}, { status: 400 });
-        const links = await getClientMenuItemLinks(client.id, role.id, "ECOLES");
+        const links = await getClientMenuItemLinks(client.id, role.id, "CLASSES");
         return NextResponse.json({links: links}, { status: 200 });
     }
     catch(error:any) {
-        logError('F',"Echec : Liens (ecole)",(new URL(request.url)).pathname, error.message, true);
+        logError('F',"Echec : Liens (salle classes)",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }
