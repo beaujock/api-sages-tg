@@ -27,7 +27,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         if (createSalleClasseData.ecole_id === null  || createSalleClasseData.classe_id === null ||
             createSalleClasseData.code === null || createSalleClasseData.created_by === null)
             return NextResponse.json({message: "Informations de création d'une classe manquantes"}, { status: 400 });
-        const existingSalleclasse = await getClientEcoleSalleClasseByCode(requestedRouteInfos.client.id, ecoleId,createSalleClasseData.code);
+        const existingSalleclasse = await getClientEcoleSalleClasseByCode(requestedRouteInfos.client.id, ecoleId,createSalleClasseData.code.toUpperCase());
         if (existingSalleclasse) return NextResponse.json({message: "Une classe du même code existe déjà"}, { status: 400 });
         const salleClasse = await createSalleClasse(requestedRouteInfos.client.id, createSalleClasseData);
 
