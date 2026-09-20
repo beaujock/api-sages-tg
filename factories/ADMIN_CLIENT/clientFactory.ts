@@ -962,7 +962,7 @@ export async function createSalleClasse(clientId: string, data : AdminClientCrea
                 ecole_id                 : data.ecole_id,
                 annee_scolaire_id        : anneeScolaire.id,
                 classe_id                : data.classe_id,
-                code                     : data.code,
+                code                     : data.code.toUpperCase(),
                 description              : data.description,
                 notes                    : data.notes,
                 create_date              : new Date(),
