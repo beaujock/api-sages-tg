@@ -955,7 +955,7 @@ export async function createSalleClasse(clientId: string, data : AdminClientCrea
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const anneeScolaire = await getCurrentAnneeScolaire(clientId);
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
         if (anneeScolaire===null) throw new Error("Aucune année scolaire en cours");
         const salleClasseCreated = await prisma.sgs_salle_classe.create({
             data : {
