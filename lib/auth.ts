@@ -73,7 +73,7 @@ export async function getConnectedUser(req: NextRequest) : Promise<sgs_user|null
     return user;
   }
   catch(error: any) {
-    logError('F',"Changement de mot de passe non effectué","getConnectedUser", error.message, false);
+    logError('F',"Echer : Retrouver l'utilisateur connecté","getConnectedUser", error.message, false);
     return null;
   }
 }
