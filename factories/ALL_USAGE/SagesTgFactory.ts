@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { logError } from "./allUsageFactories";
-import { InfoMenuItemLinkActionDO, InfoModuleDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
+import { InfoAnneeScolaireDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { DisplayAnneeScolaireDO, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 const ErrorOrigin = "SagesTgFactory";
 
@@ -201,6 +201,30 @@ export async function getAllRoles() : Promise<InfoRoleDO[]> {
             });
         };
         return [... new Set(listRoles)];
+    }
+    catch(error:any) {
+        logError('F',"Echec : Retrouver tous les roles ",ErrorOrigin + " - " + functionName, error.message, false);
+        return [];
+    }
+}
+
+export async function getAllAnneeScolaires() : Promise<InfoAnneeScolaireDO[]> {
+    const functionName = "getAllAnneeScolaires";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listAnneeScolaires:InfoAnneeScolaireDO[] = [];
+        const allAnneeScolaires = await prisma.tg_annee_scolaire.findMany();
+        if (!allAnneeScolaires || allAnneeScolaires.length === 0) return [];
+        for(const anneeScolaire of allAnneeScolaires) {
+            if (anneeScolaire) listAnneeScolaires.push({
+                id : anneeScolaire.id,
+                start_date : anneeScolaire.start_date,
+                end_date : anneeScolaire.end_date,
+                label : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString()
+            });
+        };
+        return [... new Set(listAnneeScolaires)];
     }
     catch(error:any) {
         logError('F',"Echec : Retrouver tous les roles ",ErrorOrigin + " - " + functionName, error.message, false);

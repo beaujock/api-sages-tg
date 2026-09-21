@@ -74,3 +74,10 @@ export type InfoClasseDO = {
     id : string;
     short_name : string;
 }
+
+export type InfoAnneeScolaireDO = {
+    id             : string;
+    start_date     : Date;
+    end_date       : Date;
+    label          : string;
+}
