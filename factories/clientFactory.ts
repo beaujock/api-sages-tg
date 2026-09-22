@@ -273,25 +273,21 @@ export async function getClientModules(clientId:string) : Promise<InfoModuleDO[]
     }
 }
 
-export async function getClientEleves(clientId:string, anneeScolaireId:string|null) : Promise<AdminClientEleveDisplay[]> {
+export async function getClientEleves(clientId:string) : Promise<AdminClientEleveDisplay[]> {
     const functionName = "getClientEleves";
     try {
-        const isConnected = await verifyAndSetPrismaConnection();
+         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEleves:AdminClientEleveDisplay[] = [];
-        let schoolYearId:string|null;
-        if (anneeScolaireId === null) {
-            const schoolYear = await getCurrentAnneeScolaire(clientId);
-            schoolYearId = (schoolYear===null)?(null):(schoolYear.id);
-        };
-        schoolYearId = anneeScolaireId;
-        if (schoolYearId === null) throw new Error("Année scolaire non trouvée");
+        const anneeScolaire = await getCurrentAnneeScolaire(clientId);
+        
+        if (anneeScolaire === null) throw new Error("Année scolaire non trouvée");
         const clientEleves= await prisma.sgs_eleve.findMany({
             where : {
                 sgs_inscription : {
                     some: {
                         sgs_salle_classe : {
-                            annee_scolaire_id : schoolYearId,
+                            annee_scolaire_id : anneeScolaire.id,
                             sgs_ecole : {
                                 sgs_client_ecole: {
                                     some: {
