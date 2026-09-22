@@ -23,7 +23,7 @@ export type AdminClientCreateSalleClasseDO = {
 }
 
 export type AdminClientCreateEleveDO = {
-    matricule       : string;
+    //matricule       : string;
     last_name       : string;
     first_name      : string;
     other_names     : string|null;

@@ -1,5 +1,5 @@
 import { logError } from "@/factories/utilitiesFactory";
-import { sgs_salle_classe, tg_annee_scolaire } from "@/lib/generated/prisma/client";
+import { sgs_eleve, sgs_salle_classe, tg_annee_scolaire } from "@/lib/generated/prisma/client";
 import { prisma, verifyAndSetPrismaConnection } from "@/lib/prisma";
 import { getYear } from "date-fns";
 
@@ -169,6 +169,46 @@ export async function ToDisplaySalleClasseDO(instance : sgs_salle_classe) : Prom
     }
     catch(error:any) {
         logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
+
+export async function ToDisplayEleveDO(instance : sgs_eleve) : Promise<DisplayEleveDO|null>
+{
+    const functionName = "ToDisplayEleveDO";
+    try {
+            const isConnected = await verifyAndSetPrismaConnection();
+            if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+            const eleve = await prisma.sgs_eleve.findUnique({
+                where : {
+                    id : instance.id
+                },
+                include : {
+                    lkp_gender : true
+                }
+            });
+            if(!eleve) return null;
+            return {
+                id              : eleve.id,
+                matricule       : eleve.matricule,
+                last_name       : eleve.last_name,
+                first_name      : eleve.first_name,
+                other_names     : eleve.other_names,
+                preferred_name  : eleve.preferred_name,
+                date_of_birth   : eleve.date_of_birth,
+                gender          : eleve.gender,
+                gender_label    : eleve.lkp_gender.display_value,
+                phone_number    : eleve.phone_number,
+                email           : eleve.email,
+                notes           : eleve.notes,
+                create_date     : eleve.create_date,
+                created_by      : eleve.created_by,
+                change_date     : eleve.change_date,
+                changed_by      : eleve.changed_by
+            }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Infos eleve",ErrorOrigin + " - " + functionName, error.message, true);
         return null;
     }
 }

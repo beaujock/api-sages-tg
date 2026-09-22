@@ -1,11 +1,11 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
-import { logError } from "../ALL_USAGE/allUsageFactories";
-import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
+import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplayEleveDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 import { OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO} from "@/types/ALL_USAGE/AllUsagesTypes";
-import { AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
-import { AdminClientSalleClasseDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
+import { AdminClientCreateEleveDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
+import { AdminClientSalleClasseDisplay, ToAdminClientEleveDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
 import { getAnneeScolaireById } from "../ALL_USAGE/SagesTgFactory";
 import { getCurrentAnneeScolaire } from "../utilitiesFactory";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
@@ -259,6 +259,45 @@ export async function getEleveById(eleveId:string) : Promise<DisplayEleveDO|null
     }
     catch(error:any) {
         logError('F',"Echec : Retrouver un élève par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
+
+export async function getEleveByMatricule(matriculeCode:string) : Promise<DisplayEleveDO|null> {
+    const functionName = "getEleveByMatricule";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const eleve = await prisma.sgs_eleve.findUnique({
+            where : {
+                matricule : matriculeCode
+            },
+            include : {
+                lkp_gender : true
+            }
+        });
+        if(!eleve) return null;
+        return {
+            id              : eleve.id,
+            matricule       : eleve.matricule,
+            last_name       : eleve.last_name,
+            first_name      : eleve.first_name,
+            other_names     : eleve.other_names,
+            preferred_name  : eleve.preferred_name,
+            date_of_birth   : eleve.date_of_birth,
+            gender          : eleve.gender,
+            gender_label    : eleve.lkp_gender.display_value,
+            phone_number    : eleve.phone_number,
+            email           : eleve.email,
+            notes           : eleve.notes,
+            create_date     : eleve.create_date,
+            created_by      : eleve.created_by,
+            change_date     : eleve.change_date,
+            changed_by      : eleve.changed_by
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Retrouver un élève par son matricule",ErrorOrigin + " - " + functionName, error.message, true);
         return null;
     }
 }
@@ -974,6 +1013,43 @@ export async function createSalleClasse(clientId: string, data : AdminClientCrea
     }
     catch(error:any) {
         logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
+
+export async function createEleve(clientId: string, data : AdminClientCreateEleveDO) : Promise<DisplayEleveDO|null> {
+    const functionName = "createEleve";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        let eleve = null;
+        let matricule = null;
+        do {
+            matricule = generateMatricule(new Date(), data.first_name, data.last_name);
+            eleve = await getEleveByMatricule(matricule);
+        } while (eleve === null && matricule === null);
+
+        const eleveCreated = await prisma.sgs_eleve.create({
+            data : {
+                matricule       : matricule,
+                last_name       : data.last_name,
+                first_name      : data.first_name,
+                other_names     : data.other_names,
+                preferred_name  : data.preferred_name,
+                date_of_birth   : data.date_of_birth,
+                gender          : data.gender,
+                phone_number    : data.phone_number,
+                email           : data.email,
+                notes           : data.notes,
+                created_by      : data.created_by,
+                create_date     : new Date()
+            }
+        });
+        if (!eleveCreated) return null;
+        return ToDisplayEleveDO(eleveCreated);
+    }
+    catch(error:any) {
+        logError('F',"Echec : Créer un éeleve ",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }

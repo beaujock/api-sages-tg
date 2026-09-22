@@ -145,3 +145,25 @@ export async function getCurrentAnneeScolaire() : Promise<tg_annee_scolaire|null
           return null;
       }
 }
+
+export function generateMatricule(currentDate:Date, firstName:string, lastName:string) : string {
+  // 1. First 4 characters: Current year
+  const year = currentDate.getFullYear().toString();
+  
+  // 2. Next character: First letter of the last name (capitalized for consistency)
+  const lastInitial = lastName.charAt(0).toUpperCase();
+  
+  // 3. Next character: A random alphabetic letter
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const randomLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+  
+  // 4. Next character: First letter of the first name (capitalized)
+  const firstInitial = firstName.charAt(0).toUpperCase();
+  
+  // 5. Last 3 characters: Random 3 numeric digits (000-999)
+  const randomNumbers = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  
+  // Combine all parts into the final string
+  return `${year}${lastInitial}${randomLetter}${firstInitial}${randomNumbers}`;
+}
+
