@@ -1,4 +1,4 @@
-import { sgs_client, sgs_ecole, sgs_enseignant, sgs_salle_classe, sgs_eleve, sgs_user } from "@/lib/generated/prisma/client";
+import { sgs_client, sgs_ecole, sgs_enseignant, sgs_salle_classe, sgs_eleve, sgs_user, sgs_inscription } from "@/lib/generated/prisma/client";
 
 export type AdminClientClientOverview = {
     client              : sgs_client|null,
@@ -214,6 +214,23 @@ export function ToAdminClientEleveDisplay(enseignant:sgs_enseignant) : AdminClie
         changed_by               : enseignant.changed_by
     }
 }
+
+export type AdminClientInscriptionDisplay = {
+    id                       : string,
+    salle_classe_id          : string,
+    salle_classe_label       : string,
+    eleve_id                 : string,
+    eleve_label              : string,
+    registration_date        : Date,
+    registration_status      : string,
+    registration_status_label: string,
+    notes                    : string|null,
+    create_date              : Date,
+    created_by               : string,
+    change_date              : Date|null,
+    changed_by               : string|null
+}
+
 
 export type AdminClientUpdateEcoleRequest = {
     full_name               : string,

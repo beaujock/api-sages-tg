@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getCurrentAnneeScolaire, logError } from "./utilitiesFactory";
 import { getYear } from 'date-fns';
-import { AdminClientClientDisplay, AdminClientUpdateEcoleRequest, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay, AdminClientUserDisplay, ToAdminClientUserDisplay, AdminClientEcoleOverview, ToAdminClientEnseignantDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
+import { AdminClientClientDisplay, AdminClientUpdateEcoleRequest, AdminClientEcoleDisplay, AdminClientEleveDisplay, AdminClientSalleClasseDisplay, ToAdminClientEcoleDisplay, ToAdminClientEleveDisplay, AdminClientEnseignantDisplay, AdminClientUserDisplay, ToAdminClientUserDisplay, AdminClientEcoleOverview, ToAdminClientEnseignantDisplay, AdminClientInscriptionDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
 import { tg_role } from "@/lib/generated/prisma/browser";
 import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
 import { sgs_client_module, tg_annee_scolaire } from "@/lib/generated/prisma/client";
@@ -165,7 +165,7 @@ export async function getClientEcoles(clientId:string) : Promise<AdminClientEcol
         return [... new Set(listEcoles)];
     }
     catch(error:any) {
-        logError('F',"Liste des écoles du client",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Recherche des école d'un client",ErrorOrigin + " : " + functionName, error.message, true);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
@@ -217,7 +217,7 @@ export async function getClientSalleClasses(clientId:string) : Promise<AdminClie
         return [... new Set(listSalleClasses)];
     }
     catch(error:any) {
-        logError('F',"Recherche des classes du client pendant une année scolaire",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Recherche des classes d'un cliente",ErrorOrigin + " : " + functionName, error.message, true);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
@@ -268,7 +268,7 @@ export async function getClientModules(clientId:string) : Promise<InfoModuleDO[]
         return listModules;
     }
     catch(error:any) {
-        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Echec : recherche des modules d'un client",ErrorOrigin + " : " + functionName, error.message, true);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
@@ -307,10 +307,66 @@ export async function getClientEleves(clientId:string) : Promise<AdminClientElev
         return [... new Set(listEleves)];
     }
     catch(error:any) {
-        logError('F',"Recherche des classes du client pendant une année scolaire",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Recherche des élèves d'un client",ErrorOrigin + " : " + functionName, error.message, true);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
+
+
+export async function getClientInscriptions(clientId:string) : Promise<AdminClientInscriptionDisplay[]> {
+    const functionName = "getClientInscriptions";
+    try {
+         const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listInscriptions:AdminClientInscriptionDisplay[] = [];
+        const anneeScolaire = await getCurrentAnneeScolaire(clientId);
+        
+        if (anneeScolaire === null) throw new Error("Année scolaire non trouvée");
+        const clientInscriptions= await prisma.sgs_inscription.findMany({
+            where : {
+                sgs_salle_classe : {
+                    annee_scolaire_id : anneeScolaire.id,
+                    sgs_ecole : {
+                        sgs_client_ecole: {
+                            some: {
+                                client_id : clientId
+                            }
+                        }
+                    }
+                }
+            },
+            include : {
+                sgs_eleve : true,
+                sgs_salle_classe : true,
+                lkp_registration_status : true
+            }
+
+        });
+        clientInscriptions.forEach(inscription => {
+            listInscriptions.push({
+                id : inscription.id,
+                salle_classe_id : inscription.sgs_salle_classe.id,
+                salle_classe_label : inscription.sgs_salle_classe.code,
+                eleve_id : inscription.eleve_id,
+                eleve_label : inscription.sgs_eleve.last_name + " " + inscription.sgs_eleve.first_name,
+                registration_date : inscription.registration_date,
+                registration_status : inscription.registration_status,
+                registration_status_label : inscription.lkp_registration_status.display_value,
+                notes : inscription.notes,
+                create_date : inscription.create_date,
+                created_by : inscription.created_by,
+                change_date : inscription.change_date,
+                changed_by : inscription.changed_by
+            });
+        });
+        return [... new Set(listInscriptions)];
+    }
+    catch(error:any) {
+        logError('F',"Recherche des inscriptions d'un client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 
 export async function getClientRoleMenuItems(clientCode: string, roleCode:string) : Promise<SagesMenuItem[]> {
     const functionName = "getClientRoleMenuItems";
