@@ -15,10 +15,11 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
         const ecole = await getClientEcoleById(client.id, ecoleId);
+        /*
         const anneeScolaire = await getClientAnneeScolaire(client.id);
         if (anneeScolaire === null) return NextResponse.json({message : "Aucune année scolaire en cours. Contactez votre administrateur"}, { status: 400 });
         if (!ecole || ecole === null) return NextResponse.json({message : "Ecole non trouvée. Contactez votre administrateur"}, { status: 400 });
-
+        */
         const salleclasses = await getClientEcoleSalleclasses(client.id, ecoleId);
         return NextResponse.json({ecole: ecole, salleClasses: salleclasses}, { status: 200 });
     }

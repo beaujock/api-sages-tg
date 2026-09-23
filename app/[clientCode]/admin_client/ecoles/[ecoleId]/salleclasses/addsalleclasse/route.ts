@@ -34,7 +34,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         return NextResponse.json({salleClasse : salleClasse}, { status: 200 });
     }
     catch(error:any) {
-        logError('F',"Echec : Liste des classes d'une ecole",(new URL(request.url)).pathname, error.message, true);
+        logError('F',"Echec : Création d'une classe",(new URL(request.url)).pathname, error.message, false);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }

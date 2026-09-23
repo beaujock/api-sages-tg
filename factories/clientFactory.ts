@@ -93,7 +93,7 @@ export async function getClientEcoleById(clientId:string, ecoleId:string ) : Pro
         return (clientEcoles === null)?(null):(ToAdminClientEcoleDisplay(clientEcoles.sgs_ecole));
     }
     catch(error:any) {
-        logError('F',"Liste des écoles du client",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver une école par son identifiant",ErrorOrigin + " : " + functionName, error.message, false);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
@@ -660,13 +660,13 @@ export async function getClientEcolesForPdfExport(clientId: string) {
         // 3. Return the payload. 
         // This includes headers and the flattened rows, making PDF generation effortless.
         return {
-            title: "Statistiques des Écoles",
+            title: "Liste des Écoles",
             headers: ["Nom de l'École", "Code", "Classes", "Enseignants", "Élèves"],
             data: pdfRows
         };
 
     } catch (error: any) {
-        logError('F', "Export PDF client", ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F', "Echec : Export PDF - Liste des éecole du client", ErrorOrigin + " : " + functionName, error.message, true);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }

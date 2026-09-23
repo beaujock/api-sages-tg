@@ -942,7 +942,7 @@ export async function getEnseignementClasses(enseignementId:string) : Promise<In
     }
 }
 
-export async function getClientEcoleClasses(clientId:string, ecoleId:string) : Promise<InfoClasseDO[]> {
+export async function getClientEcoleClassesAllowed(clientId:string, ecoleId:string) : Promise<InfoClasseDO[]> {
     const functionName = "getClientEcoleClasses";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
