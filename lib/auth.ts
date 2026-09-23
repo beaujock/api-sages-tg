@@ -103,6 +103,7 @@ export async function userAndRouteAuthorized(user: sgs_user|null, routeRoot: str
     return true;
   }
   catch(error: any) {
+    logError('F',"Echec : Réponse requête","userAndRouteAuthorized", error.message, true);
     return false;
   }
 }
@@ -126,7 +127,7 @@ export async function getClientUserRouteRequestInfos(req: NextRequest, clientCod
 
     if (clientCode === null || routeRoot === null || resourceType=== null) return nullResponse;
     
-    const client = await getClientByCode(clientCode.toUpperCase());
+    const client = await getClientByCode(clientCode.toLowerCase());
     const user = await getConnectedUser(req);
     const authorized = await userAndRouteAuthorized(user, routeRoot.toUpperCase());
 
