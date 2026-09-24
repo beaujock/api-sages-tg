@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getClientEcoles, getClientEcoleSalleClasses } from "@/factories/clientFactory";
+import {  getClientEcoleSalleClasses } from "@/factories/clientFactory";
 
 
-export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
+export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
     try {
         const clientCode = (await params).clientCode;
         if(!clientCode) return NextResponse.json({message : "Requête invalide (code client manquant)"}, { status: 400 });
