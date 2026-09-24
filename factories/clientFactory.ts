@@ -569,7 +569,7 @@ export async function getClientEcoleEnseignants(clientId:string, ecoleId:string)
 }
 
 export async function getClientEcoleEleves(clientId:string, ecoleId:string) : Promise<AdminClientEleveDisplay[]> {
-    const functionName = "getClientEcoleSalleclasses";
+    const functionName = "getClientEcoleEleves";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -583,7 +583,7 @@ export async function getClientEcoleEleves(clientId:string, ecoleId:string) : Pr
         return [... new Set(listeEleves)];
     }
     catch(error:any) {
-        logError('F',"Recherche des classes du client pendant une année scolaire",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Recherche des élèves d'une école",ErrorOrigin + " : " + functionName, error.message, true);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
