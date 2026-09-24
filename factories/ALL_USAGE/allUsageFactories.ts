@@ -170,24 +170,27 @@ export function generateMatricule(currentDate:Date, firstName:string, lastName:s
   return `${year}${lastInitial}${randomLetter}${firstInitial}${randomNumbers}`;
 }
 
-export async function uploadElevePhoto(photoData : any) : Promise<boolean> {
-    const functionName = "functionName";
+export async function uploadElevePhoto(photoData : FormData) : Promise<boolean> {
+    const functionName = "uploadElevePhoto";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
 
         const s3 = new S3Client({ forcePathStyle: true });
-        const bucket = photoData.folder;
-        const key = photoData.filename;
+        const file = photoData.get("file") as Blob; // The raw File blob
+        const bucket = photoData.get("folder") as string;
+        const key = photoData.get("filename") as string;
 
-        await s3.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: photoData.file }));
+        if (file===null || bucket === null || key === null) return false;
+
+        await s3.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: file }));
 
         const url = await getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn: 3600 });
         console.log(`[view] ${url}`);
         return true;
     }
     catch(error:any) {
-        logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Téléchargement de photo d'élève ",ErrorOrigin + " - " + functionName, error.message, true);
         return false;
     }
 }
