@@ -16,7 +16,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
             first_name      : body.eleveData.first_name,
             other_names     : body.eleveData.other_names,
             preferred_name  : body.eleveData.preferred_name,
-            date_of_birth   : new Date(body.date_of_birth),
+            date_of_birth   : new Date(body.eleveData.date_of_birth),
             gender          : body.eleveData.gender,
             phone_number    : body.eleveData.phone_number,
             email           : body.eleveData.email,
@@ -26,7 +26,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         const inscriptionData:AdminClientCreateInscriptionDO = {
             salle_classe_id : body.inscriptionData.salleclasseId,
             eleve_id : "",
-            registration_date : body.inscriptionData.registrationDate,
+            registration_date : new Date(body.inscriptionData.registrationDate),
             registration_status : "A",
             status_notes : null,
             notes : body.inscriptionData.registrationNotes,
