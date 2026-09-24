@@ -234,11 +234,12 @@ export async function getClientEcoleSalleClasses(clientId:string, ecoleId:string
         const clientSalleClasses= await prisma.sgs_salle_classe.findMany({
             where : {
                 annee_scolaire_id : anneeScolaire.id,
+                ecole_id : ecoleId,
                 sgs_ecole : {
-                    ecole_id : ecoleId,
                     sgs_client_ecole: {
                         some: {
                             client_id : clientId,
+                            
                         }
                     }
                 }
