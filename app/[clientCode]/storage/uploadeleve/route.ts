@@ -17,7 +17,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         return NextResponse.json({isPhotoUploaded : isPhotoUploaded}, { status: 200 });
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver tous les sexes",(new URL(request.url)).pathname, error.message, true);
+        logError('F',"Echec : Télécharger la photo d'un élève",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }
