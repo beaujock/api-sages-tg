@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
 import { getClientEleves } from "@/factories/clientFactory";
-import { AdminClientCreateEleveDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
+import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
 import { createEleve } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
@@ -12,17 +12,27 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         const body = await request.json();
         if(!body) return NextResponse.json("Requête invalide", { status: 400 });
         const eleveData:AdminClientCreateEleveDO = {
-            last_name       : body.last_name,
-            first_name      : body.first_name,
-            other_names     : body.other_names,
-            preferred_name  : body.preferred_name,
+            last_name       : body.eleveData.last_name,
+            first_name      : body.eleveData.first_name,
+            other_names     : body.eleveData.other_names,
+            preferred_name  : body.eleveData.preferred_name,
             date_of_birth   : new Date(body.date_of_birth),
-            gender          : body.gender,
-            phone_number    : body.phone_number,
-            email           : body.email,
-            notes           : body.notes,
+            gender          : body.eleveData.gender,
+            phone_number    : body.eleveData.phone_number,
+            email           : body.eleveData.email,
+            notes           : body.eleveData.notes,
             created_by      : "SAGES"
         };
+        const inscriptionData:AdminClientCreateInscriptionDO = {
+            salle_classe_id : body.inscriptionData.salleclasseId,
+            eleve_id : "",
+            registration_date : body.inscriptionData.registrationDate,
+            registration_status : "A",
+            status_notes : null,
+            notes : body.inscriptionData.registrationNotes,
+            created_by      : "SAGES"
+        }
+
         if (!eleveData.last_name?.trim() || !eleveData.first_name?.trim() || eleveData.date_of_birth === null || eleveData.gender === null)
             return NextResponse.json({message: "Informations de connexion manquantes"}, { status: 400 });
         const clientCode = (await params).clientCode;
@@ -32,7 +42,8 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
         eleveData.created_by = requestedRouteInfos.user.user_name;
-        const createdEleve = await createEleve(client.id, eleveData);
+        inscriptionData.created_by = requestedRouteInfos.user.user_name;
+        const createdEleve = await createEleve(client.id, eleveData, inscriptionData);
         return NextResponse.json({eleve: createdEleve}, { status: 200 });
     }
     catch(error:any) {

@@ -222,6 +222,59 @@ export async function getClientSalleClasses(clientId:string) : Promise<AdminClie
     }
 }
 
+export async function getClientEcoleSalleClasses(clientId:string, ecoleId:string) : Promise<AdminClientSalleClasseDisplay[]> {
+    const functionName = "getClientEcoleSalleClasses";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listSalleClasses:AdminClientSalleClasseDisplay[] = [];
+        const anneeScolaire = await getCurrentAnneeScolaire(clientId);
+        
+        if (anneeScolaire === null) throw new Error("Année scolaire non trouvée");
+        const clientSalleClasses= await prisma.sgs_salle_classe.findMany({
+            where : {
+                annee_scolaire_id : anneeScolaire.id,
+                sgs_ecole : {
+                    sgs_client_ecole: {
+                        some: {
+                            client_id : clientId,
+                            ecole_id : ecoleId
+                        }
+                    }
+                }
+            },
+            include : {
+                sgs_ecole : true,
+                tg_annee_scolaire : true,
+                tg_classe : true
+            }
+        });
+        clientSalleClasses.forEach(salleclasse => {
+            listSalleClasses.push({
+                id                       : salleclasse.id,
+                ecole_id                 : salleclasse.ecole_id,
+                ecole_label              : (salleclasse.sgs_ecole.short_name === null)?(salleclasse.sgs_ecole.code):(salleclasse.sgs_ecole.short_name),
+                annee_scolaire_id        : salleclasse.annee_scolaire_id,
+                annee_scolaire_label     : getYear(salleclasse.tg_annee_scolaire.start_date) + "-" + getYear(salleclasse.tg_annee_scolaire.end_date),
+                classe_id                : salleclasse.classe_id,
+                classe_label             : (salleclasse.tg_classe.short_name === null)?(salleclasse.tg_classe.code):(salleclasse.tg_classe.short_name),
+                code                     : salleclasse.code,
+                description              : salleclasse.description,
+                notes                    : salleclasse.notes,
+                create_date              : salleclasse.create_date,
+                created_by               : salleclasse.created_by,
+                change_date              : salleclasse.change_date,
+                changed_by               : salleclasse.changed_by
+            });
+        });
+        return [... new Set(listSalleClasses)];
+    }
+    catch(error:any) {
+        logError('F',"Recherche des classes d'une école",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 export async function getRoleByCode(roleCode:string) : Promise<tg_role|null> {
     const functionName = "getRoleByCode";
     try {

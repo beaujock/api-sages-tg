@@ -4,7 +4,7 @@ import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
 import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplayEleveDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 import { OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO} from "@/types/ALL_USAGE/AllUsagesTypes";
-import { AdminClientCreateEleveDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
+import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
 import { AdminClientSalleClasseDisplay, ToAdminClientEleveDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
 import { getAnneeScolaireById } from "../ALL_USAGE/SagesTgFactory";
 import { getCurrentAnneeScolaire } from "../utilitiesFactory";
@@ -1017,7 +1017,7 @@ export async function createSalleClasse(clientId: string, data : AdminClientCrea
     }
 }
 
-export async function createEleve(clientId: string, data : AdminClientCreateEleveDO) : Promise<DisplayEleveDO|null> {
+export async function createEleve(clientId: string, eleveData : AdminClientCreateEleveDO, inscriptionData : AdminClientCreateInscriptionDO) : Promise<DisplayEleveDO|null> {
     const functionName = "createEleve";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -1025,31 +1025,43 @@ export async function createEleve(clientId: string, data : AdminClientCreateElev
         let eleve = null;
         let matricule = null;
         do {
-            matricule = generateMatricule(new Date(), data.first_name, data.last_name);
+            matricule = generateMatricule(new Date(), eleveData.first_name, eleveData.last_name);
             eleve = await getEleveByMatricule(matricule);
         } while (eleve === null && matricule === null);
 
         const eleveCreated = await prisma.sgs_eleve.create({
             data : {
                 matricule       : matricule,
-                last_name       : data.last_name,
-                first_name      : data.first_name,
-                other_names     : data.other_names,
-                preferred_name  : data.preferred_name,
-                date_of_birth   : data.date_of_birth,
-                gender          : data.gender,
-                phone_number    : data.phone_number,
-                email           : data.email,
-                notes           : data.notes,
-                created_by      : data.created_by,
+                last_name       : eleveData.last_name,
+                first_name      : eleveData.first_name,
+                other_names     : eleveData.other_names,
+                preferred_name  : eleveData.preferred_name,
+                date_of_birth   : eleveData.date_of_birth,
+                gender          : eleveData.gender,
+                phone_number    : eleveData.phone_number,
+                email           : eleveData.email,
+                notes           : eleveData.notes,
+                created_by      : eleveData.created_by,
                 create_date     : new Date()
             }
         });
         if (!eleveCreated) return null;
+
+        const inscriptionCreated = await prisma.sgs_inscription.create({
+            data : {
+                salle_classe_id : inscriptionData.salle_classe_id,
+                eleve_id : eleveCreated.id,
+                registration_date : inscriptionData.registration_date,
+                registration_status : inscriptionData.registration_status,
+                notes : inscriptionData.notes,
+                create_date : new Date(),
+                created_by : inscriptionData.created_by
+            }
+        });
         return ToDisplayEleveDO(eleveCreated);
     }
     catch(error:any) {
-        logError('F',"Echec : Créer un éeleve ",ErrorOrigin + " - " + functionName, error.message, false);
+        logError('F',"Echec : Créer un éleve et son inscription ",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
