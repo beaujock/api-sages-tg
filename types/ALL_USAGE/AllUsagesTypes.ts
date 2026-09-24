@@ -81,3 +81,13 @@ export type InfoAnneeScolaireDO = {
     end_date       : Date;
     label          : string;
 }
+
+export type InfoGenderDO = {
+    code : string;
+    label : string;
+}
+
+export type InfoResourceTypeDO = {
+    code : string;
+    label : string;
+}

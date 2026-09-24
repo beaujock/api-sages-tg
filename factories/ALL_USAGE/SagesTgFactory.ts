@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { logError } from "./allUsageFactories";
-import { InfoAnneeScolaireDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
+import { InfoAnneeScolaireDO, InfoGenderDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoResourceTypeDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { DisplayAnneeScolaireDO, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 const ErrorOrigin = "SagesTgFactory";
 
@@ -231,6 +231,51 @@ export async function getAllAnneeScolaires() : Promise<InfoAnneeScolaireDO[]> {
         return [];
     }
 }
+
+export async function getAllGenders() : Promise<InfoGenderDO[]> {
+    const functionName = "getAllGenders";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listGenders:InfoGenderDO[] = [];
+        const allGenders = await prisma.lkp_gender.findMany();
+        if (!allGenders || allGenders.length === 0) return [];
+        for(const gender of allGenders) {
+            if (gender) listGenders.push({
+                code : gender.code,
+                label : gender.display_value
+            });
+        };
+        return [... new Set(listGenders)];
+    }
+    catch(error:any) {
+        logError('F',"Echec : Retrouver tous les roles ",ErrorOrigin + " - " + functionName, error.message, false);
+        return [];
+    }
+}
+
+export async function getAllResourceTypes() : Promise<InfoResourceTypeDO[]> {
+    const functionName = "getAllResourceTypes";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listResourceTypes:InfoResourceTypeDO[] = [];
+        const allResourceTypes = await prisma.lkp_gender.findMany();
+        if (!allResourceTypes || allResourceTypes.length === 0) return [];
+        for(const resourceType of allResourceTypes) {
+            if (resourceType) listResourceTypes.push({
+                code : resourceType.code,
+                label : resourceType.display_value
+            });
+        };
+        return [... new Set(listResourceTypes)];
+    }
+    catch(error:any) {
+        logError('F',"Echec : Retrouver tous les type de resources",ErrorOrigin + " - " + functionName, error.message, false);
+        return [];
+    }
+}
+
 
 
 export async function functionName() {
