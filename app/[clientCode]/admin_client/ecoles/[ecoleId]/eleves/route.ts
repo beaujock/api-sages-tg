@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
 import {getClientEcoleById, getClientEcoleEleves  } from "@/factories/clientFactory";
+import { getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string}> }) {
@@ -14,8 +15,9 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
-       const ecoleEleves = await getClientEcoleEleves(client.id, ecoleId);
-        return NextResponse.json({eleves: ecoleEleves}, { status: 200 });
+        const ecole = await getEcoleById(ecoleId);
+        const ecoleEleves = await getClientEcoleEleves(client.id, ecoleId);
+        return NextResponse.json({ecole : ecole, eleves: ecoleEleves}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Echec : Liste des élèves d'une école",(new URL(request.url)).pathname, error.message, true);
