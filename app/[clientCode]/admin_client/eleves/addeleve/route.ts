@@ -16,7 +16,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
             first_name      : body.first_name,
             other_names     : body.other_names,
             preferred_name  : body.preferred_name,
-            date_of_birth   : body.date_of_birth,
+            date_of_birth   : new Date(body.date_of_birth),
             gender          : body.gender,
             phone_number    : body.phone_number,
             email           : body.email,
