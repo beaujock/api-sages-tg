@@ -6,7 +6,7 @@ import { getClientMenuItemLinks } from "@/factories/ADMIN_CLIENT/clientFactory";
 import { getElevePhotoUrl } from "@/factories/ALL_USAGE/allUsageFactories";
 
 
-export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
+export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
     try {
         const clientCode = (await params).clientCode;
         if(!clientCode) return NextResponse.json({message : "Requête invalide (code client manquant)"}, { status: 400 });
