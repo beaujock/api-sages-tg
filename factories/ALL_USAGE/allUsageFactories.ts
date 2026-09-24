@@ -191,13 +191,13 @@ export async function uploadElevePhoto(photoData : FormData) : Promise<boolean> 
 
         if (file===null || bucket === null || key === null) return false;
         
-        //const arrayBuffer = await file.arrayBuffer();
-        //const buffer = Buffer.from(arrayBuffer);
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
         const command = new PutObjectCommand({
           Bucket: bucket,
           Key: key,
-          Body: file,
+          Body: buffer,
           ContentType: "image/jpeg",
         });
 
