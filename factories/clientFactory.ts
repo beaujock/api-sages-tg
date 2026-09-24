@@ -235,10 +235,10 @@ export async function getClientEcoleSalleClasses(clientId:string, ecoleId:string
             where : {
                 annee_scolaire_id : anneeScolaire.id,
                 sgs_ecole : {
+                    ecole_id : ecoleId,
                     sgs_client_ecole: {
                         some: {
                             client_id : clientId,
-                            ecole_id : ecoleId
                         }
                     }
                 }
