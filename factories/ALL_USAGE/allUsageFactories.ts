@@ -229,7 +229,7 @@ export async function getElevePhotoUrl(clientCode: string, matricule : string): 
             },
         });
         const bucket = clientCode.toLowerCase();
-        const key = "eleves/" + matricule.toUpperCase() + "jpg";
+        const key = "eleves/" + matricule.toUpperCase() + ".jpg";
 
         if (!bucket || !key) return null;
 
