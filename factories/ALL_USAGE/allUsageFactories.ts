@@ -185,19 +185,20 @@ export async function uploadElevePhoto(photoData : FormData) : Promise<boolean> 
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
           },
         });
-        const file = photoData.get("file") as File; // The raw File blob
+        const file = photoData.get("file") as Blob; // The raw File blob
         const bucket = photoData.get("folder") as string;
         const key = photoData.get("filename") as string;
 
         if (file===null || bucket === null || key === null) return false;
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+        
+        //const arrayBuffer = await file.arrayBuffer();
+        //const buffer = Buffer.from(arrayBuffer);
 
         const command = new PutObjectCommand({
           Bucket: bucket,
           Key: key,
-          Body: buffer,
-          ContentType: file.type,
+          Body: file,
+          ContentType: "image/jpeg",
         });
 
         await s3.send(command);
