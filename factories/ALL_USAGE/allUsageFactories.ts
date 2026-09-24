@@ -212,3 +212,38 @@ export async function uploadElevePhoto(photoData : FormData) : Promise<boolean> 
         return false;
     }
 }
+
+export async function getElevePhotoUrl(clientCode: string, matricule : string): Promise<string | null> {
+    const functionName = "getElevePhotoUrl";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if (!isConnected) throw new Error("Vous n'êtes pas connecté!");
+
+        const s3 = new S3Client({ 
+            forcePathStyle: true,
+            region: process.env.AWS_REGION,
+            endpoint: process.env.AWS_ENDPOINT_URL_S3, 
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+            },
+        });
+        const bucket = clientCode.toLowerCase();
+        const key = "eleves/" + matricule.toUpperCase() + "jpg";
+
+        if (!bucket || !key) return null;
+
+        const command = new GetObjectCommand({ 
+            Bucket: bucket, 
+            Key: key 
+        });
+
+        // Creates a temporary URL valid for 1 hour
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        return url;
+    }
+    catch (error: any) {
+        logError('F', "Echec : Récupération de l'URL de la photo d'élève ", ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
