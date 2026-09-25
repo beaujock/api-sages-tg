@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // 1. Get the origin making the request (e.g., http://localhost:3000)
   const origin = request.headers.get('origin')
 
@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
   return response
 }
 
-// 4. Only apply this middleware to your API routes
+// 4. Only apply this proxy to your API routes
 export const config = {
   matcher: '/:path*',
 }
