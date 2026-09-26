@@ -31,7 +31,7 @@ export async function PATCH(request:NextRequest, { params }: { params: Promise<{
             notes                   : body.notes
         };
         
-        const updatedEcole = await updateEcole(requestedRouteInfos.client.id, ecoleUpdateRequest);
+        const updatedEcole = await updateEcole(requestedRouteInfos.client.id, ecoleUpdateRequest, requestedRouteInfos.user.user_name);
         return NextResponse.json({ecole : updatedEcole}, { status: 200 });
     }
     catch(error:any) {

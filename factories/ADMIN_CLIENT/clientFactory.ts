@@ -1057,7 +1057,7 @@ export async function createEleve(clientId: string, eleveData : AdminClientCreat
 //#endregion Creating records
 
 //#region Creating records 
-export async function updateEcole(clientId:string, ecoleData: UpdateEcoleDO) : Promise<DisplayEcoleDO|null> {
+export async function updateEcole(clientId:string, ecoleData: UpdateEcoleDO, username : string) : Promise<DisplayEcoleDO|null> {
     const functionName = "updateEcole";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -1074,7 +1074,9 @@ export async function updateEcole(clientId:string, ecoleData: UpdateEcoleDO) : P
                 phone_number            : ecoleData.phone_number,
                 email                   : ecoleData.email,
                 website                 : ecoleData.website,
-                notes                   : ecoleData.notes
+                notes                   : ecoleData.notes,
+                change_date             : new Date(),
+                changed_by              : username
             }
         });
         if (!updatedEcole || updatedEcole === null) return null;
