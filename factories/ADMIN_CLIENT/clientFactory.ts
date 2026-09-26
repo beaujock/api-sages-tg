@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
-import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplayEleveDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayClientEcoleDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplayEleveDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 import { OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
@@ -380,12 +380,14 @@ export async function getEnseignantById(enseignantId:string) : Promise<DisplayEn
     }
 }
 
-export async function getClientEcoles(clientId:string) : Promise<DisplayEcoleDO[]> {
+export async function getClientEcoles(clientId:string) : Promise<DisplayClientEcoleDO[]> {
     const functionName = "getClientEcoles";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listEcoles:DisplayEcoleDO[] = [];
+        //const client = await getClientById(clientId);
+        //if ( !client || client === null ) throw new Error("Client inconnu");
+        const listEcoles:DisplayClientEcoleDO[] = [];
         const clientEcoles = await prisma.sgs_client_ecole.findMany({
             where : {
                 client_id : clientId,
@@ -393,14 +395,18 @@ export async function getClientEcoles(clientId:string) : Promise<DisplayEcoleDO[
                 active : true,
             },
             include : {
-                sgs_ecole : true
+                sgs_ecole : true,
+                sgs_client : true
             }
         });
         if(clientEcoles.length === 0) return [];
         for(const clientEcole of clientEcoles) {
             if (clientEcole.sgs_ecole) {
-                const ecoleDetails = await getEcoleById(clientEcole.sgs_ecole.id);
-                if(ecoleDetails) listEcoles.push(ecoleDetails);
+                listEcoles.push({
+                    id : clientEcole.sgs_ecole.id,
+                    client_label : clientEcole.sgs_client.short_name,
+                    short_name : clientEcole.sgs_ecole.short_name,
+                });
             }
         }
         return [... new Set(listEcoles)];

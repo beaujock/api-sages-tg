@@ -5,6 +5,7 @@ import { getYear } from "date-fns";
 
 const ErrorOrigin = "AdminClientDisplays";
 
+//#region Client Displays
 export type DisplayClientDO = {
     id                      : string;
     systeme_scolaire_id     : string;
@@ -28,7 +29,9 @@ export type DisplayClientDO = {
     change_date             : Date|null;       
     changed_by              : string|null;
 }
+//#endregion
 
+//#region Ecole Displays
 export type DisplayEcoleDO = {
     id                      : string;
     full_name               : string;
@@ -48,6 +51,14 @@ export type DisplayEcoleDO = {
     changed_by              : string|null;
 }
 
+export type DisplayClientEcoleDO = {
+    id                      : string;
+    client_label            : string;
+    short_name              : string;
+}
+//#endregion 
+
+//#region SalleClasse Displays
 export type DisplaySalleClasseDO = {
     id                       : string;
     ecole_id                 : string;
@@ -65,6 +76,15 @@ export type DisplaySalleClasseDO = {
     changed_by               : string|null;
 }
 
+export type DisplayEcoleSalleClasseDO = {
+    id                       : string;
+    ecole_label              : string;
+    classe_label             : string;
+    code                     : string;
+}
+//#endregion 
+
+//#region Eleve Displays
 export type DisplayEleveDO = {
     id              : string;
     matricule       : string;
@@ -84,6 +104,28 @@ export type DisplayEleveDO = {
     changed_by      : string|null;
 }
 
+export type DisplayEcoleSalleClasseEleveDO = {
+    id                  : string;
+    ecole_label         : string;
+    salle_classe_label  : string;
+    matricule           : string;
+    last_name           : string;
+    first_name          : string;
+    gender              : string;
+}
+
+export type DisplaySalleClasseEleveDO = {
+    id                  : string;
+    salle_classe_label  : string;
+    matricule           : string;
+    last_name           : string;
+    first_name          : string;
+    gender              : string;
+}
+
+//#endregion
+
+//#region Enseignant Displays
 export type DisplayEnseignantDO = {
     id              : string;
     matricule       : string;
@@ -102,7 +144,9 @@ export type DisplayEnseignantDO = {
     change_date     : Date|null;
     changed_by      : string|null;
 }
+//#endregion
 
+//#region Inscription Displays
 export type DisplayInscriptionDO = {
     id                      : string;
     salle_classe_id         : string;
@@ -120,6 +164,27 @@ export type DisplayInscriptionDO = {
     changed_by              : string|null;
 }
 
+export type DisplayEcoleSalleClasseInscriptionDO = {
+    id                      : string;
+    ecole_label             : string;
+    salle_classe_label      : string;
+    eleve_label             : string;
+    registration_date       : Date;
+    registration_status     : string;
+    registration_status_label : string;
+}
+
+export type DisplaySalleClasseInscriptionDO = {
+    id                      : string;
+    salle_classe_label      : string;
+    eleve_label             : string;
+    registration_date       : Date;
+    registration_status     : string;
+    registration_status_label : string;
+}
+//#endregion
+
+//#region Annee Acolaire Displays
 export type DisplayAnneeScolaireDO = {
     id             : string;
     start_date     : Date;
@@ -130,6 +195,7 @@ export type DisplayAnneeScolaireDO = {
     change_date    : Date|null;       
     changed_by     : string|null;
 }
+//#endregion
 
 /* Functions to get Data Objects from instances */
 
