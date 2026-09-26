@@ -1,19 +1,21 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
-import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayClientEcoleDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
-import { OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
-import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO} from "@/types/ALL_USAGE/AllUsagesTypes";
+import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayClientEcoleDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+import { overviewEcoleDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
+import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
-import { getAnneeScolaireById } from "../ALL_USAGE/SagesTgFactory";
+import { getAnneeScolaireById, getRoleByCode } from "../ALL_USAGE/SagesTgFactory";
 import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/AdminClientUpdates";
+import { ClientSettingsDO } from "@/types/ADMIN_CLIENT/AdminClientSettings";
+import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
 
 /* Get DataObjects from records */
 
 
 
-/* Retrieveing data */
+//#region Retrieveing data
 
 export async function getClientById(clientId:string) : Promise<DisplayClientDO|null> {
     const functionName = "getClientById";
@@ -55,7 +57,7 @@ export async function getClientById(clientId:string) : Promise<DisplayClientDO|n
         }
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver un client par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver un client par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -100,7 +102,7 @@ export async function getClientByCode(clientCode:string) : Promise<DisplayClient
         }
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver un client par son code",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver un client par son code",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -119,7 +121,7 @@ export async function getEcoleById(ecoleId:string) : Promise<DisplayEcoleDO|null
         return ToDisplayEcoleDO(ecole);
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver une école par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver une école par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -158,7 +160,7 @@ export async function getSalleClasseById(salleClasseId:string) : Promise<Display
         }
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver une classe par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver une classe par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -201,7 +203,7 @@ export async function getClientEcoleSalleClasseByCode(clientId:string, ecoleId:s
         }
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver une classe par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver une classe par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -240,7 +242,7 @@ export async function getEleveById(eleveId:string) : Promise<DisplayEleveDO|null
         }
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver un élève par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver un élève par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -279,7 +281,7 @@ export async function getEleveByMatricule(matriculeCode:string) : Promise<Displa
         }
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver un élève par son matricule",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver un élève par son matricule",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -318,7 +320,7 @@ export async function getInscriptionById(inscriptionId:string) : Promise<Display
         }
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver une inscription par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Retrouver une inscription par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -357,7 +359,7 @@ export async function getEnseignantById(enseignantId:string) : Promise<DisplayEn
         }
     }
     catch(error:any) {
-        logError('F',"Echec :Retrouver un enseignant par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec :Retrouver un enseignant par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -394,21 +396,23 @@ export async function getClientEcoles(clientId:string) : Promise<DisplayClientEc
         return [... new Set(listEcoles)];
     }
     catch(error:any) {
-        logError('F',"Liste des écoles d'un client",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Liste des écoles d'un client",ErrorOrigin + " : " + functionName, error.message, false);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
 
-export async function getEcoleSalleClasses(ecoleId:string, anneeScolaireId:string) : Promise<DisplaySalleClasseDO[]> {
-    const functionName = "getEcoleSalleClasses";
+export async function getClientEcoleSalleClasses(clientId:string, ecoleId:string) : Promise<DisplaySalleClasseDO[]> {
+    const functionName = "getClientEcoleSalleClasses";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listSallesClasses:DisplaySalleClasseDO[] = [];
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) return [];
         const salleClasses = await prisma.sgs_salle_classe.findMany({
             where : {
                 ecole_id : ecoleId,
-                annee_scolaire_id : anneeScolaireId
+                annee_scolaire_id : anneeScolaire.id
             }
         });
         for(const salleClasse of salleClasses) {
@@ -420,27 +424,29 @@ export async function getEcoleSalleClasses(ecoleId:string, anneeScolaireId:strin
         return [... new Set(listSallesClasses)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les classes d'une école ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les classes d'une école d'un client ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
 
-export async function getClientSalleClasses(clientId:string, anneeScolaireId:string) : Promise<DisplaySalleClasseDO[]> {
+export async function getClientSalleClasses(clientId:string) : Promise<DisplaySalleClasseDO[]> {
     const functionName = "getClientSalleClasses";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         let listSallesClasses:DisplaySalleClasseDO[] = [];
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if(anneeScolaire === null) return [];
         const listEcoles = await getClientEcoles(clientId);
         if (listEcoles.length === 0) return [];
         for(const ecole of listEcoles) {
-            const salleClasses = await getEcoleSalleClasses(ecole.id, anneeScolaireId);
+            const salleClasses = await getClientEcoleSalleClasses(clientId, ecole.id);
             listSallesClasses = [...listSallesClasses, ...salleClasses];
         }
         return [... new Set(listSallesClasses)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les classes d'une client ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les classes d'un client ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
@@ -473,18 +479,18 @@ export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<
         return [...new Set(listEnseignants)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les enseignants d'une classe ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les enseignants d'une classe ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
 
-export async function getEcoleEnseignants(ecoleId:string, anneeScolaireId:string) : Promise<DisplayEnseignantDO[]> {
+export async function getClientEcoleEnseignants(ClientId:string, ecoleId:string) : Promise<DisplayEnseignantDO[]> {
     const functionName = "getEcoleEnseignants";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEnseignants:DisplayEnseignantDO[] = [];
-        const listClasses = await getEcoleSalleClasses(ecoleId, anneeScolaireId);
+        const listClasses = await getClientEcoleSalleClasses(ClientId, ecoleId);
         if (listClasses.length === 0) return [];
         for (const salleClasse of listClasses) {
             const enseignants = await getSalleClasseEnseignants(salleClasse.id);
@@ -493,12 +499,12 @@ export async function getEcoleEnseignants(ecoleId:string, anneeScolaireId:string
         return [...new Set(listEnseignants)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les enseignants d'une école ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les enseignants d'une école ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
 
-export async function getClientEnseignants(salleclasseId:string, anneeScolaireId:string) : Promise<DisplayEnseignantDO[]> {
+export async function getClientEnseignants(ClientId:string, salleclasseId:string) : Promise<DisplayEnseignantDO[]> {
     const functionName = "getEcoleEnseignants";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -507,13 +513,13 @@ export async function getClientEnseignants(salleclasseId:string, anneeScolaireId
         const listEcoles = await getClientEcoles(salleclasseId);
         if (listEcoles.length === 0) return [];
         for (const ecole of listEcoles) {
-            const enseignants = await getEcoleEnseignants(ecole.id, anneeScolaireId);
+            const enseignants = await getClientEcoleEnseignants(ClientId, ecole.id);
             listEnseignants.push(...enseignants);
         }
         return [...new Set(listEnseignants)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les enseignants d'un client ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les enseignants d'un client ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
@@ -541,18 +547,20 @@ export async function getSalleclasseEleves(salleclasseId:string) : Promise<Displ
         return [...new Set(listEleves)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les élèves d'une classe ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les élèves d'une classe ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
 
-export async function getEcoleEleves(ecoleId:string, anneescolaireId:string) : Promise<DisplayEleveDO[]> {
+export async function getClientEcoleEleves(clientId:string, ecoleId:string) : Promise<DisplayEleveDO[]> {
     const functionName = "getEcoleEleves";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEleves:DisplayEleveDO[] = [];
-        const listSalleclasses = await getEcoleSalleClasses(ecoleId, anneescolaireId);
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if(anneeScolaire === null) return [];
+        const listSalleclasses = await getClientEcoleSalleClasses(clientId, ecoleId);
         if(listSalleclasses.length === 0) return [];
         for (const salleclasse of listSalleclasses ) {
             const eleves = await getSalleclasseEleves(salleclasse.id);
@@ -561,18 +569,20 @@ export async function getEcoleEleves(ecoleId:string, anneescolaireId:string) : P
         return [...new Set(listEleves)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
 
-export async function getClientEleves(clientId:string, anneescolaireId:string) : Promise<DisplayEleveDO[]> {
+export async function getClientEleves(clientId:string) : Promise<DisplayEleveDO[]> {
     const functionName = "getClientEleves";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEleves:DisplayEleveDO[] = [];
-        const listSalleclasses = await getClientSalleClasses(clientId, anneescolaireId);
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if(anneeScolaire === null) return [];
+        const listSalleclasses = await getClientSalleClasses(clientId);
         if(listSalleclasses.length === 0) return [];
         for (const salleclasse of listSalleclasses ) {
             const eleves = await getSalleclasseEleves(salleclasse.id);
@@ -581,7 +591,7 @@ export async function getClientEleves(clientId:string, anneescolaireId:string) :
         return [...new Set(listEleves)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les élèves d'un client ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
@@ -621,7 +631,7 @@ export async function getEnseignantSalleClasses(clientId:string, ecoleId:string,
         return [... new Set(listSallesClasses)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les classes d'un enseignant ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les classes d'un enseignant ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
@@ -668,7 +678,7 @@ export async function getEnseignantMatieres(clientId:string, ecoleId:string, ann
         return [... new Set(listMatieres)];
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les matières d'un enseignant ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les matières d'un enseignant ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
@@ -722,13 +732,13 @@ export async function getEleveOverview(clientId:string, ecoleId:string, anneeSco
         
     }
     catch(error:any) {
-        logError('F',"Echec : Générer la vue d'ensemble d'un élève",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Générer la vue d'ensemble d'un élève",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
 
 export async function getEnseignantOverview(clientId:string, ecoleId:string, anneeScolaireId:string, enseignantId:string) : Promise<OverviewEnseignantDO|null> {
-    const functionName = "functionName";
+    const functionName = "getEnseignantOverview";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -782,7 +792,7 @@ export async function getEnseignantOverview(clientId:string, ecoleId:string, ann
         }
     }
     catch(error:any) {
-        logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Vue d'ensemble d'un enseignant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -821,7 +831,7 @@ export async function getClientMenuItemLinks(clientId:string, roleId:string, men
         return listLinks;
     }
     catch(error:any) {
-        logError('F',"Echec : List des liens d'un menu", ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : List des liens d'un menu", ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
@@ -860,7 +870,7 @@ export async function getClientMenuItemActions(clientId:string, roleId:string, m
         return listActions;
     }
     catch(error:any) {
-        logError('F',"Echec : List des actions d'un menu", ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : List des actions d'un menu", ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
@@ -897,12 +907,13 @@ export async function getClientCurrentAnneeScolaire(clientId:string) : Promise<D
           return anneeScolaire;
       }
       catch(error:any) {
-          return null;
+        logError('F',"Echec : Retrouver l'annéee scolaire en cours",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
       }
 }
 
 export async function getEnseignementClasses(enseignementId:string) : Promise<InfoClasseDO[]> {
-    const functionName = "getClientEcoleEnseignementClasses";
+    const functionName = "getEnseignementClasses";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -925,7 +936,7 @@ export async function getEnseignementClasses(enseignementId:string) : Promise<In
         return listClasses;
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les classes d'un senseignement",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
@@ -969,10 +980,192 @@ export async function getClientEcoleClassesAllowed(clientId:string, ecoleId:stri
         return listClasses;
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
+
+export async function getClientModules(clientId:string) : Promise<InfoModuleDO[]> {
+    const functionName = "getClientModules";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listModules:InfoModuleDO[] = [];
+        const clientModules = await prisma.sgs_client_module.findMany({
+            where : {
+                client_id : clientId
+            },
+            include : {
+                tg_module : true
+            }
+        });
+        if (!clientModules || clientModules.length === 0) return [];
+        for (const cm of clientModules) {
+            if (cm) listModules.push({
+                id : cm.tg_module.id,
+                full_name : cm.tg_module.full_name,
+                short_name : cm.tg_module.short_name,
+                code : cm.tg_module.code,
+                order : cm.tg_module.module_order
+            });
+        };
+        return listModules;
+    }
+    catch(error:any) {
+        logError('F',"Echec : recherche des modules d'un client",ErrorOrigin + " : " + functionName, error.message, false);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
+export async function getClientRoleMenuItems(clientCode: string, roleCode:string) : Promise<SagesMenuItem[]> {
+    const functionName = "getClientRoleMenuItems";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const menuItems:SagesMenuItem[] = []; 
+        const client = await getClientByCode(clientCode.toLowerCase());
+        if (client == null) return menuItems;
+        const role = await getRoleByCode(roleCode.toUpperCase());
+        if (role === null) return menuItems;
+        const clientModules = await getClientModules(client.id);
+        const clientModulesIds:string[] = [];
+        clientModules.forEach(cm  => {
+            clientModulesIds.push(cm.id);
+        });
+        const items = await prisma.sgs_client_module_role_menu_item.findMany({
+            where : {
+                sgs_client_module : {
+                    tg_module : {
+                        id : {
+                            in : clientModulesIds
+                        } 
+                    }
+                }
+            },
+            orderBy : {
+                item_order : 'asc'
+            }
+        });
+        items.forEach(item => {
+            menuItems.push(ToSagesMenuItem(item));
+        });
+        return menuItems;
+    }
+    catch(error:any) {
+        logError('F',"Liste des éléments de menu basé sur le client et le role",ErrorOrigin + " : " + functionName, error.message, true);
+        return [];
+    }
+}
+
+export async function getClientActiveUsers(clientId:string) : Promise<DisplayUserDO[]> {
+    const functionName = "getClientActiveUsers";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listUsers:DisplayUserDO[] = [];
+        const clientUsers= await prisma.sgs_user.findMany({
+            where : {
+                sgs_client_user : {
+                    some: {
+                        client_id : clientId,
+                        status : 'A'
+                    }
+                }
+            }
+        });
+        clientUsers.forEach(user => {
+            listUsers.push(ToDisplayUserDO(user));
+        });
+        return listUsers;
+    }
+    catch(error:any) {
+        logError('F',"Recherche des utilisateurs actifs du client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+//#endregion Retrieveing data
+
+
+//#region get settings
+export async function getClientSettings(clientId:string) : Promise<ClientSettingsDO|null> {
+    const functionName = "getClientSettings";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const clientSettings = await prisma.sgs_client_setting.findFirst({
+            where : {
+                client_id : clientId
+            }
+        });
+        if (!clientSettings || clientSettings === null) return null;
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) return null;
+        return {
+            client_id                   : clientId,
+            annee_scolaire_id           : anneeScolaire.id,
+            annee_scolaire_label        : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString(),
+            max_schools                 : clientSettings.max_schools,
+            max_admin_client_users      : clientSettings.max_admin_client_users,
+            max_admin_ecole_users       : clientSettings.max_admin_ecole_users,
+            max_admin_classroom_users   : clientSettings.max_admin_classroom_users,
+            max_teacher_users           : clientSettings.max_teacher_users,
+            max_parent_users            : clientSettings.max_parent_users,
+            max_eleve_users             : clientSettings.max_eleve_users
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Paramètres client",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+//#endregion get settings
+
+
+//#region Export PDFs
+//#endregion Export PDFs
+
+//#region building overviews
+
+export async function getClientEcolesOverviews(clientId:string) : Promise<overviewEcoleDO[]> {
+    const functionName = "getClientEcoleOverview";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listEcoleOverviews:overviewEcoleDO[] = [];
+        const ecoles = await getClientEcoles(clientId);
+        if(ecoles.length === 0) return listEcoleOverviews
+        return [... new Set(listEcoleOverviews)];
+
+    }
+    catch(error:any) {
+        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+/*export async function buildEcoleOverview(ecoleId:string) : Promise<overviewEcoleDO> {
+    const functionName = "getClientEcoleOverview";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const ecole = await getEcoleById(ecoleId);
+        if (!ecole || ecole === null) throw new Error("Identifiant Ecole Incorrect");
+        const salleclasses = await getClientEcoleSalleclasses(clientId, ecoleId);
+        const enseignants = await getClientEcoleEnseignants(clientId, ecoleId);
+        const eleves = await getClientEcoleEleves(clientId, ecoleId);
+        return {
+            ecole : ecole,
+            numberSalleClasses : salleclasses.length,
+            numberEnseignants : enseignants.length,
+            numberEleves : eleves.length,
+        }
+
+    }
+    catch(error:any) {
+        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}*/
+//#endregion building overviews
 
 
 //#region Creating records 
@@ -1000,7 +1193,7 @@ export async function createSalleClasse(clientId: string, data : AdminClientCrea
         return ToDisplaySalleClasseDO(salleClasseCreated);
     }
     catch(error:any) {
-        logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -1056,7 +1249,7 @@ export async function createEleve(clientId: string, eleveData : AdminClientCreat
 
 //#endregion Creating records
 
-//#region Creating records 
+//#region updating records 
 export async function updateEcole(clientId:string, ecoleData: UpdateEcoleDO, username : string) : Promise<DisplayEcoleDO|null> {
     const functionName = "updateEcole";
     try {
@@ -1104,7 +1297,7 @@ export async function functionName() {
         // Your code logic here
     }
     catch(error:any) {
-        logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }

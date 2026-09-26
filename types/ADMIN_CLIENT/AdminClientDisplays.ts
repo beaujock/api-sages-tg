@@ -1,9 +1,23 @@
 import { logError } from "@/factories/utilitiesFactory";
-import { sgs_ecole, sgs_eleve, sgs_salle_classe, tg_annee_scolaire } from "@/lib/generated/prisma/client";
+import { sgs_ecole, sgs_eleve, sgs_salle_classe, sgs_user, tg_annee_scolaire } from "@/lib/generated/prisma/client";
 import { prisma, verifyAndSetPrismaConnection } from "@/lib/prisma";
 import { getYear } from "date-fns";
 
 const ErrorOrigin = "AdminClientDisplays";
+
+//#region User Displays
+export type DisplayUserDO = {
+    id                       : string,
+    username                 : string,
+    email                    : string,
+    full_name                : string,
+    phone_number             : string|null,
+    create_date              : Date,
+    created_by               : string,
+    change_date              : Date|null,
+    changed_by               : string|null
+}
+//#endregion
 
 //#region Client Displays
 export type DisplayClientDO = {
@@ -311,4 +325,18 @@ export function ToDisplayEcoleDO(ecole : sgs_ecole) : DisplayEcoleDO {
             change_date             : ecole.change_date,
             changed_by              : ecole.changed_by
         }
+}
+
+export function ToDisplayUserDO(user:sgs_user) : DisplayUserDO {
+    return {
+        id                       : user.id,
+        username                 : user.user_name,
+        email                    : user.email,
+        full_name                : user.full_name,
+        phone_number             : user.phone,
+        create_date              : user.create_date,
+        created_by               : user.created_by,
+        change_date              : user.change_date,
+        changed_by               : user.changed_by
+    }
 }

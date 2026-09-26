@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import {getClientEcoleById, getClientEcoleEleves  } from "@/factories/clientFactory";
-import { getEcoleById, updateEcole } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { updateEcole } from "@/factories/ADMIN_CLIENT/clientFactory";
 import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/AdminClientUpdates";
 
 

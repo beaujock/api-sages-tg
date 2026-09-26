@@ -93,7 +93,7 @@ export async function generatePassword(minLength:number = 8) {
   return passwordChars.join('');
 }
 
-export async function logError(errorType:string, title:string, origin:string, details:string, sendingEmail:boolean = false) {
+export async function logError(errorType:string, title:string, origin:string, details:string, sendingEmail:boolean) {
   const functionName = "logError"
   try {
           const isConnected = await verifyAndSetPrismaConnection();

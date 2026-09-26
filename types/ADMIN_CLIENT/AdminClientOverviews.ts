@@ -25,3 +25,12 @@ export type OverviewEnseignantDO = {
     number_absences         : number;
     number_bulletins        : number;
 }
+
+export type overviewEcoleDO = {
+    id                      : string;
+    short_name              : string;
+    code                    : string;
+    number_salles_classes   : number;
+    number_enseignants      : number;
+    number_eleves           : number;
+}

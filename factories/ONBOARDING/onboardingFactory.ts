@@ -7,7 +7,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InfoClientMenuDO, InfoMenuItemLinkActionDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { getAllRoles, getModuleRoleMenuActions, getModuleRoleMenuItems, getModuleRoleMenuLinks } from "../ALL_USAGE/SagesTgFactory";
-import { getClientModules } from "../clientFactory";
+import { getClientModules } from "../ADMIN_CLIENT/clientFactory";
+
 
 const ErrorOrigin = "ONBOARDING : onboardingFactory";
 

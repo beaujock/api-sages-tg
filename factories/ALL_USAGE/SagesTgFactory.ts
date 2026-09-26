@@ -3,6 +3,7 @@ import { getYear } from 'date-fns';
 import { logError } from "./allUsageFactories";
 import { InfoAnneeScolaireDO, InfoGenderDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoResourceTypeDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { DisplayAnneeScolaireDO, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+import { tg_role } from "@/lib/generated/prisma/client";
 const ErrorOrigin = "SagesTgFactory";
 
 export async function getAnneeScolaireById(anneeScolaireIdId:string) : Promise<DisplayAnneeScolaireDO|null> {
@@ -273,6 +274,25 @@ export async function getAllResourceTypes() : Promise<InfoResourceTypeDO[]> {
     catch(error:any) {
         logError('F',"Echec : Retrouver tous les type de resources",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
+    }
+}
+
+export async function getRoleByCode(roleCode:string) : Promise<tg_role|null> {
+    const functionName = "getRoleByCode";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const role = await prisma.tg_role.findFirst({
+            where : {
+                code : roleCode
+            }
+        });
+
+        return role;
+    }
+    catch(error:any) {
+        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, false);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
 

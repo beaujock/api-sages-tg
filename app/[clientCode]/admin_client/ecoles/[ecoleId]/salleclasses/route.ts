@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getClientAnneeScolaire, getClientEcoleSalleclasses, getClientEcoleById  } from "@/factories/clientFactory";
+import { getClientEcoleSalleClasses, getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string}> }) {
@@ -14,13 +14,13 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
-        const ecole = await getClientEcoleById(client.id, ecoleId);
+        const ecole = await getEcoleById(client.id);
         /*
         const anneeScolaire = await getClientAnneeScolaire(client.id);
         if (anneeScolaire === null) return NextResponse.json({message : "Aucune année scolaire en cours. Contactez votre administrateur"}, { status: 400 });
         if (!ecole || ecole === null) return NextResponse.json({message : "Ecole non trouvée. Contactez votre administrateur"}, { status: 400 });
         */
-        const salleclasses = await getClientEcoleSalleclasses(client.id, ecoleId);
+        const salleclasses = await getClientEcoleSalleClasses(client.id, ecoleId);
         return NextResponse.json({ecole: ecole, salleClasses: salleclasses}, { status: 200 });
     }
     catch(error:any) {

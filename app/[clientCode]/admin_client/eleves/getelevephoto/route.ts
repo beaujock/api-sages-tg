@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getRoleByCode } from "@/factories/clientFactory";
-import { getClientMenuItemLinks } from "@/factories/ADMIN_CLIENT/clientFactory";
 import { getElevePhotoUrl } from "@/factories/ALL_USAGE/allUsageFactories";
 
 
@@ -16,7 +14,6 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         const requestedRouteInfos = await getClientUserRouteRequestInfos(request, clientCode, "ADMIN_CLIENT","CLIENT");
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
-        const client = requestedRouteInfos.client;
         const photoURL = await getElevePhotoUrl(clientCode,eleveMatricule);
         
         return NextResponse.json({photo: photoURL}, { status: 200 });

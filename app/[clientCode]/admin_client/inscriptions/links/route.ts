@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getRoleByCode } from "@/factories/clientFactory";
 import { getClientMenuItemLinks } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getRoleByCode } from "@/factories/ALL_USAGE/SagesTgFactory";
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
