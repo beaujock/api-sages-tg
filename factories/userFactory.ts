@@ -2,8 +2,7 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { ResourceCombo, UserBaseInfos, UserInfos, UserRoleInfos } from "@/types/USERX/UserTypes";
 import { logError } from "./utilitiesFactory";
 import { sgs_client, sgs_user } from "@/lib/generated/prisma/client";
-import { UserInfo } from "os";
-import { getClientRoleMenuItems } from "./clientFactory";
+import { getClientRoleMenuItems } from "./ADMIN_CLIENT/clientFactory";
 
 const ErrorOrigin = "userFactory";
 

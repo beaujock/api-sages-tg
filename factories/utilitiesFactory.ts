@@ -1,7 +1,6 @@
 
 import nodemailer from 'nodemailer';
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { tg_annee_scolaire, } from '@/lib/generated/prisma/client';
 import { DisplayAnneeScolaireDO } from '@/types/ADMIN_CLIENT/AdminClientDisplays';
 
 const ErrorOrigin = "utilistiesFactory"
