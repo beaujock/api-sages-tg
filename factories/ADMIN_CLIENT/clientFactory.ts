@@ -1,13 +1,12 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
-import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayClientEcoleDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplayEleveDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayClientEcoleDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, ToDisplayAnneeScolaireDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 import { OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
-import { AdminClientSalleClasseDisplay, ToAdminClientEleveDisplay } from "@/types/ADMIN_CLIENT/AdminClientTypes";
 import { getAnneeScolaireById } from "../ALL_USAGE/SagesTgFactory";
-import { getCurrentAnneeScolaire } from "../utilitiesFactory";
+import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/AdminClientUpdates";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
 
 /* Get DataObjects from records */
@@ -117,24 +116,7 @@ export async function getEcoleById(ecoleId:string) : Promise<DisplayEcoleDO|null
             }
         });
         if(!ecole) return null;
-        return {
-            id                      : ecole.id,
-            full_name               : ecole.full_name,
-            short_name              : ecole.short_name,
-            establishment_date      : ecole.establishment_date,
-            code                    : ecole.code,
-            primary_contact_name    : ecole.primary_contact_name,
-            secondary_contact_name  : ecole.secondary_contact_name,
-            contact_infos           : ecole.contact_infos,
-            phone_number            : ecole.phone_number,
-            email                   : ecole.email,
-            website                 : ecole.website,
-            notes                   : ecole.notes,
-            create_date             : ecole.create_date,
-            created_by              : ecole.created_by,
-            change_date             : ecole.change_date,
-            changed_by              : ecole.changed_by
-        }
+        return ToDisplayEcoleDO(ecole);
     }
     catch(error:any) {
         logError('F',"Echec : Retrouver une école par son identifiant",ErrorOrigin + " - " + functionName, error.message, true);
@@ -993,7 +975,7 @@ export async function getClientEcoleClassesAllowed(clientId:string, ecoleId:stri
 }
 
 
-/* Creating records */
+//#region Creating records 
 
 export async function createSalleClasse(clientId: string, data : AdminClientCreateSalleClasseDO) : Promise<DisplaySalleClasseDO|null> {
     const functionName = "createSalleClasse";
@@ -1071,6 +1053,45 @@ export async function createEleve(clientId: string, eleveData : AdminClientCreat
         return null;
     }
 }
+
+//#endregion Creating records
+
+//#region Creating records 
+export async function updateEcole(clientId:string, ecoleData: UpdateEcoleDO) : Promise<DisplayEcoleDO|null> {
+    const functionName = "updateEcole";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const updatedEcole = await prisma.sgs_ecole.update({
+            where : {id : ecoleData.id},
+            data : {
+                full_name               : ecoleData.full_name,
+                short_name              : ecoleData.short_name,
+                establishment_date      : ecoleData.establishment_date,
+                primary_contact_name    : ecoleData.primary_contact_name,
+                secondary_contact_name  : ecoleData.secondary_contact_name,
+                contact_infos           : ecoleData.contact_infos,
+                phone_number            : ecoleData.phone_number,
+                email                   : ecoleData.email,
+                website                 : ecoleData.website,
+                notes                   : ecoleData.notes
+            }
+        });
+        if (!updatedEcole || updatedEcole === null) return null;
+        return ToDisplayEcoleDO(updatedEcole);
+    }
+    catch(error:any) {
+        logError('F',"Echec : Mise à jour d'une école ",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+//#endregion Creating records
+
+
+
+
+
+
 
 
 export async function functionName() {

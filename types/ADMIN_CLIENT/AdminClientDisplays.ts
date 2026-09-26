@@ -1,5 +1,5 @@
 import { logError } from "@/factories/utilitiesFactory";
-import { sgs_eleve, sgs_salle_classe, tg_annee_scolaire } from "@/lib/generated/prisma/client";
+import { sgs_ecole, sgs_eleve, sgs_salle_classe, tg_annee_scolaire } from "@/lib/generated/prisma/client";
 import { prisma, verifyAndSetPrismaConnection } from "@/lib/prisma";
 import { getYear } from "date-fns";
 
@@ -290,4 +290,25 @@ export function ToDisplayAnneeScolaireDO(instance : tg_annee_scolaire) : Display
         change_date    : instance.change_date,
         changed_by     : instance.changed_by
     }
+}
+
+export function ToDisplayEcoleDO(ecole : sgs_ecole) : DisplayEcoleDO {
+    return {
+            id                      : ecole.id,
+            full_name               : ecole.full_name,
+            short_name              : ecole.short_name,
+            establishment_date      : ecole.establishment_date,
+            code                    : ecole.code,
+            primary_contact_name    : ecole.primary_contact_name,
+            secondary_contact_name  : ecole.secondary_contact_name,
+            contact_infos           : ecole.contact_infos,
+            phone_number            : ecole.phone_number,
+            email                   : ecole.email,
+            website                 : ecole.website,
+            notes                   : ecole.notes,
+            create_date             : ecole.create_date,
+            created_by              : ecole.created_by,
+            change_date             : ecole.change_date,
+            changed_by              : ecole.changed_by
+        }
 }
