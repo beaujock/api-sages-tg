@@ -451,6 +451,32 @@ export async function getClientSalleClasses(clientId:string) : Promise<DisplaySa
     }
 }
 
+/*
+export async function getClientInscriptions(clientId:string) : Promise<DisplayInscriptionDO[]> {
+    const functionName = "getClientSalleClasses";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        let listInscriptions:DisplayInscriptionDO[] = [];
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if(anneeScolaire === null) return [];
+        const listEcoles = await getClientEcoles(clientId);
+        if (listEcoles.length === 0) return [];
+        for(const ecole of listEcoles) {
+            const salleClasses = await getClientEcoleSalleClasses(clientId, ecole.id);
+            listSallesClasses = [...listSallesClasses, ...salleClasses];
+        }
+        return [... new Set(listSallesClasses)];
+    }
+    catch(error:any) {
+        logError('F',"Echec : Lister les classes d'un client ",ErrorOrigin + " - " + functionName, error.message, false);
+        return [];
+    }
+}
+    */
+
+
+
 export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<DisplayEnseignantDO[]> {
     const functionName = "getSalleClasseEnseignants";
     try {

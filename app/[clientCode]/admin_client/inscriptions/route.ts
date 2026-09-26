@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getClientInscriptions } from "@/factories/clientFactory";
 
 
 
@@ -13,8 +12,8 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
                 if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
                     return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
                 const client = requestedRouteInfos.client;
-        const clientEleves = await getClientInscriptions(client.id);
-        return NextResponse.json({clientEleves: clientEleves}, { status: 200 });
+        //const clientEleves = await getClientInscriptions(client.id);
+        return NextResponse.json({clientEleves: []}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Liste des écoles du client",(new URL(request.url)).pathname, error.message, true);
