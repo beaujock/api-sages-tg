@@ -1164,7 +1164,7 @@ export async function getClientEcolesOverviews(clientId:string) : Promise<overvi
 
     }
     catch(error:any) {
-        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
+        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, false);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }

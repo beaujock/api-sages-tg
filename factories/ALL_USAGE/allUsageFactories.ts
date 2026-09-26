@@ -213,7 +213,7 @@ export async function uploadElevePhoto(photoData : FormData) : Promise<boolean> 
     }
 }
 
-export async function getElevePhotoUrl(clientCode: string, matricule : string): Promise<string | null> {
+export async function getElevePhotoUrl(clientCode: string, ecoleCode: string, matricule : string): Promise<string | null> {
     const functionName = "getElevePhotoUrl";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -229,7 +229,7 @@ export async function getElevePhotoUrl(clientCode: string, matricule : string): 
             },
         });
         const bucket = clientCode.toLowerCase();
-        const key = "eleves/" + matricule.toUpperCase() + ".jpg";
+        const key = ecoleCode.toLowerCase() + "/eleves/" + matricule.toUpperCase() + ".jpg";
 
         if (!bucket || !key) return null;
 
