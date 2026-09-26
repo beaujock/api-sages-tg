@@ -21,7 +21,7 @@ export async function PATCH(request:NextRequest, { params }: { params: Promise<{
             id                      : ecoleId,
             full_name               : body.full_name,
             short_name              : body.short_name,
-            establishment_date      : new Date(body.establisment_date),
+            establishment_date      : new Date(body.establishment_date),
             primary_contact_name    : body.primary_contact_name,
             secondary_contact_name  : body.secondary_contact_name,
             contact_infos           : body.contact_infos,
