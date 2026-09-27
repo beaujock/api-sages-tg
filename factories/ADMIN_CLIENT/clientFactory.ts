@@ -2,7 +2,7 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
 import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayClientEcoleDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
-import { overviewEcoleDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
+import { OverviewEcoleDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
 import { getAnneeScolaireById, getRoleByCode } from "../ALL_USAGE/SagesTgFactory";
@@ -1152,12 +1152,70 @@ export async function getClientSettings(clientId:string) : Promise<ClientSetting
 
 //#region building overviews
 
-export async function getClientEcolesOverviews(clientId:string) : Promise<overviewEcoleDO[]> {
+export async function getEcoleOverview(clientId:string, ecoleId:string) : Promise<OverviewEcoleDO|null> {
+    const functionName = "getEcoleOverview";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const ecole = await prisma.sgs_ecole.findFirst({
+            where : {
+                id : ecoleId,
+                sgs_client_ecole : {
+                    some : {
+                        client_id : clientId
+                    }
+                }
+            }
+        });
+        if (!ecole) return null;
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error("Aucune année scolaire en cours");
+        const salleClasseFilter = {
+            ecole_id : ecoleId,
+            annee_scolaire_id : anneeScolaire.id
+        };
+        const [numberSallesClasses, enseignants, eleves] = await Promise.all([
+            prisma.sgs_salle_classe.count({
+                where : salleClasseFilter
+            }),
+            prisma.sgs_portfolio_enseignant.findMany({
+                where : {
+                    sgs_salle_classe_matiere : {
+                        sgs_salle_classe : salleClasseFilter
+                    }
+                },
+                select : { enseignant_id : true },
+                distinct : ['enseignant_id']
+            }),
+            prisma.sgs_inscription.findMany({
+                where : {
+                    sgs_salle_classe : salleClasseFilter
+                },
+                select : { eleve_id : true },
+                distinct : ['eleve_id']
+            })
+        ]);
+        return {
+            id                      : ecole.id,
+            short_name              : ecole.short_name,
+            code                    : ecole.code,
+            number_salles_classes   : numberSallesClasses,
+            number_enseignants      : enseignants.length,
+            number_eleves           : eleves.length
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Générer la vue d'ensemble d'une école",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
+export async function getClientEcolesOverviews(clientId:string) : Promise<OverviewEcoleDO[]> {
     const functionName = "getClientEcoleOverview";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listEcoleOverviews:overviewEcoleDO[] = [];
+        const listEcoleOverviews:OverviewEcoleDO[] = [];
         const ecoles = await getClientEcoles(clientId);
         if(ecoles.length === 0) return listEcoleOverviews
         return [... new Set(listEcoleOverviews)];

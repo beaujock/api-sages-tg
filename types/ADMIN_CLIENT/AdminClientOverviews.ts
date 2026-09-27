@@ -26,11 +26,19 @@ export type OverviewEnseignantDO = {
     number_bulletins        : number;
 }
 
-export type overviewEcoleDO = {
+export type OverviewEcoleDO = {
     id                      : string;
     short_name              : string;
     code                    : string;
     number_salles_classes   : number;
+    number_enseignants      : number;
+    number_eleves           : number;
+}
+
+export type OverviewSalleClasseDO = {
+    id                      : string;
+    short_name              : string;
+    code                    : string;
     number_enseignants      : number;
     number_eleves           : number;
 }
