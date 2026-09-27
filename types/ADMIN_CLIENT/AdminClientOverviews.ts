@@ -37,7 +37,6 @@ export type OverviewEcoleDO = {
 
 export type OverviewSalleClasseDO = {
     id                      : string;
-    short_name              : string;
     code                    : string;
     number_enseignants      : number;
     number_eleves           : number;

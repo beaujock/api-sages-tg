@@ -1273,9 +1273,6 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
                         }
                     }
                 }
-            },
-            include : {
-                tg_classe : true
             }
         });
         if (!salleClasse) return null;
@@ -1299,7 +1296,6 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
         ]);
         return {
             id                      : salleClasse.id,
-            short_name              : salleClasse.tg_classe.short_name,
             code                    : salleClasse.code,
             number_enseignants      : enseignants.length,
             number_eleves           : eleves.length
