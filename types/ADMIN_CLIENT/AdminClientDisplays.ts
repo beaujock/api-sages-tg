@@ -1,5 +1,5 @@
 import { logError } from "@/factories/utilitiesFactory";
-import { sgs_ecole, sgs_eleve, sgs_salle_classe, sgs_user, tg_annee_scolaire } from "@/lib/generated/prisma/client";
+import { lkp_client_status, sgs_client, sgs_ecole, sgs_eleve, sgs_salle_classe, sgs_user, tg_annee_scolaire, tg_systeme_scolaire } from "@/lib/generated/prisma/client";
 import { prisma, verifyAndSetPrismaConnection } from "@/lib/prisma";
 import { getYear } from "date-fns";
 
@@ -23,7 +23,7 @@ export type DisplayUserDO = {
 export type DisplayClientDO = {
     id                      : string;
     systeme_scolaire_id     : string;
-    systeme_scolaire_label  :string
+    systeme_scolaire_label  : string
     active                  : boolean;
     active_label            : string;
     status                  : string;
@@ -164,6 +164,32 @@ export type DisplayAnneeScolaireDO = {
 //#endregion
 
 /* Functions to get Data Objects from instances */
+
+export function ToDisplayClientDO(instance : sgs_client & { tg_systeme_scolaire : tg_systeme_scolaire, lkp_client_status : lkp_client_status }) : DisplayClientDO {
+    return {
+        id                      : instance.id,
+        systeme_scolaire_id     : instance.systeme_scolaire_id,
+        systeme_scolaire_label  : instance.tg_systeme_scolaire.code,
+        active                  : instance.active,
+        active_label            : (instance.active)?("Actif"):("Inactif"),
+        status                  : instance.status,
+        status_label            : instance.lkp_client_status.display_value,
+        legal_name              : instance.legal_name,
+        short_name              : instance.short_name,
+        code                    : instance.code,
+        address                 : instance.address,
+        website                 : instance.website,
+        main_contact_name       : instance.main_contact_name,
+        main_contact_email      : instance.main_contact_email,
+        main_contact_phone      : instance.main_contact_phone,
+        other_contact_infos     : instance.other_contact_infos,
+        notes                   : instance.notes,
+        create_date             : instance.create_date,
+        created_by              : instance.created_by,
+        change_date             : instance.change_date,
+        changed_by              : instance.changed_by
+    }
+}
 
 export async function ToDisplaySalleClasseDO(instance : sgs_salle_classe) : Promise<DisplaySalleClasseDO|null>
 {

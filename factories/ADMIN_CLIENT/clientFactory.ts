@@ -1,7 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
-import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayClientDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
 import { OverviewEcoleDO, OverviewSalleClasseDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
@@ -32,29 +32,7 @@ export async function getClientById(clientId:string) : Promise<DisplayClientDO|n
             }
         });
         if(!client) return null;
-        return {
-            id                       : client.id,
-            systeme_scolaire_id      : client.systeme_scolaire_id,
-            systeme_scolaire_label   : client.tg_systeme_scolaire.code,
-            active                   : client.active,
-            active_label             : (client.active)?("Actif"):("Inactif"),
-            status                   : client.status,
-            status_label             : client.lkp_client_status.display_value,
-            legal_name               : client.legal_name,
-            short_name               : client.short_name,
-            code                     : client.code,
-            address                  : client.address,
-            website                  : client.website,
-            main_contact_name        : client.main_contact_name,
-            main_contact_email       : client.main_contact_email,
-            main_contact_phone       : client.main_contact_phone,
-            other_contact_infos      : client.other_contact_infos,
-            notes                    : client.notes,
-            create_date              : client.create_date,
-            created_by               : client.created_by,
-            change_date              : client.change_date,
-            changed_by               : client.changed_by
-        }
+        return ToDisplayClientDO(client);
     }
     catch(error:any) {
         logError('F',"Echec : Retrouver un client par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
@@ -77,29 +55,7 @@ export async function getClientByCode(clientCode:string) : Promise<DisplayClient
             }
         });
         if(!client) return null;
-        return {
-            id                       : client.id,
-            systeme_scolaire_id      : client.systeme_scolaire_id,
-            systeme_scolaire_label   : client.tg_systeme_scolaire.code,
-            active                   : client.active,
-            active_label             : (client.active)?("Actif"):("Inactif"),
-            status                   : client.status,
-            status_label             : client.lkp_client_status.display_value,
-            legal_name               : client.legal_name,
-            short_name               : client.short_name,
-            code                     : client.code,
-            address                  : client.address,
-            website                  : client.website,
-            main_contact_name        : client.main_contact_name,
-            main_contact_email       : client.main_contact_email,
-            main_contact_phone       : client.main_contact_phone,
-            other_contact_infos      : client.other_contact_infos,
-            notes                    : client.notes,
-            create_date              : client.create_date,
-            created_by               : client.created_by,
-            change_date              : client.change_date,
-            changed_by               : client.changed_by
-        }
+        return ToDisplayClientDO(client);
     }
     catch(error:any) {
         logError('F',"Echec : Retrouver un client par son code",ErrorOrigin + " - " + functionName, error.message, false);
@@ -453,7 +409,14 @@ export async function getClientEcoleSalleClasses(clientId:string, ecoleId:string
         const salleClasses = await prisma.sgs_salle_classe.findMany({
             where : {
                 ecole_id : ecoleId,
-                annee_scolaire_id : anneeScolaire.id
+                annee_scolaire_id : anneeScolaire.id,
+                sgs_ecole : {
+                    sgs_client_ecole : {
+                        some : {
+                            client_id : clientId
+                        }
+                    }
+                }
             }
         });
         for(const salleClasse of salleClasses) {
@@ -491,31 +454,6 @@ export async function getClientSalleClasses(clientId:string) : Promise<DisplaySa
         return [];
     }
 }
-
-/*
-export async function getClientInscriptions(clientId:string) : Promise<DisplayInscriptionDO[]> {
-    const functionName = "getClientSalleClasses";
-    try {
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        let listInscriptions:DisplayInscriptionDO[] = [];
-        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
-        if(anneeScolaire === null) return [];
-        const listEcoles = await getClientEcoles(clientId);
-        if (listEcoles.length === 0) return [];
-        for(const ecole of listEcoles) {
-            const salleClasses = await getClientEcoleSalleClasses(clientId, ecole.id);
-            listSallesClasses = [...listSallesClasses, ...salleClasses];
-        }
-        return [... new Set(listSallesClasses)];
-    }
-    catch(error:any) {
-        logError('F',"Echec : Lister les classes d'un client ",ErrorOrigin + " - " + functionName, error.message, false);
-        return [];
-    }
-}
-    */
-
 
 
 export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<DisplayEnseignantDO[]> {
@@ -1317,29 +1255,7 @@ export async function getClientEcolesOverviews(clientId:string) : Promise<Overvi
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
-/*export async function buildEcoleOverview(ecoleId:string) : Promise<overviewEcoleDO> {
-    const functionName = "getClientEcoleOverview";
-    try {
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const ecole = await getEcoleById(ecoleId);
-        if (!ecole || ecole === null) throw new Error("Identifiant Ecole Incorrect");
-        const salleclasses = await getClientEcoleSalleclasses(clientId, ecoleId);
-        const enseignants = await getClientEcoleEnseignants(clientId, ecoleId);
-        const eleves = await getClientEcoleEleves(clientId, ecoleId);
-        return {
-            ecole : ecole,
-            numberSalleClasses : salleclasses.length,
-            numberEnseignants : enseignants.length,
-            numberEleves : eleves.length,
-        }
 
-    }
-    catch(error:any) {
-        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, true);
-        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
-    }
-}*/
 //#endregion building overviews
 
 
