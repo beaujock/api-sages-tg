@@ -2,7 +2,7 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
 import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayClientEcoleDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
-import { OverviewEcoleDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
+import { OverviewEcoleDO, OverviewSalleClasseDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
 import { getAnneeScolaireById, getRoleByCode } from "../ALL_USAGE/SagesTgFactory";
@@ -1253,6 +1253,60 @@ export async function getEcoleOverview(clientId:string, ecoleId:string) : Promis
     }
     catch(error:any) {
         logError('F',"Echec : Générer la vue d'ensemble d'une école",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
+export async function getSalleClasseOverview(clientId:string, ecoleId:string, salleClasseId:string) : Promise<OverviewSalleClasseDO|null> {
+    const functionName = "getSalleClasseOverview";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const salleClasse = await prisma.sgs_salle_classe.findFirst({
+            where : {
+                id : salleClasseId,
+                ecole_id : ecoleId,
+                sgs_ecole : {
+                    sgs_client_ecole : {
+                        some : {
+                            client_id : clientId
+                        }
+                    }
+                }
+            },
+            include : {
+                tg_classe : true
+            }
+        });
+        if (!salleClasse) return null;
+        const [enseignants, eleves] = await Promise.all([
+            prisma.sgs_portfolio_enseignant.findMany({
+                where : {
+                    sgs_salle_classe_matiere : {
+                        salle_classe_id : salleClasseId
+                    }
+                },
+                select : { enseignant_id : true },
+                distinct : ['enseignant_id']
+            }),
+            prisma.sgs_inscription.findMany({
+                where : {
+                    salle_classe_id : salleClasseId
+                },
+                select : { eleve_id : true },
+                distinct : ['eleve_id']
+            })
+        ]);
+        return {
+            id                      : salleClasse.id,
+            short_name              : salleClasse.tg_classe.short_name,
+            code                    : salleClasse.code,
+            number_enseignants      : enseignants.length,
+            number_eleves           : eleves.length
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Générer la vue d'ensemble d'une classe",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
