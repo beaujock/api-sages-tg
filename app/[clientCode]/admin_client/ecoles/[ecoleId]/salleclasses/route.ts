@@ -14,12 +14,8 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
-        const ecole = await getEcoleById(client.id);
-        /*
-        const anneeScolaire = await getClientAnneeScolaire(client.id);
-        if (anneeScolaire === null) return NextResponse.json({message : "Aucune année scolaire en cours. Contactez votre administrateur"}, { status: 400 });
-        if (!ecole || ecole === null) return NextResponse.json({message : "Ecole non trouvée. Contactez votre administrateur"}, { status: 400 });
-        */
+        const ecole = await getEcoleById(ecoleId);
+        if (ecole === null) return NextResponse.json({message : "Requête invalide (Identification de l'ecole incorrect)"}, { status: 400 });
         const salleclasses = await getClientEcoleSalleClasses(client.id, ecoleId);
         return NextResponse.json({ecole: ecole, salleClasses: salleclasses}, { status: 200 });
     }

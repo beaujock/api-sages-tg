@@ -65,11 +65,6 @@ export type DisplayEcoleDO = {
     changed_by              : string|null;
 }
 
-export type DisplayClientEcoleDO = {
-    id                      : string;
-    client_label            : string;
-    short_name              : string;
-}
 //#endregion 
 
 //#region SalleClasse Displays
@@ -90,12 +85,6 @@ export type DisplaySalleClasseDO = {
     changed_by               : string|null;
 }
 
-export type DisplayEcoleSalleClasseDO = {
-    id                       : string;
-    ecole_label              : string;
-    classe_label             : string;
-    code                     : string;
-}
 //#endregion 
 
 //#region Eleve Displays
@@ -116,25 +105,6 @@ export type DisplayEleveDO = {
     created_by      : string;
     change_date     : Date|null;
     changed_by      : string|null;
-}
-
-export type DisplayEcoleSalleClasseEleveDO = {
-    id                  : string;
-    ecole_label         : string;
-    salle_classe_label  : string;
-    matricule           : string;
-    last_name           : string;
-    first_name          : string;
-    gender              : string;
-}
-
-export type DisplaySalleClasseEleveDO = {
-    id                  : string;
-    salle_classe_label  : string;
-    matricule           : string;
-    last_name           : string;
-    first_name          : string;
-    gender              : string;
 }
 
 //#endregion
@@ -178,24 +148,6 @@ export type DisplayInscriptionDO = {
     changed_by              : string|null;
 }
 
-export type DisplayEcoleSalleClasseInscriptionDO = {
-    id                      : string;
-    ecole_label             : string;
-    salle_classe_label      : string;
-    eleve_label             : string;
-    registration_date       : Date;
-    registration_status     : string;
-    registration_status_label : string;
-}
-
-export type DisplaySalleClasseInscriptionDO = {
-    id                      : string;
-    salle_classe_label      : string;
-    eleve_label             : string;
-    registration_date       : Date;
-    registration_status     : string;
-    registration_status_label : string;
-}
 //#endregion
 
 //#region Annee Acolaire Displays
