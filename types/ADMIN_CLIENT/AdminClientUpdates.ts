@@ -15,3 +15,8 @@ export type UpdateEcoleDO = {
     notes                   : string|null;
 }
 //#endregion
+
+export type UpdateClientSettings = {
+    client_id           : string;
+    annee_scolaire_id   : string;
+}

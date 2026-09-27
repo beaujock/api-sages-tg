@@ -7,7 +7,7 @@ import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} fr
 import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
 import { getAnneeScolaireById, getRoleByCode } from "../ALL_USAGE/SagesTgFactory";
 import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/AdminClientUpdates";
-import { ClientSettingsDO } from "@/types/ADMIN_CLIENT/AdminClientSettings";
+import { ClientSettingsDO, ToClientSettingsDO } from "@/types/ADMIN_CLIENT/AdminClientSettings";
 import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
 
@@ -1300,6 +1300,36 @@ export async function updateEcole(clientId:string, ecoleData: UpdateEcoleDO, use
         });
         if (!updatedEcole || updatedEcole === null) return null;
         return ToDisplayEcoleDO(updatedEcole);
+    }
+    catch(error:any) {
+        logError('F',"Echec : Mise à jour d'une école ",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
+export async function updateClientSettings(clientId:string, anneescolaireId:string, username : string) : Promise<ClientSettingsDO|null> {
+    const functionName = "updateClientSettings";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const clientSetting = await prisma.sgs_client_setting.findFirst({
+            where : {
+                client_id : clientId
+            }
+        });
+        if (!clientSetting || clientSetting===null) return null;
+        const updatedSetting = await prisma.sgs_client_setting.update({
+            where : {
+                id : clientSetting.id
+            },
+            data : {
+                anneescolaire_id : anneescolaireId,
+                change_date             : new Date(),
+                changed_by              : username
+            }
+        });
+        if (!updatedSetting || updatedSetting === null) return null;
+        return ToClientSettingsDO(updatedSetting);
     }
     catch(error:any) {
         logError('F',"Echec : Mise à jour d'une école ",ErrorOrigin + " - " + functionName, error.message, false);
