@@ -134,6 +134,54 @@ export async function getEcoleSalleClasseById(clientId:string, ecoleId:string, s
     }
 }
 
+export async function getEcoleSalleClasseByCode(clientId:string, ecoleId:string, salleClasseCode:string) : Promise<DisplaySalleClasseDO|null> {
+    const functionName = "getEcoleSalleClasseById";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const salleClasse = await prisma.sgs_salle_classe.findFirst({
+            where : {
+                code : salleClasseCode,
+                ecole_id : ecoleId,
+                sgs_ecole : {
+                    sgs_client_ecole : {
+                        some : {
+                            client_id : clientId
+                        }
+                    }
+                }
+            },
+            include : {
+                tg_annee_scolaire : true,
+                tg_classe : true,
+                sgs_ecole : true
+            }
+        });
+        if(!salleClasse) return null;
+        return {
+            id                       : salleClasse.id,
+            ecole_id                 : salleClasse.ecole_id,
+            ecole_label              : salleClasse.sgs_ecole.short_name === null ? salleClasse.sgs_ecole.full_name : salleClasse.sgs_ecole.short_name,
+            annee_scolaire_id        : salleClasse.annee_scolaire_id,
+            annee_scolaire_label     : getYear(salleClasse.tg_annee_scolaire.start_date).toString() + "-" + getYear(salleClasse.tg_annee_scolaire.end_date).toString(),
+            classe_id                : salleClasse.classe_id,
+            classe_label             : salleClasse.tg_classe.code,
+            code                     : salleClasse.code,
+            description              : salleClasse.description,
+            notes                    : salleClasse.notes,
+            create_date              : salleClasse.create_date,
+            created_by               : salleClasse.created_by,
+            change_date              : salleClasse.change_date,
+            changed_by               : salleClasse.changed_by
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Retrouver une classe par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
+
 
 export async function getEleveById(clientId:string, eleveId:string) : Promise<DisplayEleveDO|null> {
     const functionName = "getEleveById";
