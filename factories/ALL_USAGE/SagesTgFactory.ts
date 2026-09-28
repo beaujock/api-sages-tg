@@ -1,8 +1,8 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { logError } from "./allUsageFactories";
-import { InfoAnneeScolaireDO, InfoGenderDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoResourceTypeDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
-import { DisplayAnneeScolaireDO, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
+import { InfoAnneeScolaireDO, InfoClasseDO, InfoGenderDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoResourceTypeDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
+import { DisplayAnneeScolaireDO, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/Displays";
 import { tg_role } from "@/lib/generated/prisma/client";
 const ErrorOrigin = "SagesTgFactory";
 
@@ -293,6 +293,35 @@ export async function getRoleByCode(roleCode:string) : Promise<tg_role|null> {
     catch(error:any) {
         logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, false);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
+export async function getEnseignementClasses(enseignementId:string) : Promise<InfoClasseDO[]> {
+    const functionName = "getEnseignementClasses";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const listClasses:InfoClasseDO[] = [];
+        const classes = await prisma.tg_classe.findMany({
+            where : {
+                tg_niveau : {
+                    enseignement_id : enseignementId
+                }
+            }
+        });
+        if (!classes || classes.length === 0) return [];
+        for (const cl of classes) {
+            listClasses.push({
+                id : cl.id,
+                short_name : cl.short_name
+            });
+        }
+
+        return listClasses;
+    }
+    catch(error:any) {
+        logError('F',"Echec : Lister les classes d'un senseignement",ErrorOrigin + " - " + functionName, error.message, false);
+        return [];
     }
 }
 

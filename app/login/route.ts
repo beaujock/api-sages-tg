@@ -4,7 +4,7 @@ import { getUser, getUserClient, getUserResources, getUserRoles } from "@/factor
 import { generateToken } from "@/lib/auth";
 import { SagesMenuItem } from "@/types/USERX/UserTypes";
 import ms, { StringValue } from 'ms'
-import { getClientRoleMenuItems } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getRoleMenuItems } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 export async function POST(request:NextRequest) {
     try {
@@ -29,7 +29,7 @@ export async function POST(request:NextRequest) {
         let menuItems: SagesMenuItem[] = [];
         if (userRoles && userRoles.length === 1) {
             const roleCode = userRoles[0];
-            menuItems = await getClientRoleMenuItems(userClient.code.toLowerCase(), roleCode.toUpperCase());
+            menuItems = await getRoleMenuItems(userClient.id, roleCode.toUpperCase());
         };
         const cookie_name = process.env.COOKIE_NAME;
         const effective_date_time = new Date(Date.now());

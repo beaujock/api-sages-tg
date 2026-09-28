@@ -13,7 +13,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const requestedRouteInfos = await getClientUserRouteRequestInfos(request, clientCode, "ADMIN_CLIENT","CLIENT");
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
-        const ecole = await getEcoleById(ecoleId);
+        const ecole = await getEcoleById(requestedRouteInfos.client.id, ecoleId);
         return NextResponse.json({ecole : ecole}, { status: 200 });
     }
     catch(error:any) {

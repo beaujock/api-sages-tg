@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
+import { CreateSalleClasseDO } from "@/types/ADMIN_CLIENT/Creates";
 import { createSalleClasse, getClientEcoleSalleClasseByCode } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
@@ -16,7 +16,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 401 });
         const body = await request.json();
         if(!body) return NextResponse.json("Requête invalide", { status: 400 });
-        const createSalleClasseData:AdminClientCreateSalleClasseDO = {
+        const createSalleClasseData:CreateSalleClasseDO = {
             ecole_id                 : body.ecole_id,
             classe_id                : body.classe_id,
             code                     : body.code,

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
 import { updateEcole } from "@/factories/ADMIN_CLIENT/clientFactory";
-import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/AdminClientUpdates";
+import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/Updates";
 
 
 export async function PATCH(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string}> }) {
@@ -31,6 +31,7 @@ export async function PATCH(request:NextRequest, { params }: { params: Promise<{
         };
         
         const updatedEcole = await updateEcole(requestedRouteInfos.client.id, ecoleUpdateRequest, requestedRouteInfos.user.user_name);
+        if (updatedEcole === null) return NextResponse.json({message : "École non trouvée"}, { status: 404 });
         return NextResponse.json({ecole : updatedEcole}, { status: 200 });
     }
     catch(error:any) {

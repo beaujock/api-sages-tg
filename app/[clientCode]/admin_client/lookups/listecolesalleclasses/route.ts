@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getClientEcoleSalleClasses } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getEcoleSalleClasses } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
@@ -14,7 +14,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
-        const clienEcoleSalleClasses = await getClientEcoleSalleClasses(client.id, body.ecoleId)
+        const clienEcoleSalleClasses = await getEcoleSalleClasses(client.id, body.ecoleId)
         return NextResponse.json({salleclasses: clienEcoleSalleClasses}, { status: 200 });
     }
     catch(error:any) {

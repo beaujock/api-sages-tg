@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InfoClientMenuDO, InfoMenuItemLinkActionDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { getAllRoles, getModuleRoleMenuActions, getModuleRoleMenuItems, getModuleRoleMenuLinks } from "../ALL_USAGE/SagesTgFactory";
-import { getClientModules } from "../ADMIN_CLIENT/clientFactory";
+import { getModules } from "../ADMIN_CLIENT/clientFactory";
 
 
 const ErrorOrigin = "ONBOARDING : onboardingFactory";
@@ -933,7 +933,7 @@ export async function createClientMenu(clientId:string) : Promise<InfoClientMenu
             links   : [],
             actions : []
         };
-        const modules = await getClientModules(clientId);
+        const modules = await getModules(clientId);
         if (!modules || modules.length === 0) return emptyMenu;
         const roles = await getAllRoles();
         if (!roles || roles.length === 0) return emptyMenu;

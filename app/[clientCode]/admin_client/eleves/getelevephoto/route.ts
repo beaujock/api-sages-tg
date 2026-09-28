@@ -17,7 +17,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         const requestedRouteInfos = await getClientUserRouteRequestInfos(request, clientCode, "ADMIN_CLIENT","CLIENT");
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
-        const ecole = await getEcoleById(ecoleId);
+        const ecole = await getEcoleById(requestedRouteInfos.client.id, ecoleId);
         if (ecole === null) return NextResponse.json({message : "Identification de l'école non valide"}, { status: 400 });
         const photoURL = await getElevePhotoUrl(clientCode,ecole.code, eleveMatricule);
         

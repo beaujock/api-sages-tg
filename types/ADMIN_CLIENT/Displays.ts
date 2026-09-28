@@ -3,7 +3,7 @@ import { lkp_client_status, sgs_client, sgs_ecole, sgs_eleve, sgs_salle_classe, 
 import { prisma, verifyAndSetPrismaConnection } from "@/lib/prisma";
 import { getYear } from "date-fns";
 
-const ErrorOrigin = "AdminClientDisplays";
+const ErrorOrigin = "ADMIN_CLIENT : Displays";
 
 //#region User Displays
 export type DisplayUserDO = {

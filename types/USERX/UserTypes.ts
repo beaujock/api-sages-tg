@@ -1,5 +1,5 @@
 import { sgs_client, sgs_client_module, sgs_client_module_role_menu_item, sgs_user } from "@/lib/generated/prisma/client";
-import { DisplayClientDO, DisplayEcoleDO } from "../ADMIN_CLIENT/AdminClientDisplays";
+import { DisplayClientDO, DisplayEcoleDO } from "../ADMIN_CLIENT/Displays";
 
 
 export type UserBaseInfos = {

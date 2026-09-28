@@ -2,7 +2,7 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { ResourceCombo, UserBaseInfos, UserInfos, UserRoleInfos } from "@/types/USERX/UserTypes";
 import { logError } from "./utilitiesFactory";
 import { sgs_client, sgs_user } from "@/lib/generated/prisma/client";
-import { getClientRoleMenuItems } from "./ADMIN_CLIENT/clientFactory";
+import { getRoleMenuItems } from "./ADMIN_CLIENT/clientFactory";
 
 const ErrorOrigin = "userFactory";
 
@@ -284,7 +284,7 @@ export async function getUserRoleConnectionInfos(clientCode:string, userId : str
         const roles = await getUserRoles(userId);
         if (!roles.includes(roleCode.toUpperCase())) return null;
         const resources = await getUserResources(userId);
-        const menuItems = await getClientRoleMenuItems(clientCode.toLowerCase(), roles[0].toUpperCase());
+        const menuItems = await getRoleMenuItems(userClient.id, roles[0].toUpperCase());
         return {
             id : user.id,
             user_name : user.user_name,
@@ -315,7 +315,7 @@ export async function getUserConnectionInfos(clientCode:string, userId : string)
         if (!user || user===null) return null;
         const roles = await getUserRoles(userId);
         const resources = await getUserResources(userId);
-        const menuItems = await getClientRoleMenuItems(clientCode.toLowerCase(), roles[0].toUpperCase());
+        const menuItems = await getRoleMenuItems(userClient.id, roles[0].toUpperCase());
         return {
             id : user.id,
             user_name : user.user_name,

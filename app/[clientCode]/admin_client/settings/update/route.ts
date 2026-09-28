@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos} from "@/lib/auth";
-import { getClientSettings, updateClientSettings } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getSettings, updateSettings } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function PATCH(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
@@ -18,7 +18,7 @@ export async function PATCH(request:NextRequest, { params }: { params: Promise<{
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
 
-        const updatedSettings = await updateClientSettings(client.id, anneeScolaireId, requestedRouteInfos.user.user_name);
+        const updatedSettings = await updateSettings(client.id, anneeScolaireId, requestedRouteInfos.user.user_name);
         return NextResponse.json({settings: updatedSettings}, { status: 200 });
         //return NextResponse.json({client: client, clientEcolesOverviews: clientEcolesOverview}, { status: 200 });
     }

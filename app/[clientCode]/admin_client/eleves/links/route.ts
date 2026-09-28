@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getClientMenuItemLinks } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getMenuItemLinks } from "@/factories/ADMIN_CLIENT/clientFactory";
 import { getRoleByCode } from "@/factories/ALL_USAGE/SagesTgFactory";
 
 
@@ -15,7 +15,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const client = requestedRouteInfos.client;
         const role = await getRoleByCode("ADMIN_CLIENT");
         if (!role) return NextResponse.json({message : "Role non trouvé. Contactez votre administrateur"}, { status: 400 });
-        const links = await getClientMenuItemLinks(client.id, role.id, "ELEVES");
+        const links = await getMenuItemLinks(client.id, role.id, "ELEVES");
         return NextResponse.json({links: links}, { status: 200 });
     }
     catch(error:any) {

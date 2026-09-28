@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
-import { createEleve } from "@/factories/ADMIN_CLIENT/clientFactory";
-
+import { CreateEleveDO, CreateInscriptionDO } from "@/types/ADMIN_CLIENT/Creates";
+import { createEleve, createInscription } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {
     try {
         const body = await request.json();
         if(!body) return NextResponse.json("Requête invalide", { status: 400 });
-        const eleveData:AdminClientCreateEleveDO = {
+        const eleveData:CreateEleveDO = {
             last_name       : body.eleveData.last_name,
             first_name      : body.eleveData.first_name,
             other_names     : body.eleveData.other_names,
@@ -22,7 +21,7 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
             notes           : body.eleveData.notes,
             created_by      : "SAGES"
         };
-        const inscriptionData:AdminClientCreateInscriptionDO = {
+        const inscriptionData:CreateInscriptionDO = {
             salle_classe_id : body.inscriptionData.salleclasseId,
             eleve_id : "",
             registration_date : new Date(body.inscriptionData.registrationDate),
@@ -42,8 +41,12 @@ export async function POST(request:NextRequest, { params }: { params: Promise<{c
         const client = requestedRouteInfos.client;
         eleveData.created_by = requestedRouteInfos.user.user_name;
         inscriptionData.created_by = requestedRouteInfos.user.user_name;
-        const createdEleve = await createEleve(client.id, eleveData, inscriptionData);
-        return NextResponse.json({eleve: createdEleve}, { status: 200 });
+        const createdEleve = await createEleve(client.id, eleveData);
+        if (createdEleve === null) return NextResponse.json({message : "Echec de la création de l'élève"}, { status: 500 });
+        inscriptionData.eleve_id = createdEleve.id;
+        const createdInscription = await createInscription(client.id, inscriptionData);
+        if (createdInscription === null) return NextResponse.json({message : "Echec de l'inscription de l'élève"}, { status: 500 });
+        return NextResponse.json({eleve: createdEleve, inscription: createdInscription}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Créer un élève",(new URL(request.url)).pathname, error.message, false);

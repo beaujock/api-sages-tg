@@ -1,13 +1,13 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
-import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayClientDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/AdminClientDisplays";
-import { OverviewEcoleDO, OverviewSalleClasseDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/AdminClientOverviews";
+import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayClientDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/Displays";
+import { OverviewEcoleDO, OverviewSalleClasseDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/Overviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} from "@/types/ALL_USAGE/AllUsagesTypes";
-import { AdminClientCreateEleveDO, AdminClientCreateInscriptionDO, AdminClientCreateSalleClasseDO } from "@/types/ADMIN_CLIENT/AdminClientCreates";
-import { getAnneeScolaireById, getRoleByCode } from "../ALL_USAGE/SagesTgFactory";
-import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/AdminClientUpdates";
-import { ClientSettingsDO, ToClientSettingsDO } from "@/types/ADMIN_CLIENT/AdminClientSettings";
+import { CreateEleveDO, CreateInscriptionDO, CreateSalleClasseDO } from "@/types/ADMIN_CLIENT/Creates";
+import { getAnneeScolaireById, getEnseignementClasses, getRoleByCode } from "../ALL_USAGE/SagesTgFactory";
+import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/Updates";
+import { ClientSettingsDO, ToClientSettingsDO } from "@/types/ADMIN_CLIENT/Settings";
 import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
 
@@ -63,14 +63,19 @@ export async function getClientByCode(clientCode:string) : Promise<DisplayClient
     }
 }
 
-export async function getEcoleById(ecoleId:string) : Promise<DisplayEcoleDO|null> {
+export async function getEcoleById(clientId:string, ecoleId:string) : Promise<DisplayEcoleDO|null> {
     const functionName = "getEcoleById";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const ecole = await prisma.sgs_ecole.findFirst({
             where : {
-                id : ecoleId
+                id : ecoleId,
+                sgs_client_ecole : {
+                    some : {
+                        client_id : clientId
+                    }
+                }
             }
         });
         if(!ecole) return null;
@@ -82,90 +87,8 @@ export async function getEcoleById(ecoleId:string) : Promise<DisplayEcoleDO|null
     }
 }
 
-export async function getSalleClasseById(salleClasseId:string) : Promise<DisplaySalleClasseDO|null> {
-    const functionName = "getSalleClasseById";
-    try {
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const salleClasse = await prisma.sgs_salle_classe.findUnique({
-            where : {
-                id : salleClasseId
-            },
-            include : {
-                tg_annee_scolaire : true,
-                tg_classe : true,
-                sgs_ecole : true
-            }
-        });
-        if(!salleClasse) return null;
-        return {
-            id                       : salleClasse.id,
-            ecole_id                 : salleClasse.ecole_id,
-            ecole_label              : salleClasse.sgs_ecole.short_name === null ? salleClasse.sgs_ecole.full_name : salleClasse.sgs_ecole.short_name,
-            annee_scolaire_id        : salleClasse.annee_scolaire_id,
-            annee_scolaire_label     : getYear(salleClasse.tg_annee_scolaire.start_date).toString() + "-" + getYear(salleClasse.tg_annee_scolaire.end_date).toString(),
-            classe_id                : salleClasse.classe_id,
-            classe_label             : salleClasse.tg_classe.code,
-            code                     : salleClasse.code,
-            description              : salleClasse.description,
-            notes                    : salleClasse.notes,
-            create_date              : salleClasse.create_date,
-            created_by               : salleClasse.created_by,
-            change_date              : salleClasse.change_date,
-            changed_by               : salleClasse.changed_by
-        }
-    }
-    catch(error:any) {
-        logError('F',"Echec : Retrouver une classe par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
-        return null;
-    }
-}
-
-export async function getClientEcoleSalleClasseByCode(clientId:string, ecoleId:string, salleClasseCode:string) : Promise<DisplaySalleClasseDO|null> {
-    const functionName = "getClientEcoleSalleClasseByCode";
-    try {
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
-        if (anneeScolaire === null) return null;
-        const salleClasse = await prisma.sgs_salle_classe.findFirst({
-            where : {
-                code : salleClasseCode,
-                ecole_id : ecoleId,
-                annee_scolaire_id : anneeScolaire.id
-            },
-            include : {
-                tg_annee_scolaire : true,
-                tg_classe : true,
-                sgs_ecole : true
-            }
-        });
-        if(!salleClasse) return null;
-        return {
-            id                       : salleClasse.id,
-            ecole_id                 : salleClasse.ecole_id,
-            ecole_label              : salleClasse.sgs_ecole.short_name === null ? salleClasse.sgs_ecole.full_name : salleClasse.sgs_ecole.short_name,
-            annee_scolaire_id        : salleClasse.annee_scolaire_id,
-            annee_scolaire_label     : getYear(salleClasse.tg_annee_scolaire.start_date).toString() + "-" + getYear(salleClasse.tg_annee_scolaire.end_date).toString(),
-            classe_id                : salleClasse.classe_id,
-            classe_label             : salleClasse.tg_classe.code,
-            code                     : salleClasse.code,
-            description              : salleClasse.description,
-            notes                    : salleClasse.notes,
-            create_date              : salleClasse.create_date,
-            created_by               : salleClasse.created_by,
-            change_date              : salleClasse.change_date,
-            changed_by               : salleClasse.changed_by
-        }
-    }
-    catch(error:any) {
-        logError('F',"Echec : Retrouver une classe par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
-        return null;
-    }
-}
-
-export async function getClientEcoleSalleClasse(clientId:string, ecoleId:string, salleClasseId:string) : Promise<DisplaySalleClasseDO|null> {
-    const functionName = "getClientEcoleSalleClasse";
+export async function getEcoleSalleClasseById(clientId:string, ecoleId:string, salleClasseId:string) : Promise<DisplaySalleClasseDO|null> {
+    const functionName = "getEcoleSalleClasseById";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -206,19 +129,33 @@ export async function getClientEcoleSalleClasse(clientId:string, ecoleId:string,
         }
     }
     catch(error:any) {
-        logError('F',"Echec : Retrouver une classe d'une école d'un client",ErrorOrigin + " - " + functionName, error.message, false);
+        logError('F',"Echec : Retrouver une classe par son identifiant",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
 
-export async function getEleveById(eleveId:string) : Promise<DisplayEleveDO|null> {
+
+export async function getEleveById(clientId:string, eleveId:string) : Promise<DisplayEleveDO|null> {
     const functionName = "getEleveById";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const eleve = await prisma.sgs_eleve.findUnique({
+        const eleve = await prisma.sgs_eleve.findFirst({
             where : {
-                id : eleveId
+                id : eleveId,
+                sgs_inscription : {
+                    some : {
+                        sgs_salle_classe : {
+                            sgs_ecole : {
+                                sgs_client_ecole : {
+                                    some : {
+                                        client_id : clientId
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             },
             include : {
                 lkp_gender : true
@@ -250,14 +187,27 @@ export async function getEleveById(eleveId:string) : Promise<DisplayEleveDO|null
     }
 }
 
-export async function getEleveByMatricule(matriculeCode:string) : Promise<DisplayEleveDO|null> {
+export async function getEleveByMatricule(clientId:string, matriculeCode:string) : Promise<DisplayEleveDO|null> {
     const functionName = "getEleveByMatricule";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const eleve = await prisma.sgs_eleve.findUnique({
+        const eleve = await prisma.sgs_eleve.findFirst({
             where : {
-                matricule : matriculeCode
+                matricule : matriculeCode,
+                sgs_inscription : {
+                    some : {
+                        sgs_salle_classe : {
+                            sgs_ecole : {
+                                sgs_client_ecole : {
+                                    some : {
+                                        client_id : clientId
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             },
             include : {
                 lkp_gender : true
@@ -289,14 +239,23 @@ export async function getEleveByMatricule(matriculeCode:string) : Promise<Displa
     }
 }
 
-export async function getInscriptionById(inscriptionId:string) : Promise<DisplayInscriptionDO|null> {
+export async function getInscriptionById(clientId:string, inscriptionId:string) : Promise<DisplayInscriptionDO|null> {
     const functionName = "getInscriptionById";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const inscription = await prisma.sgs_inscription.findUnique({
+        const inscription = await prisma.sgs_inscription.findFirst({
             where : {
-                id : inscriptionId
+                id : inscriptionId,
+                sgs_salle_classe : {
+                    sgs_ecole : {
+                        sgs_client_ecole : {
+                            some : {
+                                client_id : clientId
+                            }
+                        }
+                    }
+                }
             },
             include : {
                 sgs_salle_classe : true,
@@ -328,14 +287,29 @@ export async function getInscriptionById(inscriptionId:string) : Promise<Display
     }
 }
 
-export async function getEnseignantById(enseignantId:string) : Promise<DisplayEnseignantDO|null> {
+export async function getEnseignantById(clientId:string, enseignantId:string) : Promise<DisplayEnseignantDO|null> {
     const functionName = "getEnseignantById";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const enseignant = await prisma.sgs_enseignant.findUnique({
+        const enseignant = await prisma.sgs_enseignant.findFirst({
             where : {
-                id : enseignantId
+                id : enseignantId,
+                sgs_portfolio_enseignant : {
+                    some : {
+                        sgs_salle_classe_matiere : {
+                            sgs_salle_classe : {
+                                sgs_ecole : {
+                                    sgs_client_ecole : {
+                                        some : {
+                                            client_id : clientId
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             },
             include : {
                 lkp_gender : true
@@ -367,13 +341,11 @@ export async function getEnseignantById(enseignantId:string) : Promise<DisplayEn
     }
 }
 
-export async function getClientEcoles(clientId:string) : Promise<DisplayEcoleDO[]> {
-    const functionName = "getClientEcoles";
+export async function getEcoles(clientId:string) : Promise<DisplayEcoleDO[]> {
+    const functionName = "getEcoles";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        //const client = await getClientById(clientId);
-        //if ( !client || client === null ) throw new Error("Client inconnu");
         const listEcoles:DisplayEcoleDO[] = [];
         const clientEcoles = await prisma.sgs_client_ecole.findMany({
             where : {
@@ -398,8 +370,8 @@ export async function getClientEcoles(clientId:string) : Promise<DisplayEcoleDO[
     }
 }
 
-export async function getClientEcoleSalleClasses(clientId:string, ecoleId:string) : Promise<DisplaySalleClasseDO[]> {
-    const functionName = "getClientEcoleSalleClasses";
+export async function getEcoleSalleClasses(clientId:string, ecoleId:string) : Promise<DisplaySalleClasseDO[]> {
+    const functionName = "getEcoleSalleClasses";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -420,7 +392,7 @@ export async function getClientEcoleSalleClasses(clientId:string, ecoleId:string
             }
         });
         for(const salleClasse of salleClasses) {
-            const salleClasseDetails = await getSalleClasseById(salleClasse.id);
+            const salleClasseDetails = await getEcoleSalleClasseById(clientId, ecoleId, salleClasse.id);
             if (salleClasseDetails) {
                 listSallesClasses.push(salleClasseDetails);
             }
@@ -433,18 +405,18 @@ export async function getClientEcoleSalleClasses(clientId:string, ecoleId:string
     }
 }
 
-export async function getClientSalleClasses(clientId:string) : Promise<DisplaySalleClasseDO[]> {
-    const functionName = "getClientSalleClasses";
+export async function getSalleClasses(clientId:string) : Promise<DisplaySalleClasseDO[]> {
+    const functionName = "getSalleClasses";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         let listSallesClasses:DisplaySalleClasseDO[] = [];
         const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
         if(anneeScolaire === null) return [];
-        const listEcoles = await getClientEcoles(clientId);
+        const listEcoles = await getEcoles(clientId);
         if (listEcoles.length === 0) return [];
         for(const ecole of listEcoles) {
-            const salleClasses = await getClientEcoleSalleClasses(clientId, ecole.id);
+            const salleClasses = await getEcoleSalleClasses(clientId, ecole.id);
             listSallesClasses = [...listSallesClasses, ...salleClasses];
         }
         return [... new Set(listSallesClasses)];
@@ -456,7 +428,7 @@ export async function getClientSalleClasses(clientId:string) : Promise<DisplaySa
 }
 
 
-export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<DisplayEnseignantDO[]> {
+export async function getSalleClasseEnseignants(clientId:string, salleclasseId:string) : Promise<DisplayEnseignantDO[]> {
     const functionName = "getSalleClasseEnseignants";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -465,7 +437,16 @@ export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<
         const portfolioEnseignants = await prisma.sgs_portfolio_enseignant.findMany({
             where : {
                 sgs_salle_classe_matiere : {
-                    salle_classe_id : salleclasseId
+                    salle_classe_id : salleclasseId,
+                    sgs_salle_classe : {
+                        sgs_ecole : {
+                            sgs_client_ecole : {
+                                some : {
+                                    client_id : clientId
+                                }
+                            }
+                        }
+                    }
                 }
             },
             include : {
@@ -475,7 +456,7 @@ export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<
         if (portfolioEnseignants.length === 0) return [];
         for (const portfolioEnseignant of portfolioEnseignants) {
             if (portfolioEnseignant.sgs_enseignant) {
-                const enseignantDetails = await getEnseignantById(portfolioEnseignant.sgs_enseignant.id);
+                const enseignantDetails = await getEnseignantById(clientId, portfolioEnseignant.sgs_enseignant.id);
                 if (enseignantDetails) {
                     listEnseignants.push(enseignantDetails);
                 }
@@ -489,16 +470,16 @@ export async function getSalleClasseEnseignants(salleclasseId:string) : Promise<
     }
 }
 
-export async function getClientEcoleEnseignants(ClientId:string, ecoleId:string) : Promise<DisplayEnseignantDO[]> {
+export async function getEcoleEnseignants(clientId:string, ecoleId:string) : Promise<DisplayEnseignantDO[]> {
     const functionName = "getEcoleEnseignants";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEnseignants:DisplayEnseignantDO[] = [];
-        const listClasses = await getClientEcoleSalleClasses(ClientId, ecoleId);
+        const listClasses = await getEcoleSalleClasses(clientId, ecoleId);
         if (listClasses.length === 0) return [];
         for (const salleClasse of listClasses) {
-            const enseignants = await getSalleClasseEnseignants(salleClasse.id);
+            const enseignants = await getSalleClasseEnseignants(clientId, salleClasse.id);
             listEnseignants.push(...enseignants);
         }
         return [...new Set(listEnseignants)];
@@ -509,16 +490,16 @@ export async function getClientEcoleEnseignants(ClientId:string, ecoleId:string)
     }
 }
 
-export async function getClientEnseignants(ClientId:string, salleclasseId:string) : Promise<DisplayEnseignantDO[]> {
-    const functionName = "getEcoleEnseignants";
+export async function getEnseignants(clientId:string) : Promise<DisplayEnseignantDO[]> {
+    const functionName = "getEnseignants";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEnseignants:DisplayEnseignantDO[] = [];
-        const listEcoles = await getClientEcoles(salleclasseId);
+        const listEcoles = await getEcoles(clientId);
         if (listEcoles.length === 0) return [];
         for (const ecole of listEcoles) {
-            const enseignants = await getClientEcoleEnseignants(ClientId, ecole.id);
+            const enseignants = await getEcoleEnseignants(clientId, ecole.id);
             listEnseignants.push(...enseignants);
         }
         return [...new Set(listEnseignants)];
@@ -529,15 +510,24 @@ export async function getClientEnseignants(ClientId:string, salleclasseId:string
     }
 }
 
-export async function getSalleclasseEleves(salleclasseId:string) : Promise<DisplayEleveDO[]> {
-    const functionName = "getSalleclasseEleves";
+export async function getSalleClasseEleves(clientId:string, salleclasseId:string) : Promise<DisplayEleveDO[]> {
+    const functionName = "getSalleClasseEleves";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEleves:DisplayEleveDO[] = [];
         const inscriptions = await prisma.sgs_inscription.findMany({
             where : {
-                salle_classe_id : salleclasseId
+                salle_classe_id : salleclasseId,
+                sgs_salle_classe : {
+                    sgs_ecole : {
+                        sgs_client_ecole : {
+                            some : {
+                                client_id : clientId
+                            }
+                        }
+                    }
+                }
             },
             include : {
                 sgs_eleve : true
@@ -545,7 +535,7 @@ export async function getSalleclasseEleves(salleclasseId:string) : Promise<Displ
         });
         for(const inscription of inscriptions) {
             if (inscription.sgs_eleve.id) {
-                const eleveDetails = await getEleveById(inscription.sgs_eleve.id);
+                const eleveDetails = await getEleveById(clientId, inscription.sgs_eleve.id);
                 if (eleveDetails) listEleves.push(eleveDetails);
             }
         }
@@ -557,18 +547,16 @@ export async function getSalleclasseEleves(salleclasseId:string) : Promise<Displ
     }
 }
 
-export async function getClientEcoleEleves(clientId:string, ecoleId:string) : Promise<DisplayEleveDO[]> {
+export async function getEcoleEleves(clientId:string, ecoleId:string) : Promise<DisplayEleveDO[]> {
     const functionName = "getEcoleEleves";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEleves:DisplayEleveDO[] = [];
-        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
-        if(anneeScolaire === null) return [];
-        const listSalleclasses = await getClientEcoleSalleClasses(clientId, ecoleId);
+        const listSalleclasses = await getEcoleSalleClasses(clientId, ecoleId);
         if(listSalleclasses.length === 0) return [];
         for (const salleclasse of listSalleclasses ) {
-            const eleves = await getSalleclasseEleves(salleclasse.id);
+            const eleves = await getSalleClasseEleves(clientId, salleclasse.id);
             listEleves.push(...eleves);
         }
         return [...new Set(listEleves)];
@@ -579,18 +567,16 @@ export async function getClientEcoleEleves(clientId:string, ecoleId:string) : Pr
     }
 }
 
-export async function getClientEleves(clientId:string) : Promise<DisplayEleveDO[]> {
-    const functionName = "getClientEleves";
+export async function getEleves(clientId:string) : Promise<DisplayEleveDO[]> {
+    const functionName = "getEleves";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const listEleves:DisplayEleveDO[] = [];
-        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
-        if(anneeScolaire === null) return [];
-        const listSalleclasses = await getClientSalleClasses(clientId);
+        const listSalleclasses = await getSalleClasses(clientId);
         if(listSalleclasses.length === 0) return [];
         for (const salleclasse of listSalleclasses ) {
-            const eleves = await getSalleclasseEleves(salleclasse.id);
+            const eleves = await getSalleClasseEleves(clientId, salleclasse.id);
             listEleves.push(...eleves);
         }
         return [...new Set(listEleves)];
@@ -625,10 +611,12 @@ export async function getEnseignantSalleClasses(clientId:string, ecoleId:string,
                         }
                     }
                 }
-            }
+            },
+            select : { salle_classe_id : true },
+            distinct : ['salle_classe_id']
         });
         for(const salleClasse of salleClasses) {
-            const salleClasseDetails = await getSalleClasseById(salleClasse.salle_classe_id);
+            const salleClasseDetails = await getEcoleSalleClasseById(clientId, ecoleId, salleClasse.salle_classe_id);
             if (salleClasseDetails) {
                 listSallesClasses.push(salleClasseDetails);
             }
@@ -668,7 +656,8 @@ export async function getEnseignantMatieres(clientId:string, ecoleId:string, ann
             },
             include : {
                 tg_matiere : true
-            }
+            },
+            distinct : ['matiere_id']
         });
         for(const matiere of matieres) {
             if (matiere.tg_matiere) {
@@ -688,18 +677,18 @@ export async function getEnseignantMatieres(clientId:string, ecoleId:string, ann
     }
 }
 
-export async function getEleveOverview(clientId:string, ecoleId:string, anneeScolaireId:string, salleClasseId:string, eleveId:string) : Promise<OverviewEleveDO|null> {
+export async function getEleveOverview(clientId:string, eleveId:string) : Promise<OverviewEleveDO|null> {
     const functionName = "getEleveOverview";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error("Aucune année scolaire en cours");
         const inscription = await prisma.sgs_inscription.findFirst({
             where : {
                 eleve_id : eleveId,
-                salle_classe_id : salleClasseId,
                 sgs_salle_classe : {
-                    ecole_id : ecoleId,
-                    annee_scolaire_id : anneeScolaireId,
+                    annee_scolaire_id : anneeScolaire.id,
                     sgs_ecole : {
                         sgs_client_ecole : {
                             some : {
@@ -717,6 +706,9 @@ export async function getEleveOverview(clientId:string, ecoleId:string, anneeSco
                         tg_annee_scolaire : true
                     }
                 }
+            },
+            orderBy : {
+                registration_date : 'desc'
             }
         });
         if(!inscription) return null;
@@ -742,18 +734,19 @@ export async function getEleveOverview(clientId:string, ecoleId:string, anneeSco
     }
 }
 
-export async function getEnseignantOverview(clientId:string, ecoleId:string, anneeScolaireId:string, enseignantId:string) : Promise<OverviewEnseignantDO|null> {
+export async function getEnseignantOverview(clientId:string, enseignantId:string) : Promise<OverviewEnseignantDO|null> {
     const functionName = "getEnseignantOverview";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const portfolioEnseignant = await prisma.sgs_portfolio_enseignant.findFirst({
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error("Aucune année scolaire en cours");
+        const portfolioEnseignants = await prisma.sgs_portfolio_enseignant.findMany({
             where : {
                 enseignant_id : enseignantId,
                 sgs_salle_classe_matiere : {
                     sgs_salle_classe : {
-                        ecole_id : ecoleId,
-                        annee_scolaire_id : anneeScolaireId,
+                        annee_scolaire_id : anneeScolaire.id,
                         sgs_ecole : {
                             sgs_client_ecole : {
                                 some : {
@@ -768,29 +761,24 @@ export async function getEnseignantOverview(clientId:string, ecoleId:string, ann
                 sgs_enseignant : true,
                 sgs_salle_classe_matiere : {
                     include : {
-                        sgs_salle_classe : {
-                            include : {
-                                sgs_ecole : true,
-                                tg_annee_scolaire : true
-                            }
-                        }
+                        sgs_salle_classe : true
                     }
                 }
             }
         });
-        if(!portfolioEnseignant) return null;
-        const enseignant = portfolioEnseignant.sgs_enseignant;
-        const salleClasses = await getEnseignantSalleClasses(clientId, ecoleId, anneeScolaireId, enseignantId);
-        const matieres = await getEnseignantMatieres(clientId, ecoleId, anneeScolaireId, enseignantId);
+        if(portfolioEnseignants.length === 0) return null;
+        const enseignant = portfolioEnseignants[0].sgs_enseignant;
+        const ecoleIds = new Set(portfolioEnseignants.map(pe => pe.sgs_salle_classe_matiere.sgs_salle_classe.ecole_id));
+        const salleClasseIds = new Set(portfolioEnseignants.map(pe => pe.sgs_salle_classe_matiere.salle_classe_id));
+        const matiereIds = new Set(portfolioEnseignants.map(pe => pe.sgs_salle_classe_matiere.matiere_id));
         return {
             id                      : enseignant.id,
             enseignant_label        : enseignant.first_name + " " + enseignant.last_name,
-            ecole_id                : portfolioEnseignant.sgs_salle_classe_matiere.sgs_salle_classe.ecole_id,
-            ecole_label             : portfolioEnseignant.sgs_salle_classe_matiere.sgs_salle_classe.sgs_ecole.short_name === null ? portfolioEnseignant.sgs_salle_classe_matiere.sgs_salle_classe.sgs_ecole.full_name : portfolioEnseignant.sgs_salle_classe_matiere.sgs_salle_classe.sgs_ecole.short_name,
-            annee_scolaire_id       : portfolioEnseignant.sgs_salle_classe_matiere.sgs_salle_classe.annee_scolaire_id,
-            annee_scolaire_label    : getYear(portfolioEnseignant.sgs_salle_classe_matiere.sgs_salle_classe.tg_annee_scolaire.start_date).toString() + "-" + getYear(portfolioEnseignant.sgs_salle_classe_matiere.sgs_salle_classe.tg_annee_scolaire.end_date).toString(),
-            number_salles_classes   : salleClasses.length,
-            number_matieres         : matieres.length,
+            annee_scolaire_id       : anneeScolaire.id,
+            annee_scolaire_label    : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString(),
+            number_ecoles           : ecoleIds.size,
+            number_salles_classes   : salleClasseIds.size,
+            number_matieres         : matiereIds.size,
             number_evaluations      : 0, // to be calculated based on evaluations data
             number_absences         : 0, // to be calculated based on absences data
             number_bulletins        : 0 // to be calculated based on bulletins data
@@ -802,8 +790,8 @@ export async function getEnseignantOverview(clientId:string, ecoleId:string, ann
     }
 }
 
-export async function getClientMenuItemLinks(clientId:string, roleId:string, menuItemDisplay:string) : Promise<InfoMenuItemLinkActionDO[]>{
-    const functionName = "getClientMenuItemLinks";
+export async function getMenuItemLinks(clientId:string, roleId:string, menuItemDisplay:string) : Promise<InfoMenuItemLinkActionDO[]>{
+    const functionName = "getMenuItemLinks";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -841,8 +829,8 @@ export async function getClientMenuItemLinks(clientId:string, roleId:string, men
     }
 }
 
-export async function getClientMenuItemActions(clientId:string, roleId:string, menuItemDisplay:string) : Promise<InfoMenuItemLinkActionDO[]> {
-    const functionName = "getClientMenuItemActions";
+export async function getMenuItemActions(clientId:string, roleId:string, menuItemDisplay:string) : Promise<InfoMenuItemLinkActionDO[]> {
+    const functionName = "getMenuItemActions";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -917,37 +905,8 @@ export async function getClientCurrentAnneeScolaire(clientId:string) : Promise<D
       }
 }
 
-export async function getEnseignementClasses(enseignementId:string) : Promise<InfoClasseDO[]> {
-    const functionName = "getEnseignementClasses";
-    try {
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listClasses:InfoClasseDO[] = [];
-        const classes = await prisma.tg_classe.findMany({
-            where : {
-                tg_niveau : {
-                    enseignement_id : enseignementId
-                }
-            }
-        });
-        if (!classes || classes.length === 0) return [];
-        for (const cl of classes) {
-            listClasses.push({
-                id : cl.id,
-                short_name : cl.short_name
-            });
-        }
-        
-        return listClasses;
-    }
-    catch(error:any) {
-        logError('F',"Echec : Lister les classes d'un senseignement",ErrorOrigin + " - " + functionName, error.message, false);
-        return [];
-    }
-}
-
-export async function getClientEcoleClassesAllowed(clientId:string, ecoleId:string) : Promise<InfoClasseDO[]> {
-    const functionName = "getClientEcoleClasses";
+export async function getEcoleClassesAllowed(clientId:string, ecoleId:string) : Promise<InfoClasseDO[]> {
+    const functionName = "getEcoleClassesAllowed";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -985,13 +944,13 @@ export async function getClientEcoleClassesAllowed(clientId:string, ecoleId:stri
         return listClasses;
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les élèves d'un école ",ErrorOrigin + " - " + functionName, error.message, false);
+        logError('F',"Echec : Lister les classes autorisées d'une école ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
 
-export async function getClientModules(clientId:string) : Promise<InfoModuleDO[]> {
-    const functionName = "getClientModules";
+export async function getModules(clientId:string) : Promise<InfoModuleDO[]> {
+    const functionName = "getModules";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -1022,29 +981,20 @@ export async function getClientModules(clientId:string) : Promise<InfoModuleDO[]
     }
 }
 
-export async function getClientRoleMenuItems(clientCode: string, roleCode:string) : Promise<SagesMenuItem[]> {
-    const functionName = "getClientRoleMenuItems";
+export async function getRoleMenuItems(clientId: string, roleCode:string) : Promise<SagesMenuItem[]> {
+    const functionName = "getRoleMenuItems";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const menuItems:SagesMenuItem[] = []; 
-        const client = await getClientByCode(clientCode.toLowerCase());
-        if (client == null) return menuItems;
+        const menuItems:SagesMenuItem[] = [];
         const role = await getRoleByCode(roleCode.toUpperCase());
         if (role === null) return menuItems;
-        const clientModules = await getClientModules(client.id);
-        const clientModulesIds:string[] = [];
-        clientModules.forEach(cm  => {
-            clientModulesIds.push(cm.id);
-        });
         const items = await prisma.sgs_client_module_role_menu_item.findMany({
             where : {
+                active : true,
+                role_id : role.id,
                 sgs_client_module : {
-                    tg_module : {
-                        id : {
-                            in : clientModulesIds
-                        } 
-                    }
+                    client_id : clientId
                 }
             },
             orderBy : {
@@ -1062,8 +1012,8 @@ export async function getClientRoleMenuItems(clientCode: string, roleCode:string
     }
 }
 
-export async function getClientActiveUsers(clientId:string) : Promise<DisplayUserDO[]> {
-    const functionName = "getClientActiveUsers";
+export async function getActiveUsers(clientId:string) : Promise<DisplayUserDO[]> {
+    const functionName = "getActiveUsers";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -1092,8 +1042,8 @@ export async function getClientActiveUsers(clientId:string) : Promise<DisplayUse
 
 
 //#region get settings
-export async function getClientSettings(clientId:string) : Promise<ClientSettingsDO|null> {
-    const functionName = "getClientSettings";
+export async function getSettings(clientId:string) : Promise<ClientSettingsDO|null> {
+    const functionName = "getSettings";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -1239,19 +1189,18 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
     }
 }
 
-export async function getClientEcolesOverviews(clientId:string) : Promise<OverviewEcoleDO[]> {
-    const functionName = "getClientEcoleOverview";
+export async function getEcolesOverviews(clientId:string) : Promise<OverviewEcoleDO[]> {
+    const functionName = "getEcolesOverviews";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listEcoleOverviews:OverviewEcoleDO[] = [];
-        const ecoles = await getClientEcoles(clientId);
-        if(ecoles.length === 0) return listEcoleOverviews
-        return [... new Set(listEcoleOverviews)];
-
+        const ecoles = await getEcoles(clientId);
+        if(ecoles.length === 0) return [];
+        const ecoleOverviews = await Promise.all(ecoles.map(ecole => getEcoleOverview(clientId, ecole.id)));
+        return ecoleOverviews.filter((overview): overview is OverviewEcoleDO => overview !== null);
     }
     catch(error:any) {
-        logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, false);
+        logError('F',"Echec : Générer les vues d'ensemble des écoles",ErrorOrigin + " : " + functionName, error.message, false);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
@@ -1261,7 +1210,7 @@ export async function getClientEcolesOverviews(clientId:string) : Promise<Overvi
 
 //#region Creating records 
 
-export async function createSalleClasse(clientId: string, data : AdminClientCreateSalleClasseDO) : Promise<DisplaySalleClasseDO|null> {
+export async function createSalleClasse(clientId: string, data : CreateSalleClasseDO) : Promise<DisplaySalleClasseDO|null> {
     const functionName = "createSalleClasse";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -1289,7 +1238,67 @@ export async function createSalleClasse(clientId: string, data : AdminClientCrea
     }
 }
 
-export async function createEleve(clientId: string, eleveData : AdminClientCreateEleveDO, inscriptionData : AdminClientCreateInscriptionDO) : Promise<DisplayEleveDO|null> {
+export async function createInscription(clientId: string, inscriptionData : CreateInscriptionDO) : Promise<DisplayInscriptionDO|null> {
+    const functionName = "createInscription";
+    try {
+
+            const isConnected = await verifyAndSetPrismaConnection();
+            if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+
+        const salleClasse = await prisma.sgs_salle_classe.findFirst({
+            where : {
+                id : inscriptionData.salle_classe_id,
+                sgs_ecole : {
+                    sgs_client_ecole : {
+                        some : {
+                            client_id : clientId
+                        }
+                    }
+                }
+            }
+        });
+        if (!salleClasse) throw new Error("Classe inconnue pour ce client");
+        const inscription = await prisma.sgs_inscription.create({
+            data : {
+                salle_classe_id     : inscriptionData.salle_classe_id,
+                eleve_id            : inscriptionData.eleve_id,
+                registration_date   : inscriptionData.registration_date,
+                registration_status : inscriptionData.registration_status,
+                status_notes        : inscriptionData.status_notes,
+                notes               : inscriptionData.notes,
+                create_date         : new Date(),
+                created_by          : inscriptionData.created_by
+            },
+            include : {
+                sgs_salle_classe : true,
+                sgs_eleve : true,
+                lkp_registration_status : true
+            }
+        });
+        return {
+            id                      : inscription.id,
+            salle_classe_id         : inscription.salle_classe_id,
+            salle_classe_label      : inscription.sgs_salle_classe.code,
+            eleve_id                : inscription.eleve_id,
+            eleve_label             : inscription.sgs_eleve.first_name + " " + inscription.sgs_eleve.last_name,
+            registration_date       : inscription.registration_date,
+            registration_status     : inscription.registration_status,
+            registration_status_label : inscription.lkp_registration_status.display_value,
+            status_notes            : inscription.status_notes,
+            notes                   : inscription.notes,
+            create_date             : inscription.create_date,
+            created_by              : inscription.created_by,
+            change_date             : inscription.change_date,
+            changed_by              : inscription.changed_by
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Créer une inscription ",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
+export async function createEleve(clientId: string, eleveData : CreateEleveDO) : Promise<DisplayEleveDO|null> {
     const functionName = "createEleve";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -1298,8 +1307,8 @@ export async function createEleve(clientId: string, eleveData : AdminClientCreat
         let matricule = null;
         do {
             matricule = generateMatricule(new Date(), eleveData.first_name, eleveData.last_name);
-            eleve = await getEleveByMatricule(matricule);
-        } while (eleve === null && matricule === null);
+            eleve = await prisma.sgs_eleve.findUnique({ where : { matricule : matricule } });
+        } while (eleve !== null);
 
         const eleveCreated = await prisma.sgs_eleve.create({
             data : {
@@ -1317,23 +1326,10 @@ export async function createEleve(clientId: string, eleveData : AdminClientCreat
                 create_date     : new Date()
             }
         });
-        if (!eleveCreated) return null;
-
-        const inscriptionCreated = await prisma.sgs_inscription.create({
-            data : {
-                salle_classe_id : inscriptionData.salle_classe_id,
-                eleve_id : eleveCreated.id,
-                registration_date : inscriptionData.registration_date,
-                registration_status : inscriptionData.registration_status,
-                notes : inscriptionData.notes,
-                create_date : new Date(),
-                created_by : inscriptionData.created_by
-            }
-        });
         return ToDisplayEleveDO(eleveCreated);
     }
     catch(error:any) {
-        logError('F',"Echec : Créer un éleve et son inscription ",ErrorOrigin + " - " + functionName, error.message, false);
+        logError('F',"Echec : Créer un éleve ",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }
@@ -1346,6 +1342,8 @@ export async function updateEcole(clientId:string, ecoleData: UpdateEcoleDO, use
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const ecole = await getEcoleById(clientId, ecoleData.id);
+        if (ecole === null) throw new Error("École inconnue pour ce client");
         const updatedEcole = await prisma.sgs_ecole.update({
             where : {id : ecoleData.id},
             data : {
@@ -1372,8 +1370,8 @@ export async function updateEcole(clientId:string, ecoleData: UpdateEcoleDO, use
     }
 }
 
-export async function updateClientSettings(clientId:string, anneescolaireId:string, username : string) : Promise<ClientSettingsDO|null> {
-    const functionName = "updateClientSettings";
+export async function updateSettings(clientId:string, anneescolaireId:string, username : string) : Promise<ClientSettingsDO|null> {
+    const functionName = "updateSettings";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
@@ -1397,7 +1395,7 @@ export async function updateClientSettings(clientId:string, anneescolaireId:stri
         return ToClientSettingsDO(updatedSetting);
     }
     catch(error:any) {
-        logError('F',"Echec : Mise à jour d'une école ",ErrorOrigin + " - " + functionName, error.message, false);
+        logError('F',"Echec : Mise à jour des paramètres client ",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
     }
 }

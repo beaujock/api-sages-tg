@@ -1,4 +1,4 @@
-export type AdminClientCreateEcoleDO = {
+export type CreateEcoleDO = {
     full_name              : string;
     short_name             : string;
     establishment_date     : Date|null;
@@ -13,7 +13,7 @@ export type AdminClientCreateEcoleDO = {
     created_by             : string;
 }
 
-export type AdminClientCreateSalleClasseDO = {
+export type CreateSalleClasseDO = {
     ecole_id                 : string;
     classe_id                : string;
     code                     : string;
@@ -22,7 +22,7 @@ export type AdminClientCreateSalleClasseDO = {
     created_by               : string;
 }
 
-export type AdminClientCreateEleveDO = {
+export type CreateEleveDO = {
     //matricule       : string;
     last_name       : string;
     first_name      : string;
@@ -36,7 +36,7 @@ export type AdminClientCreateEleveDO = {
     created_by      : string;
 }
 
-export type AdminClientCreateInscriptionDO = {
+export type CreateInscriptionDO = {
     salle_classe_id         : string;
     eleve_id                : string;
     registration_date       : Date;

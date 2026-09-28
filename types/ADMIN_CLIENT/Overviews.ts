@@ -15,10 +15,9 @@ export type OverviewEleveDO = {
 export type OverviewEnseignantDO = {
     id                      : string;
     enseignant_label        : string;
-    ecole_id                : string;
-    ecole_label             : string;
     annee_scolaire_id       : string;
     annee_scolaire_label    : string;
+    number_ecoles           : number;
     number_salles_classes   : number;
     number_matieres         : number;
     number_evaluations      : number;
