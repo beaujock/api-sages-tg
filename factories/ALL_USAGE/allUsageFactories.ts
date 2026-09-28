@@ -187,12 +187,14 @@ export async function uploadElevePhoto(photoData : FormData) : Promise<boolean> 
         });
         const file = photoData.get("file") as Blob; // The raw File blob
         const bucket = photoData.get("folder") as string;
-        const key = photoData.get("filename") as string;
+        const filename = photoData.get("filename") as string;
+        const ecoleCode = photoData.get("schoolCode") as string;
 
-        if (file===null || bucket === null || key === null) return false;
+        if (file===null || bucket === null || filename === null || ecoleCode === null) return false;
         
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
+        const key = ecoleCode.toLowerCase() + "/" + filename;
 
         const command = new PutObjectCommand({
           Bucket: bucket,
