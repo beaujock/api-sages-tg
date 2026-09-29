@@ -249,3 +249,38 @@ export async function getElevePhotoUrl(clientCode: string, ecoleCode: string, ma
         return null;
     }
 }
+
+export async function getEcoleLogoUrl(clientCode: string, ecoleCode: string): Promise<string | null> {
+    const functionName = "getEcoleLogoUrl";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if (!isConnected) throw new Error("Vous n'êtes pas connecté!");
+
+        const s3 = new S3Client({ 
+            forcePathStyle: true,
+            region: process.env.AWS_REGION,
+            endpoint: process.env.AWS_ENDPOINT_URL_S3, 
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+            },
+        });
+        const bucket = clientCode.toLowerCase();
+        const key = ecoleCode.toLowerCase() + "/" + ecoleCode.toLowerCase() + "_logo.jpg";
+
+        if (!bucket || !key) return null;
+
+        const command = new GetObjectCommand({ 
+            Bucket: bucket, 
+            Key: key 
+        });
+
+        // Creates a temporary URL valid for 1 hour
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        return url;
+    }
+    catch (error: any) {
+        logError('F', "Echec : Récupération de l'URL du logo de l'école ", ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
