@@ -23,7 +23,6 @@ export type OverviewSalleClasseDO = {
     code                    : string;
     annee_scolaire_id       : string;
     annee_scolaire_label    : string;
-    number_enseignants      : number;
     number_eleves           : number;
 }
 

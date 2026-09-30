@@ -1197,30 +1197,18 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
             }
         });
         if (!salleClasse) return null;
-        const [enseignants, eleves] = await Promise.all([
-            prisma.sgs_portfolio_enseignant.findMany({
-                where : {
-                    sgs_salle_classe_matiere : {
-                        salle_classe_id : salleClasseId
-                    }
-                },
-                select : { enseignant_id : true },
-                distinct : ['enseignant_id']
-            }),
-            prisma.sgs_inscription.findMany({
-                where : {
-                    salle_classe_id : salleClasseId
-                },
-                select : { eleve_id : true },
-                distinct : ['eleve_id']
-            })
-        ]);
+        const eleves = await prisma.sgs_inscription.findMany({
+            where : {
+                salle_classe_id : salleClasseId
+            },
+            select : { eleve_id : true },
+            distinct : ['eleve_id']
+        });
         return {
             id                      : salleClasse.id,
             code                    : salleClasse.code,
             annee_scolaire_id       : salleClasse.annee_scolaire_id,
             annee_scolaire_label    : getYear(salleClasse.tg_annee_scolaire.start_date).toString() + "-" + getYear(salleClasse.tg_annee_scolaire.end_date).toString(),
-            number_enseignants      : enseignants.length,
             number_eleves           : eleves.length
         }
     }
