@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos} from "@/lib/auth";
-import { getSalleClasses } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getSalleClasseOverviews } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 
@@ -14,12 +14,11 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
 
-        
-        const clientSalleClasses = await getSalleClasses(client.id);
+        const clientSalleClasses = await getSalleClasseOverviews(client.id);
         return NextResponse.json({clientSalleClasses: clientSalleClasses}, { status: 200 });
     }
     catch(error:any) {
-        logError('F',"Liste des écoles du client",(new URL(request.url)).pathname, error.message, true);
+        logError('F',"Liste des classes du client",(new URL(request.url)).pathname, error.message, true);
         return NextResponse.json({message : error.message}, { status: 500 });
     }
 }

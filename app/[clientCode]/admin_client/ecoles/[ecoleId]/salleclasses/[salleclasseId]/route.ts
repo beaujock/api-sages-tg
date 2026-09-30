@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getEcoleSalleClasseById } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getSalleClasseOverview } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string, salleclasseId: string}> }) {
@@ -16,8 +16,8 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
-        const salleClasse = await getEcoleSalleClasseById(client.id, ecoleId, salleclasseId);
-        if (!salleClasse || salleClasse === null) return NextResponse.json({message : "Classe non trouvée. Contactez votre administrateur"}, { status: 400 });
+        const salleClasse = await getSalleClasseOverview(client.id, ecoleId, salleclasseId);
+        if (!salleClasse) return NextResponse.json({message : "Classe non trouvée. Contactez votre administrateur"}, { status: 400 });
         return NextResponse.json({salleClasse: salleClasse}, { status: 200 });
     }
     catch(error:any) {

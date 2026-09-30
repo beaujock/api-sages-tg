@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getEcoleOverview } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 
@@ -14,8 +14,8 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const requestedRouteInfos = await getClientUserRouteRequestInfos(request, clientCode, "ADMIN_CLIENT","CLIENT");
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
-        const ecole = await getEcoleById(requestedRouteInfos.client.id, ecoleId);
-        if (!ecole || ecole === null) return NextResponse.json({message : "Ecole non trouvée. Contactez votre administrateur"}, { status: 400 });
+        const ecole = await getEcoleOverview(requestedRouteInfos.client.id, ecoleId);
+        if (!ecole) return NextResponse.json({message : "Ecole non trouvée. Contactez votre administrateur"}, { status: 400 });
         return NextResponse.json({ecole: ecole}, { status: 200 });
     }
     catch(error:any) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getEcoleSalleClasses, getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getEcoleSalleClasseOverviews, getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string}> }) {
@@ -16,7 +16,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const client = requestedRouteInfos.client;
         const ecole = await getEcoleById(client.id, ecoleId);
         if (ecole === null) return NextResponse.json({message : "Requête invalide (Identification de l'ecole incorrect)"}, { status: 400 });
-        const salleclasses = await getEcoleSalleClasses(client.id, ecoleId);
+        const salleclasses = await getEcoleSalleClasseOverviews(client.id, ecoleId);
         return NextResponse.json({ecole: ecole, salleClasses: salleclasses}, { status: 200 });
     }
     catch(error:any) {

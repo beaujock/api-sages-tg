@@ -1,3 +1,33 @@
+export type OverviewDO = {
+    id                          : string;
+    annee_scolaire_id           : string;
+    annee_scolaire_label        : string;
+    number_ecoles             : number;
+    number_salle_classes        : number;
+    number_eleve_inscriptions   : number;
+    number_modules              : number
+}
+
+export type OverviewEcoleDO = {
+    id                      : string;
+    short_name              : string;
+    code                    : string;
+    annee_scolaire_id       : string;
+    annee_scolaire_label    : string;
+    number_salles_classes   : number;
+    number_enseignants      : number;
+    number_eleves           : number;
+}
+
+export type OverviewSalleClasseDO = {
+    id                      : string;
+    code                    : string;
+    annee_scolaire_id       : string;
+    annee_scolaire_label    : string;
+    number_enseignants      : number;
+    number_eleves           : number;
+}
+
 export type OverviewEleveDO = {
     id                      : string;
     eleve_label             : string;
@@ -7,9 +37,6 @@ export type OverviewEleveDO = {
     annee_scolaire_label    : string;
     salle_classe_id         : string;
     salle_classe_label      : string;
-    number_evaluations      : number;
-    number_absences         : number;
-    number_bulletins        : number;
 }
 
 export type OverviewEnseignantDO = {
@@ -23,20 +50,4 @@ export type OverviewEnseignantDO = {
     number_evaluations      : number;
     number_absences         : number;
     number_bulletins        : number;
-}
-
-export type OverviewEcoleDO = {
-    id                      : string;
-    short_name              : string;
-    code                    : string;
-    number_salles_classes   : number;
-    number_enseignants      : number;
-    number_eleves           : number;
-}
-
-export type OverviewSalleClasseDO = {
-    id                      : string;
-    code                    : string;
-    number_enseignants      : number;
-    number_eleves           : number;
 }

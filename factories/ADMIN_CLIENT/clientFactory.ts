@@ -2,7 +2,7 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
 import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayClientDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/Displays";
-import { OverviewEcoleDO, OverviewSalleClasseDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/Overviews";
+import { OverviewDO, OverviewEcoleDO, OverviewSalleClasseDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/Overviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 import { CreateEleveDO, CreateInscriptionDO, CreateSalleClasseDO } from "@/types/ADMIN_CLIENT/Creates";
 import { getAnneeScolaireById, getEnseignementClasses, getRoleByCode } from "../ALL_USAGE/SagesTgFactory";
@@ -725,63 +725,6 @@ export async function getEnseignantMatieres(clientId:string, ecoleId:string, ann
     }
 }
 
-export async function getEleveOverview(clientId:string, eleveId:string) : Promise<OverviewEleveDO|null> {
-    const functionName = "getEleveOverview";
-    try {
-        const isConnected = await verifyAndSetPrismaConnection();
-        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
-        if (anneeScolaire === null) throw new Error("Aucune année scolaire en cours");
-        const inscription = await prisma.sgs_inscription.findFirst({
-            where : {
-                eleve_id : eleveId,
-                sgs_salle_classe : {
-                    annee_scolaire_id : anneeScolaire.id,
-                    sgs_ecole : {
-                        sgs_client_ecole : {
-                            some : {
-                                client_id : clientId
-                            }
-                        }
-                    }
-                },
-            },
-            include : {
-                sgs_eleve : true,
-                sgs_salle_classe : {
-                    include : {
-                        sgs_ecole : true,
-                        tg_annee_scolaire : true
-                    }
-                }
-            },
-            orderBy : {
-                registration_date : 'desc'
-            }
-        });
-        if(!inscription) return null;
-        const eleve = inscription.sgs_eleve;
-        return {
-            id                      : eleve.id,
-            eleve_label             : eleve.first_name + " " + eleve.last_name,
-            ecole_id                : inscription.sgs_salle_classe.ecole_id,
-            ecole_label             : inscription.sgs_salle_classe.sgs_ecole.short_name === null ? inscription.sgs_salle_classe.sgs_ecole.full_name : inscription.sgs_salle_classe.sgs_ecole.short_name,
-            annee_scolaire_id       : inscription.sgs_salle_classe.annee_scolaire_id,
-            annee_scolaire_label    : getYear(inscription.sgs_salle_classe.tg_annee_scolaire.start_date).toString() + "-" + getYear(inscription.sgs_salle_classe.tg_annee_scolaire.end_date).toString(),
-            salle_classe_id         : inscription.salle_classe_id,
-            salle_classe_label      : inscription.sgs_salle_classe.code,
-            number_evaluations      : 0, // to be calculated based on evaluations data
-            number_absences         : 0, // to be calculated based on absences data
-            number_bulletins        : 0 // to be calculated based on bulletins data
-        }
-        
-    }
-    catch(error:any) {
-        logError('F',"Echec : Générer la vue d'ensemble d'un élève",ErrorOrigin + " - " + functionName, error.message, false);
-        return null;
-    }
-}
-
 export async function getEnseignantOverview(clientId:string, enseignantId:string) : Promise<OverviewEnseignantDO|null> {
     const functionName = "getEnseignantOverview";
     try {
@@ -1129,7 +1072,58 @@ export async function getSettings(clientId:string) : Promise<ClientSettingsDO|nu
 
 //#region building overviews
 
-export async function getEcoleOverview(clientId:string, ecoleId:string) : Promise<OverviewEcoleDO|null> {
+export async function getOverview(clientId:string, anneeScolaireId?:string) : Promise<OverviewDO|null> {
+    const functionName = "getOverview";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
+        const salleClasseFilter = {
+            annee_scolaire_id : anneeScolaire.id,
+            sgs_ecole : {
+                sgs_client_ecole : {
+                    some : {
+                        client_id : clientId
+                    }
+                }
+            }
+        };
+        const [numberEcoles, numberSallesClasses, numberInscriptions, numberModules] = await Promise.all([
+            prisma.sgs_client_ecole.count({
+                where : { client_id : clientId }
+            }),
+            prisma.sgs_salle_classe.count({
+                where : salleClasseFilter
+            }),
+            prisma.sgs_inscription.count({
+                where : {
+                    sgs_salle_classe : salleClasseFilter
+                }
+            }),
+            prisma.sgs_client_module.count({
+                where : { client_id : clientId }
+            })
+        ]);
+        return {
+            id                          : clientId,
+            annee_scolaire_id           : anneeScolaire.id,
+            annee_scolaire_label        : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString(),
+            number_ecoles              : numberEcoles,
+            number_salle_classes        : numberSallesClasses,
+            number_eleve_inscriptions   : numberInscriptions,
+            number_modules              : numberModules
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Générer la vue d'ensemble d'un client",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
+export async function getEcoleOverview(clientId:string, ecoleId:string, anneeScolaireId?:string) : Promise<OverviewEcoleDO|null> {
     const functionName = "getEcoleOverview";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -1145,8 +1139,10 @@ export async function getEcoleOverview(clientId:string, ecoleId:string) : Promis
             }
         });
         if (!ecole) return null;
-        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
-        if (anneeScolaire === null) throw new Error("Aucune année scolaire en cours");
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
         const salleClasseFilter = {
             ecole_id : ecoleId,
             annee_scolaire_id : anneeScolaire.id
@@ -1176,6 +1172,8 @@ export async function getEcoleOverview(clientId:string, ecoleId:string) : Promis
             id                      : ecole.id,
             short_name              : ecole.short_name,
             code                    : ecole.code,
+            annee_scolaire_id       : anneeScolaire.id,
+            annee_scolaire_label    : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString(),
             number_salles_classes   : numberSallesClasses,
             number_enseignants      : enseignants.length,
             number_eleves           : eleves.length
@@ -1203,6 +1201,9 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
                         }
                     }
                 }
+            },
+            include : {
+                tg_annee_scolaire : true
             }
         });
         if (!salleClasse) return null;
@@ -1227,6 +1228,8 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
         return {
             id                      : salleClasse.id,
             code                    : salleClasse.code,
+            annee_scolaire_id       : salleClasse.annee_scolaire_id,
+            annee_scolaire_label    : getYear(salleClasse.tg_annee_scolaire.start_date).toString() + "-" + getYear(salleClasse.tg_annee_scolaire.end_date).toString(),
             number_enseignants      : enseignants.length,
             number_eleves           : eleves.length
         }
@@ -1237,18 +1240,141 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
     }
 }
 
-export async function getEcolesOverviews(clientId:string) : Promise<OverviewEcoleDO[]> {
+export async function getEleveOverview(clientId:string, eleveId:string, anneeScolaireId?:string) : Promise<OverviewEleveDO|null> {
+    const functionName = "getEleveOverview";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
+        const inscription = await prisma.sgs_inscription.findFirst({
+            where : {
+                eleve_id : eleveId,
+                sgs_salle_classe : {
+                    annee_scolaire_id : anneeScolaire.id,
+                    sgs_ecole : {
+                        sgs_client_ecole : {
+                            some : {
+                                client_id : clientId
+                            }
+                        }
+                    }
+                },
+            },
+            include : {
+                sgs_eleve : true,
+                sgs_salle_classe : {
+                    include : {
+                        sgs_ecole : true,
+                        tg_annee_scolaire : true
+                    }
+                }
+            },
+            orderBy : {
+                registration_date : 'desc'
+            }
+        });
+        if(!inscription) return null;
+        const eleve = inscription.sgs_eleve;
+        return {
+            id                      : eleve.id,
+            eleve_label             : eleve.first_name + " " + eleve.last_name,
+            ecole_id                : inscription.sgs_salle_classe.ecole_id,
+            ecole_label             : inscription.sgs_salle_classe.sgs_ecole.short_name === null ? inscription.sgs_salle_classe.sgs_ecole.full_name : inscription.sgs_salle_classe.sgs_ecole.short_name,
+            annee_scolaire_id       : inscription.sgs_salle_classe.annee_scolaire_id,
+            annee_scolaire_label    : getYear(inscription.sgs_salle_classe.tg_annee_scolaire.start_date).toString() + "-" + getYear(inscription.sgs_salle_classe.tg_annee_scolaire.end_date).toString(),
+            salle_classe_id         : inscription.salle_classe_id,
+            salle_classe_label      : inscription.sgs_salle_classe.code,
+        }
+        
+    }
+    catch(error:any) {
+        logError('F',"Echec : Générer la vue d'ensemble d'un élève",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
+export async function getEcolesOverviews(clientId:string, anneeScolaireId?:string) : Promise<OverviewEcoleDO[]> {
     const functionName = "getEcolesOverviews";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
         const ecoles = await getEcoles(clientId);
         if(ecoles.length === 0) return [];
-        const ecoleOverviews = await Promise.all(ecoles.map(ecole => getEcoleOverview(clientId, ecole.id)));
+        const ecoleOverviews = await Promise.all(ecoles.map(ecole => getEcoleOverview(clientId, ecole.id, anneeScolaireId)));
         return ecoleOverviews.filter((overview): overview is OverviewEcoleDO => overview !== null);
     }
     catch(error:any) {
         logError('F',"Echec : Générer les vues d'ensemble des écoles",ErrorOrigin + " : " + functionName, error.message, false);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
+export async function getEcoleSalleClasseOverviews(clientId:string, ecoleId:string, anneeScolaireId?:string) : Promise<OverviewSalleClasseDO[]> {
+    const functionName = "getEcoleSalleClasseOverviews";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
+        const salleClasses = await prisma.sgs_salle_classe.findMany({
+            where : {
+                ecole_id : ecoleId,
+                annee_scolaire_id : anneeScolaire.id,
+                sgs_ecole : {
+                    sgs_client_ecole : {
+                        some : {
+                            client_id : clientId
+                        }
+                    }
+                }
+            },
+            select : { id : true },
+            orderBy : { code : 'asc' }
+        });
+        if(salleClasses.length === 0) return [];
+        const salleClasseOverviews = await Promise.all(salleClasses.map(salleClasse => getSalleClasseOverview(clientId, ecoleId, salleClasse.id)));
+        return salleClasseOverviews.filter((overview): overview is OverviewSalleClasseDO => overview !== null);
+    }
+    catch(error:any) {
+        logError('F',"Echec : Générer les vues d'ensemble des classes d'une école",ErrorOrigin + " : " + functionName, error.message, false);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
+export async function getSalleClasseOverviews(clientId:string, anneeScolaireId?:string) : Promise<OverviewSalleClasseDO[]> {
+    const functionName = "getSalleClasseOverviews";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
+        const salleClasses = await prisma.sgs_salle_classe.findMany({
+            where : {
+                annee_scolaire_id : anneeScolaire.id,
+                sgs_ecole : {
+                    sgs_client_ecole : {
+                        some : {
+                            client_id : clientId
+                        }
+                    }
+                }
+            },
+            select : { id : true, ecole_id : true },
+            orderBy : [{ ecole_id : 'asc' }, { code : 'asc' }]
+        });
+        if(salleClasses.length === 0) return [];
+        const salleClasseOverviews = await Promise.all(salleClasses.map(salleClasse => getSalleClasseOverview(clientId, salleClasse.ecole_id, salleClasse.id)));
+        return salleClasseOverviews.filter((overview): overview is OverviewSalleClasseDO => overview !== null);
+    }
+    catch(error:any) {
+        logError('F',"Echec : Générer les vues d'ensemble des classes du client",ErrorOrigin + " : " + functionName, error.message, false);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }
