@@ -15,7 +15,6 @@ export type OverviewEcoleDO = {
     annee_scolaire_id       : string;
     annee_scolaire_label    : string;
     number_salles_classes   : number;
-    number_enseignants      : number;
     number_eleves           : number;
 }
 
