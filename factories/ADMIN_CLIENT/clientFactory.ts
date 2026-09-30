@@ -635,14 +635,19 @@ export async function getEleves(clientId:string) : Promise<DisplayEleveDO[]> {
     }
 }
 
-export async function getInscriptions(clientId:string) : Promise<DisplayInscriptionDO[]> {
+export async function getInscriptions(clientId:string, anneeScolaireId?:string) : Promise<DisplayInscriptionDO[]> {
     const functionName = "getInscriptions";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
         const inscriptions = await prisma.sgs_inscription.findMany({
             where : {
                 sgs_salle_classe : {
+                    annee_scolaire_id : anneeScolaire.id,
                     sgs_ecole : {
                         sgs_client_ecole : {
                             some : {
@@ -679,7 +684,7 @@ export async function getInscriptions(clientId:string) : Promise<DisplayInscript
         }));
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les inscriptions d'un client ",ErrorOrigin + " - " + functionName, error.message, false);
+        logError('F',"Echec : Lister les inscriptions d'un client pour une année scolaire ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
