@@ -1,7 +1,6 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { getYear } from 'date-fns';
 import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
-import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayAnneeScolaireDO, ToDisplayClientDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/Displays";
+import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, getAnneeScolaireLabel, ToDisplayAnneeScolaireDO, ToDisplayClientDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/Displays";
 import { OverviewDO, OverviewEcoleDO, OverviewSalleClasseDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/Overviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} from "@/types/ALL_USAGE/AllUsagesTypes";
 import { CreateEleveDO, CreateInscriptionDO, CreateSalleClasseDO } from "@/types/ADMIN_CLIENT/Creates";
@@ -116,7 +115,7 @@ export async function getEcoleSalleClasseById(clientId:string, ecoleId:string, s
             ecole_id                 : salleClasse.ecole_id,
             ecole_label              : salleClasse.sgs_ecole.short_name === null ? salleClasse.sgs_ecole.full_name : salleClasse.sgs_ecole.short_name,
             annee_scolaire_id        : salleClasse.annee_scolaire_id,
-            annee_scolaire_label     : getYear(salleClasse.tg_annee_scolaire.start_date).toString() + "-" + getYear(salleClasse.tg_annee_scolaire.end_date).toString(),
+            annee_scolaire_label     : getAnneeScolaireLabel(salleClasse.tg_annee_scolaire),
             classe_id                : salleClasse.classe_id,
             classe_label             : salleClasse.tg_classe.code,
             code                     : salleClasse.code,
@@ -163,7 +162,7 @@ export async function getEcoleSalleClasseByCode(clientId:string, ecoleId:string,
             ecole_id                 : salleClasse.ecole_id,
             ecole_label              : salleClasse.sgs_ecole.short_name === null ? salleClasse.sgs_ecole.full_name : salleClasse.sgs_ecole.short_name,
             annee_scolaire_id        : salleClasse.annee_scolaire_id,
-            annee_scolaire_label     : getYear(salleClasse.tg_annee_scolaire.start_date).toString() + "-" + getYear(salleClasse.tg_annee_scolaire.end_date).toString(),
+            annee_scolaire_label     : getAnneeScolaireLabel(salleClasse.tg_annee_scolaire),
             classe_id                : salleClasse.classe_id,
             classe_label             : salleClasse.tg_classe.code,
             code                     : salleClasse.code,
@@ -820,7 +819,7 @@ export async function getEnseignantOverview(clientId:string, enseignantId:string
             id                      : enseignant.id,
             enseignant_label        : enseignant.first_name + " " + enseignant.last_name,
             annee_scolaire_id       : anneeScolaire.id,
-            annee_scolaire_label    : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString(),
+            annee_scolaire_label    : anneeScolaire.label,
             number_ecoles           : ecoleIds.size,
             number_salles_classes   : salleClasseIds.size,
             number_matieres         : matiereIds.size,
@@ -1103,7 +1102,7 @@ export async function getSettings(clientId:string) : Promise<ClientSettingsDO|nu
         return {
             client_id                   : clientId,
             annee_scolaire_id           : anneeScolaire.id,
-            annee_scolaire_label        : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString(),
+            annee_scolaire_label        : anneeScolaire.label,
             max_schools                 : clientSettings.max_schools,
             max_admin_client_users      : clientSettings.max_admin_client_users,
             max_admin_ecole_users       : clientSettings.max_admin_ecole_users,
@@ -1164,7 +1163,7 @@ export async function getOverview(clientId:string, anneeScolaireId?:string) : Pr
         return {
             id                          : clientId,
             annee_scolaire_id           : anneeScolaire.id,
-            annee_scolaire_label        : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString(),
+            annee_scolaire_label        : anneeScolaire.label,
             number_ecoles              : numberEcoles,
             number_salle_classes        : numberSallesClasses,
             number_eleve_inscriptions   : numberInscriptions,
@@ -1218,7 +1217,7 @@ export async function getEcoleOverview(clientId:string, ecoleId:string, anneeSco
             short_name              : ecole.short_name,
             code                    : ecole.code,
             annee_scolaire_id       : anneeScolaire.id,
-            annee_scolaire_label    : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString(),
+            annee_scolaire_label    : anneeScolaire.label,
             number_salles_classes   : numberSallesClasses,
             number_eleves           : eleves.length
         }
@@ -1262,7 +1261,7 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
             id                      : salleClasse.id,
             code                    : salleClasse.code,
             annee_scolaire_id       : salleClasse.annee_scolaire_id,
-            annee_scolaire_label    : getYear(salleClasse.tg_annee_scolaire.start_date).toString() + "-" + getYear(salleClasse.tg_annee_scolaire.end_date).toString(),
+            annee_scolaire_label    : getAnneeScolaireLabel(salleClasse.tg_annee_scolaire),
             number_eleves           : eleves.length
         }
     }
@@ -1316,7 +1315,7 @@ export async function getEleveOverview(clientId:string, eleveId:string, anneeSco
             ecole_id                : inscription.sgs_salle_classe.ecole_id,
             ecole_label             : inscription.sgs_salle_classe.sgs_ecole.short_name === null ? inscription.sgs_salle_classe.sgs_ecole.full_name : inscription.sgs_salle_classe.sgs_ecole.short_name,
             annee_scolaire_id       : inscription.sgs_salle_classe.annee_scolaire_id,
-            annee_scolaire_label    : getYear(inscription.sgs_salle_classe.tg_annee_scolaire.start_date).toString() + "-" + getYear(inscription.sgs_salle_classe.tg_annee_scolaire.end_date).toString(),
+            annee_scolaire_label    : getAnneeScolaireLabel(inscription.sgs_salle_classe.tg_annee_scolaire),
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
         }

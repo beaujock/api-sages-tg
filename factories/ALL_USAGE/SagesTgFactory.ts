@@ -1,8 +1,7 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { getYear } from 'date-fns';
 import { logError } from "./allUsageFactories";
 import { InfoAnneeScolaireDO, InfoClasseDO, InfoGenderDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoResourceTypeDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
-import { DisplayAnneeScolaireDO, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/Displays";
+import { DisplayAnneeScolaireDO, getAnneeScolaireLabel, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/Displays";
 import { tg_role } from "@/lib/generated/prisma/client";
 const ErrorOrigin = "SagesTgFactory";
 
@@ -222,7 +221,7 @@ export async function getAllAnneeScolaires() : Promise<InfoAnneeScolaireDO[]> {
                 id : anneeScolaire.id,
                 start_date : anneeScolaire.start_date,
                 end_date : anneeScolaire.end_date,
-                label : getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString()
+                label : getAnneeScolaireLabel(anneeScolaire)
             });
         };
         return [... new Set(listAnneeScolaires)];

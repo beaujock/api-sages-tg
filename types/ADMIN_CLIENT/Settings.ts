@@ -1,6 +1,5 @@
 import { getAnneeScolaireById } from "@/factories/ALL_USAGE/SagesTgFactory";
 import { sgs_client_setting } from "@/lib/generated/prisma/client";
-import { getYear } from "date-fns";
 
 export type ClientSettingsDO = {
     client_id                   : string;
@@ -38,7 +37,7 @@ export async function ToClientSettingsDO(instance : sgs_client_setting) : Promis
         const anneeScolaire = await getAnneeScolaireById(instance.anneescolaire_id);
         if (anneeScolaire !== null) {
             anneescolaireId = anneeScolaire.id;
-            anneescolairelabel = getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString();
+            anneescolairelabel = anneeScolaire.label;
         }
     };
         

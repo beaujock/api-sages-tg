@@ -155,6 +155,7 @@ export type DisplayAnneeScolaireDO = {
     id             : string;
     start_date     : Date;
     end_date       : Date
+    label          : string;
     notes          : string|null;
     create_date    : Date;
     created_by     : string;
@@ -164,6 +165,10 @@ export type DisplayAnneeScolaireDO = {
 //#endregion
 
 /* Functions to get Data Objects from instances */
+
+export function getAnneeScolaireLabel(anneeScolaire : { start_date : Date, end_date : Date }) : string {
+    return getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString();
+}
 
 export function ToDisplayClientDO(instance : sgs_client & { tg_systeme_scolaire : tg_systeme_scolaire, lkp_client_status : lkp_client_status }) : DisplayClientDO {
     return {
@@ -213,7 +218,7 @@ export async function ToDisplaySalleClasseDO(instance : sgs_salle_classe) : Prom
                 ecole_id                 : instance.ecole_id,
                 ecole_label              : sc.sgs_ecole.short_name,
                 annee_scolaire_id        : instance.annee_scolaire_id,
-                annee_scolaire_label     : getYear(sc.tg_annee_scolaire.start_date).toString() + "-" + getYear(sc.tg_annee_scolaire.end_date).toString(),
+                annee_scolaire_label     : getAnneeScolaireLabel(sc.tg_annee_scolaire),
                 classe_id                : instance.classe_id,
                 classe_label             : sc.tg_classe.short_name,
                 code                     : instance.code,
@@ -276,6 +281,7 @@ export function ToDisplayAnneeScolaireDO(instance : tg_annee_scolaire) : Display
         id             : instance.id,
         start_date     : instance.start_date,
         end_date       : instance.end_date,
+        label          : getAnneeScolaireLabel(instance),
         notes          : instance.notes,
         create_date    : instance.create_date,
         created_by     : instance.created_by,

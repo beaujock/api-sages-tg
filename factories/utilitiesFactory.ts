@@ -1,7 +1,7 @@
 
 import nodemailer from 'nodemailer';
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { DisplayAnneeScolaireDO } from '@/types/ADMIN_CLIENT/Displays';
+import { DisplayAnneeScolaireDO, ToDisplayAnneeScolaireDO } from '@/types/ADMIN_CLIENT/Displays';
 
 const ErrorOrigin = "utilistiesFactory"
 
@@ -145,7 +145,7 @@ export async function getCurrentAnneeScolaire(clientId:string) : Promise<Display
               }
             }
           });
-          return anneeScolaire;
+          return anneeScolaire ? ToDisplayAnneeScolaireDO(anneeScolaire) : null;
       }
       catch(error:any) {
           return null;
