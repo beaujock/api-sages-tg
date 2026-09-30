@@ -150,7 +150,7 @@ export type DisplayInscriptionDO = {
 
 //#endregion
 
-//#region Annee Acolaire Displays
+//#region Annee Scolaire Displays
 export type DisplayAnneeScolaireDO = {
     id             : string;
     start_date     : Date;

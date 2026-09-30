@@ -635,6 +635,55 @@ export async function getEleves(clientId:string) : Promise<DisplayEleveDO[]> {
     }
 }
 
+export async function getInscriptions(clientId:string) : Promise<DisplayInscriptionDO[]> {
+    const functionName = "getInscriptions";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const inscriptions = await prisma.sgs_inscription.findMany({
+            where : {
+                sgs_salle_classe : {
+                    sgs_ecole : {
+                        sgs_client_ecole : {
+                            some : {
+                                client_id : clientId
+                            }
+                        }
+                    }
+                }
+            },
+            include : {
+                sgs_salle_classe : true,
+                sgs_eleve : true,
+                lkp_registration_status : true
+            },
+            orderBy : {
+                registration_date : 'desc'
+            }
+        });
+        return inscriptions.map(inscription => ({
+            id                      : inscription.id,
+            salle_classe_id         : inscription.salle_classe_id,
+            salle_classe_label      : inscription.sgs_salle_classe.code,
+            eleve_id                : inscription.eleve_id,
+            eleve_label             : inscription.sgs_eleve.first_name + " " + inscription.sgs_eleve.last_name,
+            registration_date       : inscription.registration_date,
+            registration_status     : inscription.registration_status,
+            registration_status_label : inscription.lkp_registration_status.display_value,
+            status_notes            : inscription.status_notes,
+            notes                   : inscription.notes,
+            create_date             : inscription.create_date,
+            created_by              : inscription.created_by,
+            change_date             : inscription.change_date,
+            changed_by              : inscription.changed_by
+        }));
+    }
+    catch(error:any) {
+        logError('F',"Echec : Lister les inscriptions d'un client ",ErrorOrigin + " - " + functionName, error.message, false);
+        return [];
+    }
+}
+
 export async function getEnseignantSalleClasses(clientId:string, ecoleId:string, anneeScolaireId:string, enseignantId:string) : Promise<DisplaySalleClasseDO[]> {
     const functionName = "getEnseignantSalleClasses";
     try {
