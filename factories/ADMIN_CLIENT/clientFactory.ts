@@ -180,8 +180,6 @@ export async function getEcoleSalleClasseByCode(clientId:string, ecoleId:string,
     }
 }
 
-
-
 export async function getEleveById(clientId:string, eleveId:string) : Promise<DisplayEleveDO|null> {
     const functionName = "getEleveById";
     try {
@@ -590,6 +588,67 @@ export async function getSalleClasseEleves(clientId:string, salleclasseId:string
     }
     catch(error:any) {
         logError('F',"Echec : Lister les élèves d'une classe ",ErrorOrigin + " - " + functionName, error.message, false);
+        return [];
+    }
+}
+
+export async function getEcoleSalleClasseEleves(clientId:string, ecoleId:string, salleclasseId:string, anneeScolaireId?:string) : Promise<DisplayEleveDO[]> {
+    const functionName = "getEcoleSalleClasseEleves";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
+        const eleves = await prisma.sgs_eleve.findMany({
+            where : {
+                sgs_inscription : {
+                    some : {
+                        sgs_salle_classe : {
+                            id : salleclasseId,
+                            ecole_id : ecoleId,
+                            annee_scolaire_id : anneeScolaire.id,
+                            sgs_ecole : {
+                                sgs_client_ecole : {
+                                    some : {
+                                        client_id : clientId
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            include : {
+                lkp_gender : true
+            },
+            orderBy : [
+                { last_name : 'asc' },
+                { first_name : 'asc' }
+            ]
+        });
+        return eleves.map(eleve => ({
+            id              : eleve.id,
+            matricule       : eleve.matricule,
+            last_name       : eleve.last_name,
+            first_name      : eleve.first_name,
+            other_names     : eleve.other_names,
+            preferred_name  : eleve.preferred_name,
+            date_of_birth   : eleve.date_of_birth,
+            gender          : eleve.gender,
+            gender_label    : eleve.lkp_gender.display_value,
+            phone_number    : eleve.phone_number,
+            email           : eleve.email,
+            notes           : eleve.notes,
+            create_date     : eleve.create_date,
+            created_by      : eleve.created_by,
+            change_date     : eleve.change_date,
+            changed_by      : eleve.changed_by
+        }));
+    }
+    catch(error:any) {
+        logError('F',"Echec : Lister les élèves d'une classe d'une école pour une année scolaire ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }

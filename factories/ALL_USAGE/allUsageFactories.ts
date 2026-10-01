@@ -170,6 +170,52 @@ export function generateMatricule(currentDate:Date, firstName:string, lastName:s
   return `${year}${lastInitial}${randomLetter}${firstInitial}${randomNumbers}`;
 }
 
+
+export async function uploadEcoleLogo(ecoleLogo : FormData) : Promise<boolean> {
+    const functionName = "uploadElevePhoto";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+
+        const s3 = new S3Client({ 
+          forcePathStyle: true,
+          region: process.env.AWS_REGION,
+          endpoint: process.env.AWS_ENDPOINT_URL_S3, // or Neon storage endpoint
+          credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+          },
+        });
+        const file = ecoleLogo.get("file") as Blob; // The raw File blob
+        const bucket = ecoleLogo.get("folder") as string;
+        const filename = ecoleLogo.get("filename") as string;
+        const ecoleCode = ecoleLogo.get("schoolCode") as string;
+
+        if (file===null || bucket === null || filename === null || ecoleCode === null) return false;
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const key = ecoleCode.toLowerCase() + "/" + filename;
+
+        const command = new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          Body: buffer,
+          ContentType: "image/jpeg",
+        });
+
+        await s3.send(command);
+
+        const url = await getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn: 3600 });
+        console.log(`[view] ${url}`);
+        return true;
+    }
+    catch(error:any) {
+        logError('F',"Echec : Téléchargement de photo d'élève ",ErrorOrigin + " - " + functionName, error.message, true);
+        return false;
+    }
+}
+
 export async function uploadElevePhoto(photoData : FormData) : Promise<boolean> {
     const functionName = "uploadElevePhoto";
     try {

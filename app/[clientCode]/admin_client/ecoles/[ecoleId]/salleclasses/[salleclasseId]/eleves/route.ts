@@ -1,0 +1,30 @@
+import { NextRequest, NextResponse } from "next/server";
+import { logError } from "@/factories/utilitiesFactory";
+import { getClientUserRouteRequestInfos } from "@/lib/auth";
+import { getEcoleSalleClasseEleves, getEcoleSalleClasseById, getClientCurrentAnneeScolaire } from "@/factories/ADMIN_CLIENT/clientFactory";
+
+
+export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string, salleclasseId: string}> }) {
+    try {
+        const clientCode = (await params).clientCode;
+        if(!clientCode) return NextResponse.json({message : "Requête invalide (code client manquant)"}, { status: 400 });
+        const ecoleId = (await params).ecoleId;
+        if(!ecoleId) return NextResponse.json({message : "Requête invalide (Identifcation de l'école manquant)"}, { status: 400 });
+        const salleclasseId = (await params).salleclasseId;
+        if(!salleclasseId) return NextResponse.json({message : "Requête invalide (Identifcation de la classe manquant)"}, { status: 400 });
+        const requestedRouteInfos = await getClientUserRouteRequestInfos(request, clientCode, "ADMIN_CLIENT","CLIENT");
+        if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
+            return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
+        const client = requestedRouteInfos.client;
+        const salleClasse = await getEcoleSalleClasseById(client.id, ecoleId, salleclasseId);
+        if (salleClasse === null) return NextResponse.json({message : "Requête invalide (Identification de la classe incorrect)"}, { status: 400 });
+        const anneeScolaire = await getClientCurrentAnneeScolaire(client.id);
+        if (anneeScolaire === null ) return NextResponse.json({message : "Année scolaire manquant"}, { status: 400 });
+        const eleves = await getEcoleSalleClasseEleves(client.id, ecoleId, salleclasseId, anneeScolaire.id);
+        return NextResponse.json({anneescolaire: anneeScolaire, salleClasse: salleClasse, eleves: eleves}, { status: 200 });
+    }
+    catch(error:any) {
+        logError('F',"Echec : Liste des élèves d'une classe d'une école",(new URL(request.url)).pathname, error.message, true);
+        return NextResponse.json({message : error.message}, { status: 500 });
+    }
+}
