@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getEcoleSalleClasseOverviews, getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getEcoleSalleClasseOverviews, getEcoleById, getClientCurrentAnneeScolaire } from "@/factories/ADMIN_CLIENT/clientFactory";
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string}> }) {
@@ -16,8 +16,10 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const client = requestedRouteInfos.client;
         const ecole = await getEcoleById(client.id, ecoleId);
         if (ecole === null) return NextResponse.json({message : "Requête invalide (Identification de l'ecole incorrect)"}, { status: 400 });
+        const anneeScolaire = await getClientCurrentAnneeScolaire(client.id);
+        if (anneeScolaire === null ) return NextResponse.json({message : "Année scolaire manquant"}, { status: 400 });
         const salleclasses = await getEcoleSalleClasseOverviews(client.id, ecoleId);
-        return NextResponse.json({ecole: ecole, salleClasses: salleclasses}, { status: 200 });
+        return NextResponse.json({anneescolaire: anneeScolaire, ecole: ecole, salleclasses: salleclasses}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Echec : Liste des classes d'une ecole",(new URL(request.url)).pathname, error.message, true);
