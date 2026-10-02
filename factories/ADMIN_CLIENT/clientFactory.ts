@@ -332,6 +332,62 @@ export async function getInscriptionById(clientId:string, inscriptionId:string) 
     }
 }
 
+export async function getEleveCurrentActiveInscription(clientId:string, eleveId:string, ecoleId?:string) : Promise<DisplayInscriptionDO|null> {
+    const functionName = "getEleveCurrentActiveInscription";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error("Aucune année scolaire en cours");
+        const inscription = await prisma.sgs_inscription.findFirst({
+            where : {
+                eleve_id : eleveId,
+                registration_status : "A",
+                sgs_salle_classe : {
+                    annee_scolaire_id : anneeScolaire.id,
+                    ...(ecoleId ? { ecole_id : ecoleId } : {}),
+                    sgs_ecole : {
+                        sgs_client_ecole : {
+                            some : {
+                                client_id : clientId
+                            }
+                        }
+                    }
+                }
+            },
+            include : {
+                sgs_salle_classe : true,
+                sgs_eleve : true,
+                lkp_registration_status : true
+            },
+            orderBy : {
+                registration_date : 'desc'
+            }
+        });
+        if(!inscription) return null;
+        return {
+            id                      : inscription.id,
+            salle_classe_id         : inscription.salle_classe_id,
+            salle_classe_label      : inscription.sgs_salle_classe.code,
+            eleve_id                : inscription.eleve_id,
+            eleve_label             : inscription.sgs_eleve.first_name + " " + inscription.sgs_eleve.last_name,
+            registration_date       : inscription.registration_date,
+            registration_status     : inscription.registration_status,
+            registration_status_label : inscription.lkp_registration_status.display_value,
+            status_notes            : inscription.status_notes,
+            notes                   : inscription.notes,
+            create_date             : inscription.create_date,
+            created_by              : inscription.created_by,
+            change_date             : inscription.change_date,
+            changed_by              : inscription.changed_by
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Retrouver l'inscription active d'un élève pour l'année scolaire en cours",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
 export async function getEnseignantById(clientId:string, enseignantId:string) : Promise<DisplayEnseignantDO|null> {
     const functionName = "getEnseignantById";
     try {
