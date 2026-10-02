@@ -571,22 +571,64 @@ export async function getSalleClasseEnseignants(clientId:string, salleclasseId:s
     }
 }
 
-export async function getEcoleEnseignants(clientId:string, ecoleId:string) : Promise<DisplayEnseignantDO[]> {
+export async function getEcoleEnseignants(clientId:string, ecoleId:string, anneeScolaireId?:string) : Promise<DisplayEnseignantDO[]> {
     const functionName = "getEcoleEnseignants";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
         if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-        const listEnseignants:DisplayEnseignantDO[] = [];
-        const listClasses = await getEcoleSalleClasses(clientId, ecoleId);
-        if (listClasses.length === 0) return [];
-        for (const salleClasse of listClasses) {
-            const enseignants = await getSalleClasseEnseignants(clientId, salleClasse.id);
-            listEnseignants.push(...enseignants);
-        }
-        return [...new Set(listEnseignants)];
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
+        const enseignants = await prisma.sgs_enseignant.findMany({
+            where : {
+                sgs_portfolio_enseignant : {
+                    some : {
+                        sgs_salle_classe_matiere : {
+                            sgs_salle_classe : {
+                                ecole_id : ecoleId,
+                                annee_scolaire_id : anneeScolaire.id,
+                                sgs_ecole : {
+                                    sgs_client_ecole : {
+                                        some : {
+                                            client_id : clientId
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            include : {
+                lkp_gender : true
+            },
+            orderBy : [
+                { last_name : 'asc' },
+                { first_name : 'asc' }
+            ]
+        });
+        return enseignants.map(enseignant => ({
+            id              : enseignant.id,
+            matricule       : enseignant.matricule,
+            last_name       : enseignant.last_name,
+            first_name      : enseignant.first_name,
+            other_names     : enseignant.other_names,
+            preferred_name  : enseignant.preferred_name,
+            date_of_birth   : enseignant.date_of_birth,
+            gender          : enseignant.gender,
+            gender_label    : enseignant.lkp_gender.display_value,
+            phone_number    : enseignant.phone_number,
+            email           : enseignant.email,
+            notes           : enseignant.notes,
+            create_date     : enseignant.create_date,
+            created_by      : enseignant.created_by,
+            change_date     : enseignant.change_date,
+            changed_by      : enseignant.changed_by
+        }));
     }
     catch(error:any) {
-        logError('F',"Echec : Lister les enseignants d'une école ",ErrorOrigin + " - " + functionName, error.message, false);
+        logError('F',"Echec : Lister les enseignants d'une école pour une année scolaire ",ErrorOrigin + " - " + functionName, error.message, false);
         return [];
     }
 }
