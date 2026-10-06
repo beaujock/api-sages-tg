@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
-import { getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getClientCurrentAnneeScolaire, getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
+import { getEcoleLogoUrl } from "@/factories/ALL_USAGE/allUsageFactories";
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string}> }) {
@@ -14,7 +15,9 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const ecole = await getEcoleById(requestedRouteInfos.client.id, ecoleId);
-        return NextResponse.json({ecole : ecole}, { status: 200 });
+        const anneeScolaire = await getClientCurrentAnneeScolaire(requestedRouteInfos.client.id);
+        const logoURL = await getEcoleLogoUrl(clientCode,ecoleId);
+        return NextResponse.json({ecole : ecole, anneescolaire : anneeScolaire, logoURL : logoURL}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Echec : Détails d'une école ",(new URL(request.url)).pathname, error.message, true);
