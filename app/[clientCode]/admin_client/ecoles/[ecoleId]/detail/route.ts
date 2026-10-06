@@ -10,13 +10,15 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
         const clientCode = (await params).clientCode;
         if(!clientCode) return NextResponse.json({message : "Requête invalide (code client manquant)"}, { status: 400 });
         const ecoleId = (await params).ecoleId;
-        if(!ecoleId) return NextResponse.json({message : "Requête invalide (Identifcation de l'école manquant)"}, { status: 400 });
+        if(!ecoleId) return NextResponse.json({message : "Requête invalide (Identification de l'école manquant)"}, { status: 400 });
         const requestedRouteInfos = await getClientUserRouteRequestInfos(request, clientCode, "ADMIN_CLIENT","CLIENT");
         if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const ecole = await getEcoleById(requestedRouteInfos.client.id, ecoleId);
+        if (ecole === null) return NextResponse.json({message : "École non trouvée"}, { status: 400 });
         const anneeScolaire = await getClientCurrentAnneeScolaire(requestedRouteInfos.client.id);
-        const logoURL = await getEcoleLogoUrl(clientCode,ecoleId);
+        if (anneeScolaire === null) return NextResponse.json({message : "Aucune année scolaire en cours"}, { status: 400 });
+        const logoURL = await getEcoleLogoUrl(clientCode,ecole.code);
         return NextResponse.json({ecole : ecole, anneescolaire : anneeScolaire, logoURL : logoURL}, { status: 200 });
     }
     catch(error:any) {
