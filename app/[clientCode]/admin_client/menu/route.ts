@@ -16,7 +16,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
             const client = requestedRouteInfos.client;
             const userClientRoleMenuItems = await getRoleMenuItems(client.id, "ADMIN_CLIENT");
             const roleInfos = await getRoleByCode("ADMIN_CLIENT");
-            return NextResponse.json({menuItems : userClientRoleMenuItems, userFullName : requestedRouteInfos.user.full_name}, { status: 200 });
+            return NextResponse.json({client : requestedRouteInfos.client , role : roleInfos, menuItems : userClientRoleMenuItems, userFullName : requestedRouteInfos.user.full_name}, { status: 200 });
     }
     catch(error:any) {
         logError('F',"Echec : Menu d'un utilisateur",(new URL(request.url)).pathname, error.message, true);

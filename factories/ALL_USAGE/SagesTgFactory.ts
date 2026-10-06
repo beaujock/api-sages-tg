@@ -2,7 +2,6 @@ import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { logError } from "./allUsageFactories";
 import { InfoAnneeScolaireDO, InfoClasseDO, InfoGenderDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoResourceTypeDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { DisplayAnneeScolaireDO, getAnneeScolaireLabel, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/Displays";
-import { tg_role } from "@/lib/generated/prisma/client";
 const ErrorOrigin = "SagesTgFactory";
 
 export async function getAnneeScolaireById(anneeScolaireIdId:string) : Promise<DisplayAnneeScolaireDO|null> {
@@ -276,7 +275,7 @@ export async function getAllResourceTypes() : Promise<InfoResourceTypeDO[]> {
     }
 }
 
-export async function getRoleByCode(roleCode:string) : Promise<tg_role|null> {
+export async function getRoleByCode(roleCode:string) : Promise<InfoRoleDO|null> {
     const functionName = "getRoleByCode";
     try {
         const isConnected = await verifyAndSetPrismaConnection();
@@ -286,8 +285,12 @@ export async function getRoleByCode(roleCode:string) : Promise<tg_role|null> {
                 code : roleCode
             }
         });
-
-        return role;
+        if (!role) return null;
+        return {
+            id : role.id,
+            name : role.name,
+            code : role.code
+        };
     }
     catch(error:any) {
         logError('F',"Obtenir un client",ErrorOrigin + " : " + functionName, error.message, false);
