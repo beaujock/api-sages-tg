@@ -2,7 +2,7 @@ import { sgs_client, sgs_ecole, sgs_onboarding,sgs_user,tg_role_module_menu_item
 import { sgs_request } from "@/lib/generated/prisma/client";
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { OnboardingStepsInfos, SGSCreateRequestDO, ToOnboardingStepsInfos } from "@/types/ONBOARDING/onboardingTypes";
-import { generatePassword, sendEmail, logError } from "../utilitiesFactory";
+import { generatePassword, sendEmail, logError } from "../ALL_USAGE/UtilitiesFactory";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InfoClientMenuDO, InfoMenuItemLinkActionDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";

@@ -1,5 +1,5 @@
 import { getClientById, registerNewUser} from "@/factories/ONBOARDING/onboardingFactory";
-import { logError, sendEmail } from "@/factories/utilitiesFactory";
+import { logError, sendEmail } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { NextRequest, NextResponse } from "next/server";
 
 

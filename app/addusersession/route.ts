@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logError } from "@/factories/utilitiesFactory";
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { addUserSession } from "@/factories/userFactory";
 import { verifyToken } from "@/lib/auth";
 import { DecodedJwtToken } from "@/types/USERX/UserTypes";

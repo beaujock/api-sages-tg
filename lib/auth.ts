@@ -5,7 +5,7 @@ import { getUserById, getUserRoles, getUserTypeResources } from '@/factories/use
 import { isWithinInterval } from 'date-fns';
 import { sgs_user } from './generated/prisma/client';
 import { routeRequestedInfos } from '@/types/USERX/UserTypes';
-import { logError } from '@/factories/utilitiesFactory';
+import { logError } from '@/factories/ALL_USAGE/UtilitiesFactory';
 import { getClientByCode } from '@/factories/ADMIN_CLIENT/clientFactory';
 
 const JWT_SECRET_STRING = process.env.JWT_SECRET as string; // Use a strong default for development, but always use env in production

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logError } from "@/factories/utilitiesFactory";
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
 import { CreateSalleClasseDO } from "@/types/ADMIN_CLIENT/Creates";
 import { createSalleClasse, getEcoleSalleClasseByCode } from "@/factories/ADMIN_CLIENT/clientFactory";

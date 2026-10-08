@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logError } from "@/factories/utilitiesFactory";
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { getConnectedUser } from "@/lib/auth";
 import {getUserRoles } from "@/factories/userFactory";
 import { getClientByCode } from "@/factories/ADMIN_CLIENT/clientFactory";

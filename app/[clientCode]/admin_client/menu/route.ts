@@ -1,7 +1,7 @@
 
 import { getRoleMenuItems } from "@/factories/ADMIN_CLIENT/clientFactory";
 import { getRoleByCode } from "@/factories/ALL_USAGE/SagesTgFactory";
-import { logError } from "@/factories/utilitiesFactory";
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 

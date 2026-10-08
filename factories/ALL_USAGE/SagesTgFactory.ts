@@ -1,5 +1,5 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { logError } from "./allUsageFactories";
+import { logError } from "./UtilitiesFactory";
 import { InfoAnneeScolaireDO, InfoClasseDO, InfoGenderDO, InfoMenuItemLinkActionDO, InfoModuleDO, InfoResourceTypeDO, InfoRoleDO, InfoRoleModuleMenuItemDO } from "@/types/ALL_USAGE/AllUsagesTypes";
 import { DisplayAnneeScolaireDO, getAnneeScolaireLabel, ToDisplayAnneeScolaireDO } from "@/types/ADMIN_CLIENT/Displays";
 const ErrorOrigin = "SagesTgFactory";
@@ -326,7 +326,6 @@ export async function getEnseignementClasses(enseignementId:string) : Promise<In
         return [];
     }
 }
-
 
 
 export async function functionName() {

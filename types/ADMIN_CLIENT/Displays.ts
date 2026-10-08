@@ -1,4 +1,4 @@
-import { logError } from "@/factories/utilitiesFactory";
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { lkp_client_status, sgs_client, sgs_ecole, sgs_eleve, sgs_salle_classe, sgs_user, tg_annee_scolaire, tg_systeme_scolaire } from "@/lib/generated/prisma/client";
 import { prisma, verifyAndSetPrismaConnection } from "@/lib/prisma";
 import { getYear } from "date-fns";

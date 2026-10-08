@@ -233,8 +233,8 @@ model sgs_client_setting {
   created_by                String     @db.VarChar(32)
   change_date               DateTime?  @db.Timestamptz(6)
   changed_by                String?    @db.VarChar(32)
-  anneescolaire_id          String?    @db.Uuid
   max_admin_ecole_users     Int        @default(1)
+  anneescolaire_id          String?    @db.Uuid
   sgs_client                sgs_client @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -271,7 +271,9 @@ model sgs_ecole {
   change_date            DateTime?          @db.Timestamptz(6)
   changed_by             String?            @db.VarChar(32)
   sgs_client_ecole       sgs_client_ecole[]
+  sgs_ecole_event        sgs_ecole_event[]
   sgs_salle_classe       sgs_salle_classe[]
+  sgs_sujet              sgs_sujet[]
 }
 
 model sgs_eleve {
@@ -291,6 +293,7 @@ model sgs_eleve {
   change_date     DateTime?         @db.Timestamptz(6)
   changed_by      String?           @db.VarChar(32)
   lkp_gender      lkp_gender        @relation(fields: [gender], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_evaluation  sgs_evaluation[]
   sgs_inscription sgs_inscription[]
 }
 
@@ -311,7 +314,9 @@ model sgs_enseignant {
   change_date              DateTime?                  @db.Timestamptz(6)
   changed_by               String?                    @db.VarChar(32)
   lkp_gender               lkp_gender                 @relation(fields: [gender], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_evaluation           sgs_evaluation[]
   sgs_portfolio_enseignant sgs_portfolio_enseignant[]
+  sgs_sujet                sgs_sujet[]
 }
 
 model sgs_errors_log {
@@ -329,20 +334,21 @@ model sgs_errors_log {
 }
 
 model sgs_inscription {
-  id                      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  salle_classe_id         String                  @db.Uuid
-  eleve_id                String                  @db.Uuid
-  registration_date       DateTime                @db.Date
-  registration_status     String                  @default("A") @db.VarChar(1)
-  status_notes            String?                 @db.VarChar
-  notes                   String?                 @db.VarChar
-  create_date             DateTime                @db.Timestamptz(6)
-  created_by              String                  @db.VarChar(32)
-  change_date             DateTime?               @db.Timestamptz(6)
-  changed_by              String?                 @db.VarChar(32)
-  sgs_eleve               sgs_eleve               @relation(fields: [eleve_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  lkp_registration_status lkp_registration_status @relation(fields: [registration_status], references: [code], onDelete: NoAction, onUpdate: NoAction)
-  sgs_salle_classe        sgs_salle_classe        @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  salle_classe_id          String                     @db.Uuid
+  eleve_id                 String                     @db.Uuid
+  registration_date        DateTime                   @db.Date
+  registration_status      String                     @default("A") @db.VarChar(1)
+  status_notes             String?                    @db.VarChar
+  notes                    String?                    @db.VarChar
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  sgs_eleve                sgs_eleve                  @relation(fields: [eleve_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_registration_status  lkp_registration_status    @relation(fields: [registration_status], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sgs_salle_classe         sgs_salle_classe           @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_inscription_paiement sgs_inscription_paiement[]
 }
 
 model sgs_onboarding {
@@ -430,7 +436,11 @@ model sgs_salle_classe {
   created_by               String                     @db.VarChar(32)
   change_date              DateTime?                  @db.Timestamptz(6)
   changed_by               String?                    @db.VarChar(32)
+  sgs_administration_sujet sgs_administration_sujet[]
+  sgs_emploi_du_temp       sgs_emploi_du_temp[]
+  sgs_frais_scolarite      sgs_frais_scolarite[]
   sgs_inscription          sgs_inscription[]
+  sgs_instruction          sgs_instruction[]
   tg_annee_scolaire        tg_annee_scolaire          @relation(fields: [annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_classe                tg_classe                  @relation(fields: [classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sgs_ecole                sgs_ecole                  @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -509,15 +519,19 @@ model sgs_user_role {
 }
 
 model tg_annee_scolaire {
-  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  start_date       DateTime           @db.Date
-  end_date         DateTime           @db.Date
-  notes            String?            @db.VarChar
-  create_date      DateTime           @db.Timestamptz(6)
-  created_by       String             @db.VarChar(32)
-  change_date      DateTime?          @db.Timestamptz(6)
-  changed_by       String?            @db.VarChar(32)
-  sgs_salle_classe sgs_salle_classe[]
+  id                                                                                                              String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  start_date                                                                                                      DateTime                         @db.Date
+  end_date                                                                                                        DateTime                         @db.Date
+  notes                                                                                                           String?                          @db.VarChar
+  create_date                                                                                                     DateTime                         @db.Timestamptz(6)
+  created_by                                                                                                      String                           @db.VarChar(32)
+  change_date                                                                                                     DateTime?                        @db.Timestamptz(6)
+  changed_by                                                                                                      String?                          @db.VarChar(32)
+  enseignement_annee_scolaire_id                                                                                  String?                          @db.Uuid
+  label                                                                                                           String?                          @db.VarChar(32)
+  sgs_salle_classe                                                                                                sgs_salle_classe[]
+  tg_enseignement_annee_scolaire_tg_annee_scolaire_enseignement_annee_scolaire_idTotg_enseignement_annee_scolaire tg_enseignement_annee_scolaire?  @relation("tg_annee_scolaire_enseignement_annee_scolaire_idTotg_enseignement_annee_scolaire", fields: [enseignement_annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tg_annee_scolaire_enseignement_anscol_fkey")
+  tg_enseignement_annee_scolaire_tg_enseignement_annee_scolaire_annee_scolaire_idTotg_annee_scolaire              tg_enseignement_annee_scolaire[] @relation("tg_enseignement_annee_scolaire_annee_scolaire_idTotg_annee_scolaire")
 }
 
 model tg_classe {
@@ -533,38 +547,42 @@ model tg_classe {
   change_date      DateTime?          @db.Timestamptz(6)
   changed_by       String?            @db.VarChar(32)
   sgs_salle_classe sgs_salle_classe[]
+  sgs_sujet        sgs_sujet[]
   tg_niveau        tg_niveau          @relation(fields: [niveau_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tg_serie         tg_serie?          @relation(fields: [serie_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tg_enseignement {
-  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  systeme_scolaire_id String              @db.Uuid
-  full_name           String              @db.VarChar(128)
-  short_name          String?             @db.VarChar(64)
-  code                String              @unique @db.VarChar(32)
-  notes               String?             @db.VarChar
-  create_date         DateTime            @db.Timestamptz(6)
-  created_by          String              @db.VarChar(32)
-  change_date         DateTime?           @db.Timestamptz(6)
-  changed_by          String?             @db.VarChar(32)
-  tg_systeme_scolaire tg_systeme_scolaire @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tg_niveau           tg_niveau[]
-  tg_serie            tg_serie[]
+  id                             String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  systeme_scolaire_id            String                           @db.Uuid
+  full_name                      String                           @db.VarChar(128)
+  short_name                     String?                          @db.VarChar(64)
+  code                           String                           @unique @db.VarChar(32)
+  notes                          String?                          @db.VarChar
+  create_date                    DateTime                         @db.Timestamptz(6)
+  created_by                     String                           @db.VarChar(32)
+  change_date                    DateTime?                        @db.Timestamptz(6)
+  changed_by                     String?                          @db.VarChar(32)
+  tg_systeme_scolaire            tg_systeme_scolaire              @relation(fields: [systeme_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_enseignement_annee_scolaire tg_enseignement_annee_scolaire[]
+  tg_niveau                      tg_niveau[]
+  tg_serie                       tg_serie[]
 }
 
 model tg_matiere {
-  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  full_name                String                     @db.VarChar(128)
-  short_name               String?                    @db.VarChar(64)
-  code                     String                     @unique @db.VarChar(32)
-  description              String?                    @db.VarChar(256)
-  notes                    String?                    @db.VarChar
-  create_date              DateTime                   @db.Timestamptz(6)
-  created_by               String                     @db.VarChar(32)
-  change_date              DateTime?                  @db.Timestamptz(6)
-  changed_by               String?                    @db.VarChar(32)
-  sgs_salle_classe_matiere sgs_salle_classe_matiere[]
+  id                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name                  String                       @db.VarChar(128)
+  short_name                 String?                      @db.VarChar(64)
+  code                       String                       @unique @db.VarChar(32)
+  description                String?                      @db.VarChar(256)
+  notes                      String?                      @db.VarChar
+  create_date                DateTime                     @db.Timestamptz(6)
+  created_by                 String                       @db.VarChar(32)
+  change_date                DateTime?                    @db.Timestamptz(6)
+  changed_by                 String?                      @db.VarChar(32)
+  sgs_element_emploi_du_temp sgs_element_emploi_du_temp[]
+  sgs_salle_classe_matiere   sgs_salle_classe_matiere[]
+  sgs_sujet                  sgs_sujet[]
 }
 
 model tg_module {
@@ -775,12 +793,241 @@ model sgs_client_ecole_setting {
   primaire                          String?          @db.Uuid
   secondaire_premier_cycle          String?          @db.Uuid
   secondaire_second_cycle_general   String?          @db.Uuid
-  secondaire_second_cycle_technique String?          @db.Uuid
-  superieure                        String?          @db.Uuid
+  formation_professionelle          String?          @db.Uuid
   notes                             String?          @db.VarChar
   create_date                       DateTime         @db.Timestamptz(6)
   created_by                        String           @db.VarChar(32)
   change_date                       DateTime?        @db.Timestamptz(6)
   changed_by                        String?          @db.VarChar(32)
+  secondaire_second_cycle_technique String?          @db.Uuid
   sgs_client_ecole                  sgs_client_ecole @relation(fields: [client_ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model lkp_jour {
+  code                       String                       @id @db.VarChar(2)
+  display_value              String                       @db.VarChar(8)
+  description                String?                      @db.VarChar(32)
+  create_date                DateTime                     @db.Timestamptz(6)
+  created_by                 String                       @db.VarChar(32)
+  change_date                DateTime?                    @db.Timestamptz(6)
+  changed_by                 String?                      @db.VarChar(32)
+  sgs_element_emploi_du_temp sgs_element_emploi_du_temp[]
+}
+
+model lkp_paiement_type {
+  code                     String                     @id @db.VarChar(1)
+  display_value            String                     @db.VarChar(16)
+  description              String?                    @db.VarChar(32)
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  sgs_inscription_paiement sgs_inscription_paiement[]
+}
+
+model lkp_type_event {
+  code            String            @id @db.VarChar(1)
+  display_value   String            @db.VarChar(8)
+  description     String?           @db.VarChar(32)
+  create_date     DateTime          @db.Timestamptz(6)
+  created_by      String            @db.VarChar(32)
+  change_date     DateTime?         @db.Timestamptz(6)
+  changed_by      String?           @db.VarChar(32)
+  sgs_ecole_event sgs_ecole_event[]
+}
+
+model sgs_administration_sujet {
+  id                       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sujet_id                 String?           @db.Uuid
+  salle_classe_id          String?           @db.Uuid
+  total_grade_points       Decimal           @db.Decimal(3, 2)
+  administration_date      DateTime?         @db.Date
+  adminitration_start_time DateTime          @db.Time(6)
+  adminitration_end_time   DateTime          @db.Time(6)
+  administration_infos     String?           @db.VarChar
+  notes                    String?           @db.VarChar
+  create_date              DateTime          @db.Timestamptz(6)
+  created_by               String            @db.VarChar(32)
+  change_date              DateTime?         @db.Timestamptz(6)
+  changed_by               String?           @db.VarChar(32)
+  sgs_salle_classe         sgs_salle_classe? @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_sujet                sgs_sujet?        @relation(fields: [sujet_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_evaluation           sgs_evaluation[]
+}
+
+model sgs_ecole_event {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ecole_id         String         @db.Uuid
+  type_event       String         @db.VarChar(1)
+  event_name       String         @db.VarChar(128)
+  event_start_date DateTime       @db.Date
+  event_end_date   DateTime       @db.Date
+  start_time       DateTime?      @db.Time(6)
+  end_time         DateTime?      @db.Time(6)
+  notes            String?        @db.VarChar
+  create_date      DateTime       @db.Timestamptz(6)
+  created_by       String         @db.VarChar(32)
+  change_date      DateTime?      @db.Timestamptz(6)
+  changed_by       String?        @db.VarChar(32)
+  sgs_ecole        sgs_ecole      @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_type_event   lkp_type_event @relation(fields: [type_event], references: [code], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_element_emploi_du_temp {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  emploi_du_temp_id  String             @db.Uuid
+  matiere_id         String?            @db.Uuid
+  jour               String             @db.VarChar(2)
+  start_date         DateTime           @db.Date
+  end_date           DateTime           @db.Date
+  start_time         DateTime           @db.Time(6)
+  end_time           DateTime           @db.Time(6)
+  notes              String?            @db.VarChar
+  create_date        DateTime           @db.Timestamptz(6)
+  created_by         String             @db.VarChar(32)
+  change_date        DateTime?          @db.Timestamptz(6)
+  changed_by         String?            @db.VarChar(32)
+  sgs_emploi_du_temp sgs_emploi_du_temp @relation(fields: [emploi_du_temp_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_jour           lkp_jour           @relation(fields: [jour], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  tg_matiere         tg_matiere?        @relation(fields: [matiere_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_emploi_du_temp {
+  id                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  salle_classe_id            String                       @db.Uuid
+  notes                      String?                      @db.VarChar
+  create_date                DateTime                     @db.Timestamptz(6)
+  created_by                 String                       @db.VarChar(32)
+  change_date                DateTime?                    @db.Timestamptz(6)
+  changed_by                 String?                      @db.VarChar(32)
+  sgs_element_emploi_du_temp sgs_element_emploi_du_temp[]
+  sgs_salle_classe           sgs_salle_classe             @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_evaluation {
+  id                       String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  administration_sujet_id  String?                   @db.Uuid
+  graded_by                String?                   @db.Uuid
+  eleve_id                 String                    @db.Uuid
+  evaluation_date          DateTime?                 @db.Date
+  grade_obtained           Decimal                   @db.Decimal(3, 2)
+  notes                    String?                   @db.VarChar
+  create_date              DateTime                  @db.Timestamptz(6)
+  created_by               String                    @db.VarChar(32)
+  change_date              DateTime?                 @db.Timestamptz(6)
+  changed_by               String?                   @db.VarChar(32)
+  sgs_administration_sujet sgs_administration_sujet? @relation(fields: [administration_sujet_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_eleve                sgs_eleve                 @relation(fields: [eleve_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_enseignant           sgs_enseignant?           @relation(fields: [graded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_frais_scolarite {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  salle_classe_id  String           @db.Uuid
+  amount           Decimal          @db.Decimal(8, 2)
+  notes            String?          @db.VarChar
+  create_date      DateTime         @db.Timestamptz(6)
+  created_by       String           @db.VarChar(32)
+  change_date      DateTime?        @db.Timestamptz(6)
+  changed_by       String?          @db.VarChar(32)
+  sgs_salle_classe sgs_salle_classe @relation(fields: [salle_classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_inscription_paiement {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  inscription_id     String            @db.Uuid
+  type_paiement      String            @db.VarChar(1)
+  amount             Decimal           @db.Decimal(8, 2)
+  paid_by            String            @db.VarChar(128)
+  received_by        String            @db.VarChar(128)
+  paiement_nullified Boolean           @default(false)
+  notes              String?           @db.VarChar
+  create_date        DateTime          @db.Timestamptz(6)
+  created_by         String            @db.VarChar(32)
+  change_date        DateTime?         @db.Timestamptz(6)
+  changed_by         String?           @db.VarChar(32)
+  sgs_inscription    sgs_inscription   @relation(fields: [inscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lkp_paiement_type  lkp_paiement_type @relation(fields: [type_paiement], references: [code], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_instruction {
+  id                      String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  salle_classe_matiere_id String           @db.Uuid
+  instruction_date        DateTime         @db.Date
+  start_time              DateTime         @db.Time(6)
+  end_time                DateTime         @db.Time(6)
+  notes                   String?          @db.VarChar
+  create_date             DateTime         @db.Timestamptz(6)
+  created_by              String           @db.VarChar(32)
+  change_date             DateTime?        @db.Timestamptz(6)
+  changed_by              String?          @db.VarChar(32)
+  sgs_salle_classe        sgs_salle_classe @relation(fields: [salle_classe_matiere_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sgs_sujet {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code_sujet               String                     @db.VarChar(32)
+  ecole_id                 String?                    @db.Uuid
+  matiere_id               String                     @db.Uuid
+  classe_id                String                     @db.Uuid
+  submitted_by             String?                    @db.Uuid
+  content                  String?                    @db.VarChar
+  notes                    String?                    @db.VarChar
+  create_date              DateTime                   @db.Timestamptz(6)
+  created_by               String                     @db.VarChar(32)
+  change_date              DateTime?                  @db.Timestamptz(6)
+  changed_by               String?                    @db.VarChar(32)
+  sgs_administration_sujet sgs_administration_sujet[]
+  tg_classe                tg_classe                  @relation(fields: [classe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_ecole                sgs_ecole?                 @relation(fields: [ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_matiere               tg_matiere                 @relation(fields: [matiere_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sgs_enseignant           sgs_enseignant?            @relation(fields: [submitted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tg_enseignement_annee_scolaire {
+  id                                                                                                 String                                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enseignement_id                                                                                    String                                    @db.Uuid
+  start_date                                                                                         DateTime                                  @db.Date
+  end_date                                                                                           DateTime                                  @db.Date
+  notes                                                                                              String?                                   @db.VarChar
+  create_date                                                                                        DateTime                                  @db.Timestamptz(6)
+  created_by                                                                                         String                                    @db.VarChar(32)
+  change_date                                                                                        DateTime?                                 @db.Timestamptz(6)
+  changed_by                                                                                         String?                                   @db.VarChar(32)
+  annee_scolaire_id                                                                                  String                                    @db.Uuid
+  tg_annee_scolaire_tg_annee_scolaire_enseignement_annee_scolaire_idTotg_enseignement_annee_scolaire tg_annee_scolaire[]                       @relation("tg_annee_scolaire_enseignement_annee_scolaire_idTotg_enseignement_annee_scolaire")
+  tg_annee_scolaire_tg_enseignement_annee_scolaire_annee_scolaire_idTotg_annee_scolaire              tg_annee_scolaire                         @relation("tg_enseignement_annee_scolaire_annee_scolaire_idTotg_annee_scolaire", fields: [annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_enseignement                                                                                    tg_enseignement                           @relation(fields: [enseignement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tg_enseignement_annee_scolaire_break                                                               tg_enseignement_annee_scolaire_break[]
+  tg_enseignement_annee_scolaire_division                                                            tg_enseignement_annee_scolaire_division[]
+}
+
+model tg_enseignement_annee_scolaire_break {
+  id                             String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enseignement_annee_scolaire_id String                         @db.Uuid
+  break_full_name                String                         @db.VarChar(64)
+  break_short_name               String                         @db.VarChar(32)
+  start_date                     DateTime                       @db.Date
+  end_date                       DateTime                       @db.Date
+  notes                          String?                        @db.VarChar
+  create_date                    DateTime                       @db.Timestamptz(6)
+  created_by                     String                         @db.VarChar(32)
+  change_date                    DateTime?                      @db.Timestamptz(6)
+  changed_by                     String?                        @db.VarChar(32)
+  tg_enseignement_annee_scolaire tg_enseignement_annee_scolaire @relation(fields: [enseignement_annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tg_enseignement_annee_scolai_enseignement_annee_scolaire__fkey1")
+}
+
+model tg_enseignement_annee_scolaire_division {
+  id                             String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enseignement_annee_scolaire_id String                         @db.Uuid
+  division_full_name             String                         @db.VarChar(64)
+  start_date                     DateTime                       @db.Date
+  end_date                       DateTime                       @db.Date
+  notes                          String?                        @db.VarChar
+  create_date                    DateTime                       @db.Timestamptz(6)
+  created_by                     String                         @db.VarChar(32)
+  change_date                    DateTime?                      @db.Timestamptz(6)
+  changed_by                     String?                        @db.VarChar(32)
+  division_short_name            String?                        @db.VarChar(32)
+  tg_enseignement_annee_scolaire tg_enseignement_annee_scolaire @relation(fields: [enseignement_annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tg_enseignement_annee_scolair_enseignement_annee_scolaire__fkey")
 }

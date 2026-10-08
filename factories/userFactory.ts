@@ -1,6 +1,6 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
 import { ResourceCombo, UserBaseInfos, UserInfos, UserRoleInfos } from "@/types/USERX/UserTypes";
-import { logError } from "./utilitiesFactory";
+import { logError } from "./ALL_USAGE/UtilitiesFactory";
 import { sgs_client, sgs_user } from "@/lib/generated/prisma/client";
 import { getRoleMenuItems } from "./ADMIN_CLIENT/clientFactory";
 

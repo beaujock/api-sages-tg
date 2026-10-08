@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logError } from "@/factories/utilitiesFactory";
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { getUser, getUserClient, getUserResources, getUserRoles } from "@/factories/userFactory";
 import { generateToken } from "@/lib/auth";
 import { SagesMenuItem } from "@/types/USERX/UserTypes";

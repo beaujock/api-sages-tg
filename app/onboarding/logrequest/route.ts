@@ -1,5 +1,5 @@
 import { createRequestForOnboarding } from "@/factories/ONBOARDING/onboardingFactory";
-import { generateCode, logError, sendEmail } from "@/factories/utilitiesFactory";
+import { generateCode, logError, sendEmail } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { SGSCreateRequestDO } from "@/types/ONBOARDING/onboardingTypes";
 import { NextRequest, NextResponse } from "next/server";
 

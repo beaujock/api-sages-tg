@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logError } from "@/factories/utilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
 import { getClientCurrentAnneeScolaire, getEcoleById } from "@/factories/ADMIN_CLIENT/clientFactory";
-import { getEcoleLogoUrl } from "@/factories/ALL_USAGE/allUsageFactories";
+import { getEcoleLogoUrl, logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 
 
 export async function GET(request:NextRequest, { params }: { params: Promise<{clientCode: string, ecoleId: string}> }) {

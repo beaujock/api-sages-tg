@@ -1,11 +1,10 @@
 import nodemailer from 'nodemailer';
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { tg_annee_scolaire, } from '@/lib/generated/prisma/client';
 import "dotenv/config";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const ErrorOrigin = "utilitiesFactory"
+const ErrorOrigin = "UtilitiesFactory"
 
 export async function sendEmail(formData:any) {
   const name = formData.name;
@@ -93,7 +92,7 @@ export async function generatePassword(minLength:number = 8) {
   return passwordChars.join('');
 }
 
-export async function logError(errorType:string, title:string, origin:string, details:string, sendingEmail:boolean) {
+export async function logError(errorType:string, title:string, origin:string, details:string, sendingEmail:boolean = false) {
   const functionName = "logError"
   try {
           const isConnected = await verifyAndSetPrismaConnection();
@@ -123,29 +122,6 @@ export async function logError(errorType:string, title:string, origin:string, de
                       email : process.env.STMP_USER!,
                       message : "Voir détails de l'erreur ci-dessous\n\n" + error.message 
                   });
-      }
-}
-
-export async function getCurrentAnneeScolaire() : Promise<tg_annee_scolaire|null> {
-   const functionName = "getCurrentAnneeScolaire"
-  try {
-          const isConnected = await verifyAndSetPrismaConnection();
-          if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
-          const currentDate = new Date();
-          const anneeScolaire = await prisma.tg_annee_scolaire.findFirst({
-            where : {
-              start_date : {
-                lte : currentDate
-              },
-              end_date : {
-                gte : currentDate
-              }
-            }
-          });
-          return anneeScolaire;
-      }
-      catch(error:any) {
-          return null;
       }
 }
 

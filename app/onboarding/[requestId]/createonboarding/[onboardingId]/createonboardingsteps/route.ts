@@ -1,6 +1,6 @@
 import { createOnboardingSteps} from "@/factories/ONBOARDING/onboardingFactory";
 import { NextRequest, NextResponse } from "next/server";
-import { logError } from "@/factories/utilitiesFactory";
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 
 
 export async function POST(request:NextRequest, { params }: { params: Promise<{requestId:string, onboardingId: string }> }) {

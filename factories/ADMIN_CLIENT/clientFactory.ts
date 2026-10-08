@@ -1,5 +1,5 @@
 import { verifyAndSetPrismaConnection, prisma } from "@/lib/prisma";
-import { generateMatricule, logError } from "../ALL_USAGE/allUsageFactories";
+import { generateMatricule, logError } from "../ALL_USAGE/UtilitiesFactory";
 import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, getAnneeScolaireLabel, ToDisplayAnneeScolaireDO, ToDisplayClientDO, ToDisplayEcoleDO, ToDisplayEleveDO, ToDisplaySalleClasseDO, ToDisplayUserDO } from "@/types/ADMIN_CLIENT/Displays";
 import { OverviewDO, OverviewEcoleDO, OverviewSalleClasseDO, OverviewEleveDO, OverviewEnseignantDO } from "@/types/ADMIN_CLIENT/Overviews";
 import { InfoClasseDO, InfoMatiereDO, InfoMenuItemLinkActionDO, InfoModuleDO} from "@/types/ALL_USAGE/AllUsagesTypes";

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logError } from "@/factories/utilitiesFactory";
 import { getConnectedUser } from "@/lib/auth";
 import { getAllGenders } from "@/factories/ALL_USAGE/SagesTgFactory";
-import { uploadElevePhoto } from "@/factories/ALL_USAGE/allUsageFactories";
+import { uploadElevePhoto, logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 
 
 export async function POST(request:NextRequest, { params }: { params: Promise<{clientCode: string}> }) {

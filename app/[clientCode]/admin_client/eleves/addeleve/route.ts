@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logError } from "@/factories/utilitiesFactory";
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
 import { getClientUserRouteRequestInfos } from "@/lib/auth";
 import { CreateEleveDO, CreateInscriptionDO } from "@/types/ADMIN_CLIENT/Creates";
 import { createEleve, createInscription } from "@/factories/ADMIN_CLIENT/clientFactory";
