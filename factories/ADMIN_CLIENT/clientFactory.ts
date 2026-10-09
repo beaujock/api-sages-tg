@@ -1085,6 +1085,7 @@ export async function getClientCurrentAnneeScolaire(clientId:string) : Promise<D
           });
           if (anneeScolaireFromSetting && anneeScolaireFromSetting.anneescolaire_id !== null) {
             anneeScolaire = await getAnneeScolaireById(anneeScolaireFromSetting.anneescolaire_id);
+            if (anneeScolaire) return anneeScolaire;
           }
           const currentDate = new Date();
           const currentAnneeScolaire = await prisma.tg_annee_scolaire.findFirst({
@@ -1101,7 +1102,7 @@ export async function getClientCurrentAnneeScolaire(clientId:string) : Promise<D
           return anneeScolaire;
       }
       catch(error:any) {
-        logError('F',"Echec : Retrouver l'annéee scolaire en cours",ErrorOrigin + " - " + functionName, error.message, false);
+        logError('F',"Echec : Retrouver l'année scolaire en cours",ErrorOrigin + " - " + functionName, error.message, false);
         return null;
       }
 }

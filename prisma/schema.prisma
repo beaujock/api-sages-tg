@@ -528,7 +528,7 @@ model tg_annee_scolaire {
   change_date                                                                                                     DateTime?                        @db.Timestamptz(6)
   changed_by                                                                                                      String?                          @db.VarChar(32)
   enseignement_annee_scolaire_id                                                                                  String?                          @db.Uuid
-  label                                                                                                           String?                          @db.VarChar(32)
+  label                                                                                                           String                           @db.VarChar(32)
   sgs_salle_classe                                                                                                sgs_salle_classe[]
   tg_enseignement_annee_scolaire_tg_annee_scolaire_enseignement_annee_scolaire_idTotg_enseignement_annee_scolaire tg_enseignement_annee_scolaire?  @relation("tg_annee_scolaire_enseignement_annee_scolaire_idTotg_enseignement_annee_scolaire", fields: [enseignement_annee_scolaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tg_annee_scolaire_enseignement_anscol_fkey")
   tg_enseignement_annee_scolaire_tg_enseignement_annee_scolaire_annee_scolaire_idTotg_annee_scolaire              tg_enseignement_annee_scolaire[] @relation("tg_enseignement_annee_scolaire_annee_scolaire_idTotg_annee_scolaire")
@@ -800,6 +800,7 @@ model sgs_client_ecole_setting {
   change_date                       DateTime?        @db.Timestamptz(6)
   changed_by                        String?          @db.VarChar(32)
   secondaire_second_cycle_technique String?          @db.Uuid
+  annee_scolaire_id                 String?          @db.Uuid
   sgs_client_ecole                  sgs_client_ecole @relation(fields: [client_ecole_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 

@@ -1,0 +1,318 @@
+import { logError } from "@/factories/ALL_USAGE/UtilitiesFactory";
+import { lkp_client_status, sgs_client, sgs_ecole, sgs_eleve, sgs_salle_classe, sgs_user, tg_annee_scolaire, tg_systeme_scolaire } from "@/lib/generated/prisma/client";
+import { prisma, verifyAndSetPrismaConnection } from "@/lib/prisma";
+import { getYear } from "date-fns";
+
+const ErrorOrigin = "ADMIN_ECOLE : Displays";
+
+//#region User Displays
+export type DisplayUserDO = {
+    id                       : string,
+    username                 : string,
+    email                    : string,
+    full_name                : string,
+    phone_number             : string|null,
+    create_date              : Date,
+    created_by               : string,
+    change_date              : Date|null,
+    changed_by               : string|null
+}
+//#endregion
+
+//#region Client Displays
+export type DisplayClientDO = {
+    id                      : string;
+    systeme_scolaire_id     : string;
+    systeme_scolaire_label  : string
+    active                  : boolean;
+    active_label            : string;
+    status                  : string;
+    status_label            : string;
+    legal_name              : string;
+    short_name              : string|null;
+    code                    : string;
+    address                 : string|null;
+    website                 : string|null;
+    main_contact_name       : string|null;
+    main_contact_email      : string|null;
+    main_contact_phone      : string|null;
+    other_contact_infos     : string|null;
+    notes                   : string|null;
+}
+//#endregion
+
+//#region Ecole Displays
+export type DisplayEcoleDO = {
+    id                      : string;
+    full_name               : string;
+    short_name              : string|null;
+    establishment_date      : Date|null;
+    code                    : string;
+    primary_contact_name    : string|null;
+    secondary_contact_name  : string|null;
+    contact_infos           : string|null;
+    phone_number            : string|null;
+    email                   : string|null;
+    website                 : string|null;
+    notes                   : string|null;
+    create_date             : Date;
+    created_by              : string;
+    change_date             : Date|null;
+    changed_by              : string|null;
+}
+
+//#endregion 
+
+//#region SalleClasse Displays
+export type DisplaySalleClasseDO = {
+    id                       : string;
+    ecole_id                 : string;
+    ecole_label              : string;
+    annee_scolaire_id        : string;
+    annee_scolaire_label     : string;
+    classe_id                : string;
+    classe_label             : string;
+    code                     : string;
+    description              : string|null;
+    notes                    : string|null;
+    create_date              : Date;
+    created_by               : string;
+    change_date              : Date|null;
+    changed_by               : string|null;
+}
+
+//#endregion 
+
+//#region Eleve Displays
+export type DisplayEleveDO = {
+    id              : string;
+    matricule       : string;
+    last_name       : string;
+    first_name      : string;
+    other_names     : string|null;
+    preferred_name  : string|null;
+    date_of_birth   : Date|null;
+    gender          : string;
+    gender_label    : string;
+    phone_number    : string|null;
+    email           : string|null;
+    notes           : string|null;
+    create_date     : Date;
+    created_by      : string;
+    change_date     : Date|null;
+    changed_by      : string|null;
+}
+
+//#endregion
+
+//#region Enseignant Displays
+export type DisplayEnseignantDO = {
+    id              : string;
+    matricule       : string;
+    last_name       : string;
+    first_name      : string;
+    other_names     : string|null;
+    preferred_name  : string|null;
+    date_of_birth   : Date|null;
+    gender          : string;
+    gender_label    : string;
+    phone_number    : string|null;
+    email           : string|null;
+    notes           : string|null;
+    create_date     : Date;
+    created_by      : string;
+    change_date     : Date|null;
+    changed_by      : string|null;
+}
+//#endregion
+
+//#region Inscription Displays
+export type DisplayInscriptionDO = {
+    id                      : string;
+    salle_classe_id         : string;
+    salle_classe_label      : string;
+    eleve_id                : string;
+    eleve_label             : string;
+    registration_date       : Date;
+    registration_status     : string;
+    registration_status_label : string;
+    status_notes            : string|null;
+    notes                   : string|null;
+    create_date             : Date;
+    created_by              : string;
+    change_date             : Date|null;
+    changed_by              : string|null;
+}
+
+//#endregion
+
+//#region Annee Scolaire Displays
+export type DisplayAnneeScolaireDO = {
+    id             : string;
+    start_date     : Date;
+    end_date       : Date
+    label          : string;
+    notes          : string|null;
+    create_date    : Date;
+    created_by     : string;
+    change_date    : Date|null;       
+    changed_by     : string|null;
+}
+//#endregion
+
+/* Functions to get Data Objects from instances */
+
+export function getAnneeScolaireLabel(anneeScolaire : { start_date : Date, end_date : Date }) : string {
+    return getYear(anneeScolaire.start_date).toString() + "-" + getYear(anneeScolaire.end_date).toString();
+}
+
+export function ToDisplayClientDO(instance : sgs_client & { tg_systeme_scolaire : tg_systeme_scolaire, lkp_client_status : lkp_client_status }) : DisplayClientDO {
+    return {
+        id                      : instance.id,
+        systeme_scolaire_id     : instance.systeme_scolaire_id,
+        systeme_scolaire_label  : instance.tg_systeme_scolaire.code,
+        active                  : instance.active,
+        active_label            : (instance.active)?("Actif"):("Inactif"),
+        status                  : instance.status,
+        status_label            : instance.lkp_client_status.display_value,
+        legal_name              : instance.legal_name,
+        short_name              : instance.short_name,
+        code                    : instance.code,
+        address                 : instance.address,
+        website                 : instance.website,
+        main_contact_name       : instance.main_contact_name,
+        main_contact_email      : instance.main_contact_email,
+        main_contact_phone      : instance.main_contact_phone,
+        other_contact_infos     : instance.other_contact_infos,
+        notes                   : instance.notes
+    }
+}
+
+export async function ToDisplaySalleClasseDO(instance : sgs_salle_classe) : Promise<DisplaySalleClasseDO|null>
+{
+    const functionName = "ToDisplaySalleClasseDO";
+    try {
+            const isConnected = await verifyAndSetPrismaConnection();
+            if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+            const sc = await prisma.sgs_salle_classe.findUnique({
+                where : {
+                    id : instance.id
+                },
+                include : {
+                    tg_annee_scolaire : true,
+                    sgs_ecole : true,
+                    tg_classe : true,
+                }
+            });
+            if(!sc) return null;
+            return {
+                id                       : instance.id,
+                ecole_id                 : instance.ecole_id,
+                ecole_label              : sc.sgs_ecole.short_name,
+                annee_scolaire_id        : instance.annee_scolaire_id,
+                annee_scolaire_label     : sc.tg_annee_scolaire.label,
+                classe_id                : instance.classe_id,
+                classe_label             : sc.tg_classe.short_name,
+                code                     : instance.code,
+                description              : instance.description,
+                notes                    : instance.notes,
+                create_date              : instance.create_date,
+                created_by               : instance.created_by,
+                change_date              : instance.change_date,
+                changed_by               : instance.changed_by
+            }
+    }
+    catch(error:any) {
+        logError('F',"Echec : function description ",ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
+
+export async function ToDisplayEleveDO(instance : sgs_eleve) : Promise<DisplayEleveDO|null>
+{
+    const functionName = "ToDisplayEleveDO";
+    try {
+            const isConnected = await verifyAndSetPrismaConnection();
+            if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+            const eleve = await prisma.sgs_eleve.findUnique({
+                where : {
+                    id : instance.id
+                },
+                include : {
+                    lkp_gender : true
+                }
+            });
+            if(!eleve) return null;
+            return {
+                id              : eleve.id,
+                matricule       : eleve.matricule,
+                last_name       : eleve.last_name,
+                first_name      : eleve.first_name,
+                other_names     : eleve.other_names,
+                preferred_name  : eleve.preferred_name,
+                date_of_birth   : eleve.date_of_birth,
+                gender          : eleve.gender,
+                gender_label    : eleve.lkp_gender.display_value,
+                phone_number    : eleve.phone_number,
+                email           : eleve.email,
+                notes           : eleve.notes,
+                create_date     : eleve.create_date,
+                created_by      : eleve.created_by,
+                change_date     : eleve.change_date,
+                changed_by      : eleve.changed_by
+            }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Infos eleve",ErrorOrigin + " - " + functionName, error.message, true);
+        return null;
+    }
+}
+
+export function ToDisplayAnneeScolaireDO(instance : tg_annee_scolaire) : DisplayAnneeScolaireDO {
+    return {
+        id             : instance.id,
+        start_date     : instance.start_date,
+        end_date       : instance.end_date,
+        label          : instance.label,
+        notes          : instance.notes,
+        create_date    : instance.create_date,
+        created_by     : instance.created_by,
+        change_date    : instance.change_date,
+        changed_by     : instance.changed_by
+    }
+}
+
+export function ToDisplayEcoleDO(ecole : sgs_ecole) : DisplayEcoleDO {
+    return {
+            id                      : ecole.id,
+            full_name               : ecole.full_name,
+            short_name              : ecole.short_name,
+            establishment_date      : ecole.establishment_date,
+            code                    : ecole.code,
+            primary_contact_name    : ecole.primary_contact_name,
+            secondary_contact_name  : ecole.secondary_contact_name,
+            contact_infos           : ecole.contact_infos,
+            phone_number            : ecole.phone_number,
+            email                   : ecole.email,
+            website                 : ecole.website,
+            notes                   : ecole.notes,
+            create_date             : ecole.create_date,
+            created_by              : ecole.created_by,
+            change_date             : ecole.change_date,
+            changed_by              : ecole.changed_by
+        }
+}
+
+export function ToDisplayUserDO(user:sgs_user) : DisplayUserDO {
+    return {
+        id                       : user.id,
+        username                 : user.user_name,
+        email                    : user.email,
+        full_name                : user.full_name,
+        phone_number             : user.phone,
+        create_date              : user.create_date,
+        created_by               : user.created_by,
+        change_date              : user.change_date,
+        changed_by               : user.changed_by
+    }
+}
