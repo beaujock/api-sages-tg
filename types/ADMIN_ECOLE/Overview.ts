@@ -1,0 +1,46 @@
+export type OverviewEcoleDO = {
+    id                      : string;
+    short_name              : string;
+    code                    : string;
+    annee_scolaire_id       : string;
+    annee_scolaire_label    : string;
+    number_salles_classes   : number;
+    number_eleves           : number;
+}
+
+export type OverviewSalleClasseDO = {
+    id                      : string;
+    code                    : string;
+    ecole_id                : string;
+    ecole_label             : string;
+    annee_scolaire_id       : string;
+    annee_scolaire_label    : string;
+    number_eleves           : number;
+}
+
+export type OverviewEleveDO = {
+    id                      : string;
+    matricule               : string;
+    eleve_label             : string;
+    ecole_id                : string;
+    ecole_label             : string;
+    annee_scolaire_id       : string;
+    annee_scolaire_label    : string;
+    salle_classe_id         : string;
+    salle_classe_label      : string;
+}
+
+/*
+export type OverviewEnseignantDO = {
+    id                      : string;
+    enseignant_label        : string;
+    annee_scolaire_id       : string;
+    annee_scolaire_label    : string;
+    number_ecoles           : number;
+    number_salles_classes   : number;
+    number_matieres         : number;
+    number_evaluations      : number;
+    number_absences         : number;
+    number_bulletins        : number;
+}
+    */

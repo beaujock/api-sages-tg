@@ -3,6 +3,7 @@ import { logError } from "../ALL_USAGE/UtilitiesFactory";
 import { DisplayAnneeScolaireDO, DisplayClientDO, DisplayEcoleDO, DisplayEleveDO, DisplayEnseignantDO, DisplayInscriptionDO, DisplaySalleClasseDO, DisplayUserDO, ToDisplayClientDO, ToDisplayEcoleDO, ToDisplayUserDO } from "@/types/ADMIN_ECOLE/Display";
 import { getAnneeScolaireById } from "../ALL_USAGE/SagesTgFactory";
 import { getClientCurrentAnneeScolaire } from "../ADMIN_CLIENT/clientFactory";
+import { OverviewEcoleDO } from "@/types/ADMIN_ECOLE/Overview";
 const ErrorOrigin = "ADMIN_ECOLE : ecoleFactory";
 const EcoleResourceType = "ECOLE";
 
@@ -589,3 +590,57 @@ export async function getActiveUsers(clientId:string, ecoleId:string) : Promise<
 
 
 //#endregion
+
+//#region building overviews
+
+export async function getEcoleOverview(ecoleId:string) : Promise<OverviewEcoleDO|null> {
+    const functionName = "getEcoleOverview";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const clientEcole = await prisma.sgs_client_ecole.findFirst({
+            where : {
+                ecole_id : ecoleId,
+                active : true
+            },
+            include : {
+                sgs_ecole : true
+            }
+        });
+        if (!clientEcole) return null;
+        const ecole = clientEcole.sgs_ecole;
+        const anneeScolaire = await getEcoleCurrentAnneeScolaire(clientEcole.client_id, ecoleId);
+        if (anneeScolaire === null) throw new Error("Aucune année scolaire en cours");
+        const salleClasseFilter = {
+            ecole_id : ecoleId,
+            annee_scolaire_id : anneeScolaire.id
+        };
+        const [numberSallesClasses, eleves] = await Promise.all([
+            prisma.sgs_salle_classe.count({
+                where : salleClasseFilter
+            }),
+            prisma.sgs_inscription.findMany({
+                where : {
+                    sgs_salle_classe : salleClasseFilter
+                },
+                select : { eleve_id : true },
+                distinct : ['eleve_id']
+            })
+        ]);
+        return {
+            id                      : ecole.id,
+            short_name              : ecole.short_name,
+            code                    : ecole.code,
+            annee_scolaire_id       : anneeScolaire.id,
+            annee_scolaire_label    : anneeScolaire.label,
+            number_salles_classes   : numberSallesClasses,
+            number_eleves           : eleves.length
+        }
+    }
+    catch(error:any) {
+        logError('F',"Echec : Générer la vue d'ensemble d'une école",ErrorOrigin + " - " + functionName, error.message, false);
+        return null;
+    }
+}
+
+//#endregion building overviews
