@@ -136,6 +136,7 @@ export type DisplayInscriptionDO = {
     salle_classe_id         : string;
     salle_classe_label      : string;
     eleve_id                : string;
+    eleve_matricule         : string;
     eleve_label             : string;
     registration_date       : Date;
     registration_status     : string;

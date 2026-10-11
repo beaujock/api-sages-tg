@@ -314,6 +314,7 @@ export async function getInscriptionById(clientId:string, inscriptionId:string) 
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
             eleve_id                : inscription.eleve_id,
+            eleve_matricule         : inscription.sgs_eleve.matricule,
             eleve_label             : inscription.sgs_eleve.first_name + " " + inscription.sgs_eleve.last_name,
             registration_date       : inscription.registration_date,
             registration_status     : inscription.registration_status,
@@ -370,6 +371,7 @@ export async function getEleveCurrentActiveInscription(clientId:string, eleveId:
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
             eleve_id                : inscription.eleve_id,
+            eleve_matricule         : inscription.sgs_eleve.matricule,
             eleve_label             : inscription.sgs_eleve.first_name + " " + inscription.sgs_eleve.last_name,
             registration_date       : inscription.registration_date,
             registration_status     : inscription.registration_status,
@@ -802,6 +804,7 @@ export async function getInscriptions(clientId:string, anneeScolaireId?:string) 
         if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
         const inscriptions = await prisma.sgs_inscription.findMany({
             where : {
+                registration_status : "A",
                 sgs_salle_classe : {
                     annee_scolaire_id : anneeScolaire.id,
                     sgs_ecole : {
@@ -827,6 +830,7 @@ export async function getInscriptions(clientId:string, anneeScolaireId?:string) 
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
             eleve_id                : inscription.eleve_id,
+            eleve_matricule         : inscription.sgs_eleve.matricule,
             eleve_label             : inscription.sgs_eleve.first_name + " " + inscription.sgs_eleve.last_name,
             registration_date       : inscription.registration_date,
             registration_status     : inscription.registration_status,
@@ -1686,6 +1690,7 @@ export async function createInscription(clientId: string, inscriptionData : Crea
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
             eleve_id                : inscription.eleve_id,
+            eleve_matricule         : inscription.sgs_eleve.matricule,
             eleve_label             : inscription.sgs_eleve.first_name + " " + inscription.sgs_eleve.last_name,
             registration_date       : inscription.registration_date,
             registration_status     : inscription.registration_status,
