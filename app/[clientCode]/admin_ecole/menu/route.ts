@@ -10,7 +10,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
     try {
             const clientCode = (await params).clientCode;
             if(!clientCode) return NextResponse.json({message : "Requête invalide (code client manquant)"}, { status: 400 });
-            const requestedRouteInfos = await getClientUserRouteRequestInfos(request, clientCode, "ADMIN_CLIENT","CLIENT");
+            const requestedRouteInfos = await getClientUserRouteRequestInfos(request, clientCode, "ADMIN_ECOLE","ECOLE");
             if (requestedRouteInfos.client === null || requestedRouteInfos.user === null || !requestedRouteInfos.allowed || requestedRouteInfos.resources.length === 0)
                 return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
             const client = requestedRouteInfos.client;
