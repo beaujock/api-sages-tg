@@ -8,6 +8,8 @@ import { getAnneeScolaireById, getEnseignementClasses, getRoleByCode } from "../
 import { UpdateEcoleDO } from "@/types/ADMIN_CLIENT/Updates";
 import { ClientSettingsDO, ToClientSettingsDO } from "@/types/ADMIN_CLIENT/Settings";
 import { SagesMenuItem, ToSagesMenuItem } from "@/types/USERX/UserTypes";
+import { jsPDF } from "jspdf";
+import { autoTable } from "jspdf-autotable";
 const ErrorOrigin = "ADMIN_CLIENT : clientFactory";
 
 /* Get DataObjects from records */
@@ -1301,6 +1303,32 @@ export async function getSettings(clientId:string) : Promise<ClientSettingsDO|nu
 
 
 //#region Export PDFs
+
+export function exportEcolesPdf(client:DisplayClientDO, ecoles:OverviewEcoleDO[]) : ArrayBuffer {
+    const functionName = "exportEcolesPdf";
+    try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text(client.legal_name, pageWidth / 2, 20, { align : "center" });
+        autoTable(doc, {
+            startY : 30,
+            head : [["École", { content : "Nombre de classes", styles : { halign : "center" } }, { content : "Nombre d'élèves", styles : { halign : "center" } }]],
+            body : ecoles.map(ecole => [ecole.short_name, ecole.number_salles_classes, ecole.number_eleves]),
+            columnStyles : {
+                1 : { halign : "center" },
+                2 : { halign : "center" }
+            }
+        });
+        return doc.output("arraybuffer");
+    }
+    catch(error:any) {
+        logError('F',"Echec : Exporter la liste des écoles en PDF",ErrorOrigin + " : " + functionName, error.message, false);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 //#endregion Export PDFs
 
 //#region building overviews
