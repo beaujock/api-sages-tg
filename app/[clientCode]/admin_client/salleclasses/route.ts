@@ -14,7 +14,7 @@ export async function GET(request:NextRequest, { params }: { params: Promise<{cl
             return NextResponse.json({message : requestedRouteInfos.message}, { status: 400 });
         const client = requestedRouteInfos.client;
 
-        const clientSalleClasses = await getSalleClasses(client.id);
+        const clientSalleClasses = await getSalleClasseOverviews(client.id);
         return NextResponse.json({clientSalleClasses: clientSalleClasses}, { status: 200 });
     }
     catch(error:any) {

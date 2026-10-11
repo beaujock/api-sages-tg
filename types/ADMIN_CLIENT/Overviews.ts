@@ -21,6 +21,8 @@ export type OverviewEcoleDO = {
 export type OverviewSalleClasseDO = {
     id                      : string;
     code                    : string;
+    ecole_id                : string;
+    ecole_label             : string;
     annee_scolaire_id       : string;
     annee_scolaire_label    : string;
     number_eleves           : number;

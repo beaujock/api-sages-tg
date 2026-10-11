@@ -1404,6 +1404,7 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
                 }
             },
             include : {
+                sgs_ecole : true,
                 tg_annee_scolaire : true
             }
         });
@@ -1418,6 +1419,8 @@ export async function getSalleClasseOverview(clientId:string, ecoleId:string, sa
         return {
             id                      : salleClasse.id,
             code                    : salleClasse.code,
+            ecole_id                : salleClasse.ecole_id,
+            ecole_label             : salleClasse.sgs_ecole.short_name === null ? salleClasse.sgs_ecole.full_name : salleClasse.sgs_ecole.short_name,
             annee_scolaire_id       : salleClasse.annee_scolaire_id,
             annee_scolaire_label    : getAnneeScolaireLabel(salleClasse.tg_annee_scolaire),
             number_eleves           : eleves.length
