@@ -1329,6 +1329,33 @@ export function exportEcolesPdf(client:DisplayClientDO, ecoles:OverviewEcoleDO[]
     }
 }
 
+export function exportSalleClassesPdf(client:DisplayClientDO, anneeScolaire:DisplayAnneeScolaireDO, salleClasses:OverviewSalleClasseDO[]) : ArrayBuffer {
+    const functionName = "exportSalleClassesPdf";
+    try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text(client.legal_name, pageWidth / 2, 20, { align : "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        doc.text("Année scolaire " + anneeScolaire.label, pageWidth / 2, 28, { align : "center" });
+        autoTable(doc, {
+            startY : 36,
+            head : [["Classe", "École", { content : "Nombre d'élèves", styles : { halign : "center" } }]],
+            body : salleClasses.map(salleClasse => [salleClasse.code, salleClasse.ecole_label, salleClasse.number_eleves]),
+            columnStyles : {
+                2 : { halign : "center" }
+            }
+        });
+        return doc.output("arraybuffer");
+    }
+    catch(error:any) {
+        logError('F',"Echec : Exporter la liste des classes en PDF",ErrorOrigin + " : " + functionName, error.message, false);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 //#endregion Export PDFs
 
 //#region building overviews
