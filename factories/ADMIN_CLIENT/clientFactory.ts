@@ -1472,11 +1472,12 @@ export async function getEleveOverview(clientId:string, eleveId:string, anneeSco
         const eleve = inscription.sgs_eleve;
         return {
             id                      : eleve.id,
+            matricule               : eleve.matricule,
             eleve_label             : eleve.first_name + " " + eleve.last_name,
             ecole_id                : inscription.sgs_salle_classe.ecole_id,
             ecole_label             : inscription.sgs_salle_classe.sgs_ecole.short_name === null ? inscription.sgs_salle_classe.sgs_ecole.full_name : inscription.sgs_salle_classe.sgs_ecole.short_name,
             annee_scolaire_id       : inscription.sgs_salle_classe.annee_scolaire_id,
-            annee_scolaire_label    : getAnneeScolaireLabel(inscription.sgs_salle_classe.tg_annee_scolaire),
+            annee_scolaire_label    : inscription.sgs_salle_classe.tg_annee_scolaire.label,
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
         }
@@ -1567,6 +1568,45 @@ export async function getSalleClasseOverviews(clientId:string, anneeScolaireId?:
     }
     catch(error:any) {
         logError('F',"Echec : Générer les vues d'ensemble des classes du client",ErrorOrigin + " : " + functionName, error.message, false);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
+export async function getElevesOverviews(clientId:string, anneeScolaireId?:string) : Promise<OverviewEleveDO[]> {
+    const functionName = "getElevesOverview";
+    try {
+        const isConnected = await verifyAndSetPrismaConnection();
+        if ( !isConnected ) throw new Error("Vous n'êtes pas connecté!");
+        const anneeScolaire = anneeScolaireId
+            ? await getAnneeScolaireById(anneeScolaireId)
+            : await getClientCurrentAnneeScolaire(clientId);
+        if (anneeScolaire === null) throw new Error(anneeScolaireId ? "Année scolaire introuvable" : "Aucune année scolaire en cours");
+        const eleves = await prisma.sgs_eleve.findMany({
+            where : {
+                sgs_inscription : {
+                    some : {
+                        sgs_salle_classe : {
+                            annee_scolaire_id : anneeScolaire.id,
+                            sgs_ecole : {
+                                sgs_client_ecole : {
+                                    some : {
+                                        client_id : clientId
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            select : { id : true },
+            orderBy : [{ last_name : 'asc' }, { first_name : 'asc' }]
+        });
+        if(eleves.length === 0) return [];
+        const eleveOverviews = await Promise.all(eleves.map(eleve => getEleveOverview(clientId, eleve.id, anneeScolaire.id)));
+        return eleveOverviews.filter((overview): overview is OverviewEleveDO => overview !== null);
+    }
+    catch(error:any) {
+        logError('F',"Echec : Générer les vues d'ensemble des élèves du client",ErrorOrigin + " : " + functionName, error.message, false);
         throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
     }
 }

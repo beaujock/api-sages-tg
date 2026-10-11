@@ -30,6 +30,7 @@ export type OverviewSalleClasseDO = {
 
 export type OverviewEleveDO = {
     id                      : string;
+    matricule               : string;
     eleve_label             : string;
     ecole_id                : string;
     ecole_label             : string;
