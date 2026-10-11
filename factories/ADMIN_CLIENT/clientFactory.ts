@@ -1356,6 +1356,30 @@ export function exportSalleClassesPdf(client:DisplayClientDO, anneeScolaire:Disp
     }
 }
 
+export function exportElevesPdf(client:DisplayClientDO, anneeScolaire:DisplayAnneeScolaireDO, eleves:OverviewEleveDO[]) : ArrayBuffer {
+    const functionName = "exportElevesPdf";
+    try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text(client.legal_name, pageWidth / 2, 20, { align : "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        doc.text("Année scolaire " + anneeScolaire.label, pageWidth / 2, 28, { align : "center" });
+        autoTable(doc, {
+            startY : 36,
+            head : [["Élève", "Matricule", "École", "Classe"]],
+            body : eleves.map(eleve => [eleve.eleve_label, eleve.matricule, eleve.ecole_label, eleve.salle_classe_label])
+        });
+        return doc.output("arraybuffer");
+    }
+    catch(error:any) {
+        logError('F',"Echec : Exporter la liste des élèves en PDF",ErrorOrigin + " : " + functionName, error.message, false);
+        throw new Error(ErrorOrigin + " : " + functionName + "\n" + error.message);
+    }
+}
+
 //#endregion Export PDFs
 
 //#region building overviews
