@@ -133,6 +133,8 @@ export type DisplayEnseignantDO = {
 //#region Inscription Displays
 export type DisplayInscriptionDO = {
     id                      : string;
+    ecole_id                : string;
+    ecole_label             : string;
     salle_classe_id         : string;
     salle_classe_label      : string;
     eleve_id                : string;

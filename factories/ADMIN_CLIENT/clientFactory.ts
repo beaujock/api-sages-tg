@@ -303,7 +303,11 @@ export async function getInscriptionById(clientId:string, inscriptionId:string) 
                 }
             },
             include : {
-                sgs_salle_classe : true,
+                sgs_salle_classe : {
+                    include : {
+                        sgs_ecole : true
+                    }
+                },
                 sgs_eleve : true,
                 lkp_registration_status : true
             }
@@ -311,6 +315,8 @@ export async function getInscriptionById(clientId:string, inscriptionId:string) 
         if(!inscription) return null;
         return {
             id                      : inscription.id,
+            ecole_id                : inscription.sgs_salle_classe.ecole_id,
+            ecole_label             : inscription.sgs_salle_classe.sgs_ecole.short_name === null ? inscription.sgs_salle_classe.sgs_ecole.full_name : inscription.sgs_salle_classe.sgs_ecole.short_name,
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
             eleve_id                : inscription.eleve_id,
@@ -357,7 +363,11 @@ export async function getEleveCurrentActiveInscription(clientId:string, eleveId:
                 }
             },
             include : {
-                sgs_salle_classe : true,
+                sgs_salle_classe : {
+                    include : {
+                        sgs_ecole : true
+                    }
+                },
                 sgs_eleve : true,
                 lkp_registration_status : true
             },
@@ -368,6 +378,8 @@ export async function getEleveCurrentActiveInscription(clientId:string, eleveId:
         if(!inscription) return null;
         return {
             id                      : inscription.id,
+            ecole_id                : inscription.sgs_salle_classe.ecole_id,
+            ecole_label             : inscription.sgs_salle_classe.sgs_ecole.short_name === null ? inscription.sgs_salle_classe.sgs_ecole.full_name : inscription.sgs_salle_classe.sgs_ecole.short_name,
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
             eleve_id                : inscription.eleve_id,
@@ -817,7 +829,11 @@ export async function getInscriptions(clientId:string, anneeScolaireId?:string) 
                 }
             },
             include : {
-                sgs_salle_classe : true,
+                sgs_salle_classe : {
+                    include : {
+                        sgs_ecole : true
+                    }
+                },
                 sgs_eleve : true,
                 lkp_registration_status : true
             },
@@ -827,6 +843,8 @@ export async function getInscriptions(clientId:string, anneeScolaireId?:string) 
         });
         return inscriptions.map(inscription => ({
             id                      : inscription.id,
+            ecole_id                : inscription.sgs_salle_classe.ecole_id,
+            ecole_label             : inscription.sgs_salle_classe.sgs_ecole.short_name === null ? inscription.sgs_salle_classe.sgs_ecole.full_name : inscription.sgs_salle_classe.sgs_ecole.short_name,
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
             eleve_id                : inscription.eleve_id,
@@ -1680,13 +1698,19 @@ export async function createInscription(clientId: string, inscriptionData : Crea
                 created_by          : inscriptionData.created_by
             },
             include : {
-                sgs_salle_classe : true,
+                sgs_salle_classe : {
+                    include : {
+                        sgs_ecole : true
+                    }
+                },
                 sgs_eleve : true,
                 lkp_registration_status : true
             }
         });
         return {
             id                      : inscription.id,
+            ecole_id                : inscription.sgs_salle_classe.ecole_id,
+            ecole_label             : inscription.sgs_salle_classe.sgs_ecole.short_name === null ? inscription.sgs_salle_classe.sgs_ecole.full_name : inscription.sgs_salle_classe.sgs_ecole.short_name,
             salle_classe_id         : inscription.salle_classe_id,
             salle_classe_label      : inscription.sgs_salle_classe.code,
             eleve_id                : inscription.eleve_id,
